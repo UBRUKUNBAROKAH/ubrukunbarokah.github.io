@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
 <title>UB Rukun Barokah</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,159 +65,32 @@ input,select{font-family:inherit;}
 #login-screen{
   min-height:100vh;
   display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:32px 20px;
+  flex-direction:column;
+}
+.login-hero{
+  padding:56px 28px 40px;
+  color:#fff;
   position:relative;
+}
+.login-hero .icon-badge{
+  width:64px;height:64px;border-radius:18px;background:var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+  box-shadow:0 8px 20px -6px rgba(0,0,0,.4);
+  margin-bottom:18px;
   overflow:hidden;
-  color:#062f1d;
-  background-color:#ffffff;
-  background-image:
-    radial-gradient(circle at 10% 15%, rgba(16,185,129,.85) 0%, rgba(4,120,87,.75) 30%, transparent 70%),
-    radial-gradient(circle at 90% 85%, rgba(5,150,105,.85) 0%, rgba(6,78,59,.8) 35%, transparent 70%);
-  background-size:160% 160%;
-  animation:gerakCahaya 14s ease-in-out infinite alternate;
 }
-@keyframes gerakCahaya{
-  0%{background-position:0% 10%;}
-  50%{background-position:100% 90%;}
-  100%{background-position:20% 100%;}
-}
-#login-screen::before{
-  content:'';
-  position:absolute; inset:0;
-  background-image:radial-gradient(circle at 12px 12px, rgba(6,47,29,.04) 2px, transparent 2.5px);
-  background-size:36px 36px;
-  pointer-events:none;
-}
+.login-hero h1{font-size:22px;margin:0 0 4px;font-weight:700;letter-spacing:.2px;}
+.login-hero p{margin:0;color:rgba(255,255,255,.75);font-size:13.5px;}
 .login-card{
-  position:relative; z-index:1;
-  width:100%; max-width:360px;
-  background:rgba(255,255,255,.65);
-  border:1px solid rgba(255,255,255,.5);
-  border-radius:32px;
-  padding:34px 26px 28px;
+  background:var(--surface);
+  border-radius:24px 24px 0 0;
+  margin-top:-20px;
+  padding:28px 24px 32px;
+  flex:1;
   display:flex;
   flex-direction:column;
   gap:16px;
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  box-shadow:0 30px 60px -18px rgba(4,120,87,.25);
-  animation:loginSlideUp .45s cubic-bezier(.22,1,.36,1);
 }
-.login-illustration{
-  position:relative;
-  height:128px;
-  display:flex; align-items:center; justify-content:center;
-  margin-bottom:2px;
-}
-.login-illustration .badge-circle{
-  width:104px;height:104px;border-radius:50%;
-  background:var(--primary-soft);
-  display:flex;align-items:center;justify-content:center;
-  position:relative; z-index:2;
-}
-.login-illustration .icon-badge{
-  width:66px;height:66px;border-radius:18px;
-  background:var(--primary);
-  color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:30px;
-  box-shadow:0 10px 22px -8px rgba(11,61,46,.55);
-  overflow:hidden;
-  animation:loginPop .5s cubic-bezier(.22,1,.36,1);
-}
-.login-illustration .coin{
-  position:absolute;
-  border-radius:50%;
-  background:var(--gold);
-  color:#fff;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-family:'Sora',sans-serif;
-  border:2px solid var(--gold-soft);
-  box-shadow:0 8px 16px -6px rgba(185,143,51,.6);
-  animation:coinFloat 3s ease-in-out infinite;
-  z-index:3;
-}
-.login-illustration .coin.c1{ width:32px;height:32px;font-size:12px; top:0; left:20%; animation-delay:0s; }
-.login-illustration .coin.c2{ width:26px;height:26px;font-size:10.5px; top:16px; right:16%; animation-delay:.5s; }
-.login-illustration .coin.c3{ width:22px;height:22px;font-size:9.5px; bottom:6px; left:10%; animation-delay:1s; }
-@keyframes coinFloat{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-9px);}
-}
-.login-title{text-align:center;}
-.login-title h1{margin:0 0 4px;font-size:19px;font-weight:800;color:var(--text);}
-.login-title p{margin:0;font-size:12.5px;color:var(--muted);}
-.field-pill{position:relative;}
-.field-pill svg{
-  position:absolute; left:16px; top:50%; transform:translateY(-50%);
-  color:var(--muted); pointer-events:none;
-}
-.field-pill input{
-  width:100%;
-  border:1.5px solid var(--border);
-  background:var(--bg);
-  border-radius:999px;
-  padding:13px 16px 13px 42px;
-  font-size:14px;
-  outline:none;
-  transition:border-color .15s, background .15s;
-}
-.field-pill input:focus{border-color:var(--primary); background:var(--surface);}
-.field-pill .field-toggle{
-  position:absolute; right:6px; top:50%; transform:translateY(-50%);
-  background:none;border:none;padding:8px;border-radius:50%;
-  color:var(--muted); display:flex; align-items:center; justify-content:center;
-}
-.field-pill .field-toggle:active{background:var(--primary-soft);}
-.btn-pill{
-  width:100%;
-  border:none; border-radius:999px; padding:14px 16px;
-  font-weight:700; font-size:14.5px;
-  background:var(--primary); color:#fff;
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  box-shadow:0 14px 26px -10px rgba(11,61,46,.55);
-  margin-top:4px;
-}
-.btn-pill:active{background:var(--primary-2);}
-.login-footer-link{
-  text-align:center; font-size:11.5px; color:var(--muted);
-  text-decoration:underline; text-underline-offset:2px; cursor:pointer;
-}
-.login-footer-note{
-  text-align:center; font-size:11px; color:var(--muted); margin-top:2px;
-}
-@keyframes loginPop{
-  0%{transform:scale(.6) rotate(-8deg); opacity:0;}
-  100%{transform:scale(1) rotate(0); opacity:1;}
-}
-@keyframes loginSlideUp{
-  0%{transform:translateY(24px); opacity:0;}
-  100%{transform:translateY(0); opacity:1;}
-}
-.btn-loading{position:relative; color:transparent !important;}
-.btn-loading::after{
-  content:''; position:absolute; width:16px;height:16px;
-  border-radius:50%; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff;
-  animation:btnSpin .7s linear infinite;
-}
-@keyframes btnSpin{to{transform:rotate(360deg);}}
-
-/* ---- Desktop: card slightly larger, more breathing room ---- */
-@media (min-width: 900px){
-  .login-card{
-    max-width:400px;
-    padding:42px 36px 34px;
-    border-radius:36px;
-  }
-  .login-illustration{height:150px;}
-  .login-illustration .badge-circle{width:120px;height:120px;}
-  .login-illustration .icon-badge{width:76px;height:76px;font-size:34px;}
-  .login-title h1{font-size:22px;}
-  .login-title p{font-size:13px;}
-}
-
-
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{font-size:12.5px;font-weight:600;color:var(--muted);}
 .field input, .field select, .field textarea{
@@ -270,17 +140,6 @@ input,select{font-family:inherit;}
 .app-header .titles .role{font-size:11px;color:var(--gold-soft);text-transform:uppercase;letter-spacing:.6px;}
 .icon-btn{background:rgba(255,255,255,.14);border:none;color:#fff;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
 
-.profile-dropdown{position:relative;}
-.profile-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:.2s;}
-.profile-avatar:hover{background:rgba(255,255,255,.28);}
-.dropdown-menu{position:absolute;right:0;top:44px;min-width:170px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:6px;display:none;z-index:999;}
-.dropdown-menu.show{display:block;}
-.dropdown-item{padding:10px 14px;border-radius:8px;font-size:13px;color:#222;cursor:pointer;transition:.15s;}
-.dropdown-item:hover{background:#f5f5f5;}
-.dropdown-item.logout{color:#e74c3c;}
-.dropdown-item.logout:hover{background:#fee;}
-.dropdown-divider{height:1px;background:#eee;margin:4px 8px;}
-
 #content{flex:1;padding:18px 18px 90px;overflow-y:auto;}
 .page-title{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;margin:2px 0 16px;display:flex;align-items:center;justify-content:space-between;}
 .page-title span.sub{display:block;font-family:'Plus Jakarta Sans';font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;}
@@ -314,28 +173,18 @@ input,select{font-family:inherit;}
 .tabs button{flex:1;border:none;background:transparent;padding:9px 6px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--primary);}
 .tabs button.active{background:var(--primary);color:#fff;}
 
-.search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;margin-bottom:14px;flex:1;min-width:0;}
-.search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;min-width:0;}
-.toolbar-row{display:flex;gap:8px;align-items:center;margin-bottom:0;}
-.toolbar-row .search-box{margin-bottom:0;}
-.btn-compact{padding:9px 14px;font-size:12.5px;white-space:nowrap;flex-shrink:0;border-radius:10px;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;margin-bottom:14px;}
+.search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;}
 
 .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
 .empty-state .ic{font-size:34px;margin-bottom:10px;}
 .empty-state .t{font-weight:700;color:var(--text);font-size:14px;}
 .empty-state .d{font-size:12.5px;margin-top:4px;}
 
-/* install prompt */
-#install-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;}
-#install-card{background:#fff;border-radius:var(--radius-lg);padding:36px 28px 28px;width:340px;max-width:88vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);}
-#install-icon{width:64px;height:64px;border-radius:18px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 14px;}
-#install-title{font-family:'Sora',sans-serif;font-size:19px;font-weight:700;color:var(--text);margin-bottom:6px;}
-#install-desc{font-size:13px;color:var(--muted);line-height:1.5;}
 /* passbook ledger */
-.ledger{border:2px solid var(--primary);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);}
-.ledger-head{background:var(--primary);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:10px 14px;}
-.ledger-row{display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:11px 14px;border-top:1px solid var(--border);align-items:center;}
-.ledger-row:nth-child(even){background:#fafafa;}
+.ledger{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
+.ledger-head{background:var(--primary-soft);color:var(--primary);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:9px 12px;}
+.ledger-row{display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:11px 12px;border-top:1px dotted var(--border);align-items:center;}
 .ledger-row .d{font-size:11px;color:var(--muted);}
 .ledger-row .k{font-size:12px;}
 .ledger-row .j{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;font-weight:600;}
@@ -413,10 +262,9 @@ input,select{font-family:inherit;}
 }
 
 /* modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(10,25,18,.5);z-index:50;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(10,25,18,.5);z-index:50;display:none;align-items:flex-end;justify-content:center;}
 .modal-overlay.show{display:flex;}
-.modal{background:var(--surface);width:100%;max-width:420px;border-radius:22px;padding:22px 22px 26px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px -12px rgba(0,0,0,.4);animation:modalIn .2s ease;}
-@keyframes modalIn{from{transform:scale(.94);opacity:0;}to{transform:scale(1);opacity:1;}}
+.modal{background:var(--surface);width:100%;border-radius:22px 22px 0 0;padding:22px 22px 26px;max-height:88vh;overflow-y:auto;}
 .modal h3{margin:0 0 16px;font-size:16px;}
 .modal-close{position:absolute;}
 .confirm-overlay{position:fixed;inset:0;background:rgba(10,25,18,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:24px;}
@@ -463,74 +311,46 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 </head>
 <body>
 
-<div id="install-overlay" style="display:none;">
-  <div id="install-card">
-    <div id="install-icon">🏦</div>
-    <div id="install-title">UB Rukun Barokah</div>
-    <div id="install-desc">Install aplikasi untuk akses lebih cepat dan nyaman</div>
-    <div style="display:flex;gap:10px;margin-top:18px;width:100%;">
-      <button id="install-btn" class="btn btn-primary" style="flex:1;">Install</button>
-      <button id="install-skip" class="btn btn-outline" style="flex:1;">Nanti</button>
-    </div>
-  </div>
-</div>
-
-<div id="app">
+<div class="phone-wrap">
 
   <!-- ================= LOGIN ================= -->
   <div id="login-screen">
+    <div class="login-hero batik-bg">
+      <div class="icon-badge" id="login-icon">ðŸ¦</div>
+      <h1 id="login-koperasi-name">UB Rukun Barokah</h1>
+      <p>Layanan digital koperasi &mdash; simpan, pinjam, dan pantau tabungan Anda kapan saja.</p>
+    </div>
     <div class="login-card">
-      <div class="login-illustration">
-        <div class="coin c1">Rp</div>
-        <div class="coin c2">$</div>
-        <div class="coin c3">Rp</div>
-        <div class="badge-circle">
-          <div class="icon-badge" id="login-icon">🏦</div>
-        </div>
-      </div>
-      <div class="login-title">
-        <h1 id="login-koperasi-name">UB Rukun Barokah</h1>
-        <p>Masuk untuk mengelola tabungan dan pembiayaan Anda</p>
-      </div>
       <div class="login-error" id="login-error"></div>
-      <div class="field-pill">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
-        <input type="text" id="login-username" placeholder="Nama pengguna" autocomplete="username">
+      <div class="field">
+        <label>Nama pengguna</label>
+        <input type="text" id="login-username" placeholder="cth. nasabah1" autocomplete="username">
       </div>
-      <div class="field-pill">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+      <div class="field">
+        <label>Kata sandi</label>
         <input type="password" id="login-password" placeholder="Kata sandi" autocomplete="current-password">
-        <button type="button" class="field-toggle" id="login-pw-toggle" onclick="togglePasswordVisibility()" title="Tampilkan/sembunyikan kata sandi">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
       </div>
-      <button class="btn-pill" id="login-submit-btn" onclick="handleLogin()">Masuk</button>
-      <div class="login-footer-link" onclick="toast('Hubungi koordinator atau admin koperasi Anda')">Lupa kata sandi?</div>
-      <div class="login-footer-note">© <span id="login-year"></span> · Aplikasi Koperasi Digital</div>
+      <button class="btn btn-primary btn-block" onclick="handleLogin()">Masuk</button>
+      <div class="demo-box">
+        Akun demo &mdash; <b>admin</b>/<b>admin123</b> &middot; <b>koordinator1</b>/<b>koor123</b> &middot; <b>nasabah1</b>/<b>nasabah123</b>
+      </div>
+      <div style="text-align:center;margin-top:12px;"><button class="btn btn-outline btn-sm" onclick="if(confirm('Reset semua data? Data akan hilang.')){localStorage.removeItem(DB_KEY);localStorage.removeItem(SESSION_KEY);location.reload();}">Reset Data</button></div>
     </div>
   </div>
-
 
   <!-- ================= APP ================= -->
   <div id="app-screen">
     <div class="app-header">
       <div class="left">
-        <div class="koperasi-icon" id="header-icon">🏦</div>
+        <div class="koperasi-icon" id="header-icon">ðŸ¦</div>
         <div class="titles">
           <div class="name" id="header-koperasi-name">UB Rukun Barokah</div>
           <div class="role" id="header-role">NASABAH</div>
         </div>
       </div>
-      <div class="profile-dropdown" id="profile-dropdown">
-        <div class="profile-avatar" id="profile-avatar" onclick="toggleProfileDropdown()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <div class="dropdown-menu" id="dropdown-menu">
-          <div class="dropdown-item" onclick="go('profil_saya');closeProfileDropdown()">Profil Saya</div>
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-item logout" onclick="handleLogout()">Keluar</div>
-        </div>
-      </div>
+      <button class="icon-btn" onclick="handleLogout()" title="Keluar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
     </div>
 
     <div class="app-body">
@@ -556,12 +376,11 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 ========================================================= */
 const SUPABASE_URL = 'https://nuczywforbwbctwxbfky.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51Y3p5d2ZvcmJ3YmN0d3hiZmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjY5NTAsImV4cCI6MjA5ODkwMjk1MH0.4xQPbzS8EQ3NAdwzkU5Q5Fjbxi2Q0rlRDWYaYBCQ8Ic';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let SUPABASE_ENABLED = true;
 
 const TABLES = {
   users: 'users',
-  anggota: 'anggota',
   kelompok: 'kelompok',
   jenis_tabungan: 'jenis_tabungan',
   tabungan_accounts: 'tabungan_accounts',
@@ -598,21 +417,14 @@ const ICONS = {
 };
 
 /* =========================================================
-   DATABASE (Supabase)
+   DATABASE (localStorage)
 ========================================================= */
+const DB_KEY = 'ub_rukun_barokah_db_v1';
 const SESSION_KEY = 'ub_rukun_barokah_session_v1';
 
 function uid(prefix){ return (prefix||'id') + '_' + Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function rupiah(n){ n = Number(n)||0; return 'Rp' + n.toLocaleString('id-ID'); }
-// Parse IDR: hapus titik (pemisah ribuan), ganti koma jadi titik (desimal)
-function parseIdr(v){ if(typeof v==='number') return v; if(!v) return 0; return parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0; }
-
-// ---- Wrapper for backward compat ----
-async function loadDB() {
-  await initSupabaseDB();
-  return DB;
-}
 function fmtDate(iso){ const d = new Date(iso); return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
 function fmtDateShort(iso){ const d = new Date(iso); return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'}); }
 function initials(name){ return (name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
@@ -654,28 +466,26 @@ async function initSupabaseDB() {
   try {
     // Load all tables in parallel
     const [
-      users, anggota, kelompok, jenisTabungan, tabunganAccounts, tabunganTx,
+      users, kelompok, jenisTabungan, tabunganAccounts, tabunganTx,
       pembiayaan, angsuran, jenisSaham, kepemilikanSaham,
       pengaturan, setoran, logs
     ] = await Promise.all([
-      supabaseClient.from(TABLES.users).select('*'),
-      supabaseClient.from(TABLES.anggota).select('*'),
-      supabaseClient.from(TABLES.kelompok).select('*'),
-      supabaseClient.from(TABLES.jenis_tabungan).select('*'),
-      supabaseClient.from(TABLES.tabungan_accounts).select('*'),
-      supabaseClient.from(TABLES.tabungan_tx).select('*'),
-      supabaseClient.from(TABLES.pembiayaan).select('*'),
-      supabaseClient.from(TABLES.angsuran).select('*'),
-      supabaseClient.from(TABLES.jenis_saham).select('*'),
-      supabaseClient.from(TABLES.kepemilikan_saham).select('*'),
-      supabaseClient.from(TABLES.pengaturan_koperasi).select('*').eq('id', 'koperasi').single(),
-      supabaseClient.from(TABLES.setoran).select('*'),
-      supabaseClient.from(TABLES.logs).select('*').order('created_at', {ascending: false}).limit(100)
+      supabase.from(TABLES.users).select('*'),
+      supabase.from(TABLES.kelompok).select('*'),
+      supabase.from(TABLES.jenis_tabungan).select('*'),
+      supabase.from(TABLES.tabungan_accounts).select('*'),
+      supabase.from(TABLES.tabungan_tx).select('*'),
+      supabase.from(TABLES.pembiayaan).select('*'),
+      supabase.from(TABLES.angsuran).select('*'),
+      supabase.from(TABLES.jenis_saham).select('*'),
+      supabase.from(TABLES.kepemilikan_saham).select('*'),
+      supabase.from(TABLES.pengaturan_koperasi).select('*').eq('id', 'koperasi').single(),
+      supabase.from(TABLES.setoran).select('*'),
+      supabase.from(TABLES.logs).select('*').order('created_at', {ascending: false}).limit(100)
     ]);
 
     // Transform to camelCase
     const u = toCamel(users.data || []);
-    const a = toCamel(anggota.data || []);
     const k = toCamel(kelompok.data || []);
     const jt = toCamel(jenisTabungan.data || []);
     const ta = toCamel(tabunganAccounts.data || []);
@@ -688,28 +498,12 @@ async function initSupabaseDB() {
     const st = toCamel(setoran.data || []);
     const lg = toCamel(logs.data || []);
 
-    // Merge: untuk nasabah, gabung data anggota ke user
-    const mergedUsers = u.map(user => {
-      if (user.role === 'nasabah' && user.anggotaId) {
-        const agg = a.find(x => x.id === user.anggotaId);
-        if (agg) return { ...user, ...agg, id: user.id, createdAt: user.createdAt };
-      }
-      // Koordinator: cari kelompokId dari tabel kelompok
-      if (user.role === 'koordinator') {
-        const kel = k.find(x => (x.koorId || x.koor_id) === user.id);
-        if (kel) user.kelompokId = kel.id;
-      }
-      return user;
-    });
-
     // Build DB object
     DB = {
-      users: mergedUsers,
+      users: u,
       koperasi: {
         kelompok: k,
         jenisTabungan: jt,
-        info: {},
-        sertifikat: {},
         saham: { 
           pemupukanPersen: 35, 
           jenis: js 
@@ -737,44 +531,68 @@ async function initSupabaseDB() {
       logs: lg
     };
 
-    // Merge pengaturan koperasi (deep merge biar nested object gak ketimpa kosong)
+    // Merge pengaturan koperasi
     if (pg) {
-      if (pg.nama) DB.koperasi.nama = pg.nama;
-      if (pg.icon) DB.koperasi.icon = pg.icon;
-      if (pg.iconImage) DB.koperasi.iconImage = pg.iconImage;
-      if (!DB.koperasi.info) DB.koperasi.info = {};
-      if (pg.info && Object.keys(pg.info).length) Object.assign(DB.koperasi.info, pg.info);
-      if (!DB.koperasi.sertifikat) DB.koperasi.sertifikat = {};
-      if (pg.sertifikat && Object.keys(pg.sertifikat).length) Object.assign(DB.koperasi.sertifikat, pg.sertifikat);
-      if (pg.aturKeuangan && Object.keys(pg.aturKeuangan).length) Object.assign(DB.koperasi.aturKeuangan, pg.aturKeuangan);
-      if (pg.saham && Object.keys(pg.saham).length) {
-        if (pg.saham.pemupukanPersen !== undefined) DB.koperasi.saham.pemupukanPersen = pg.saham.pemupukanPersen;
-      }
-      // Kembalikan data dari tabel dedicated
-      DB.koperasi.kelompok = k;
-      DB.koperasi.jenisTabungan = jt;
-      DB.koperasi.saham.jenis = js;
+      Object.assign(DB.koperasi, pg);
     }
 
     // Ensure defaults
     ensureDefaults();
     DB_LOADED = true;
     
+    // Auto-seed if empty
+    const userCount = await supabase.from(TABLES.users).select('*', { count: 'exact', head: true });
+    if (!userCount.count || userCount.count === 0) {
+      await seedSupabase();
+      return initSupabaseDB(); // Reload after seed
+    }
+    
     return DB;
     
   } catch (err) {
-    console.error('Gagal load dari Supabase:', err);
-    throw err;
+    console.error('Supabase load error:', err);
+    // Fallback to localStorage
+    return loadLocalDB();
+  }
+}
+    console.error('Supabase load error:', err);
+    // Fallback to localStorage
+    return loadLocalDB();
   }
 }
 
+// ---- Fallback to localStorage ----
+function loadLocalDB() {
+  let raw = localStorage.getItem(DB_KEY);
+  if(!raw){ seedLocalDB(); raw = localStorage.getItem(DB_KEY); }
+  const db = JSON.parse(raw);
+  // ... (migration logic from original loadDB)
+  ensureDefaultsLocal(db);
+  DB = db;
+  DB_LOADED = true;
+  return DB;
+}
+
 function ensureDefaults() {
-  if(!DB.koperasi.kelompok) DB.koperasi.kelompok = [];
-  if(!DB.koperasi.jenisTabungan) DB.koperasi.jenisTabungan = [];
-  if(!DB.koperasi.saham || typeof DB.koperasi.saham !== 'object' || Object.keys(DB.koperasi.saham).length===0) DB.koperasi.saham = { pemupukanPersen: 35, jenis: [] };
-  if(!DB.koperasi.saham.jenis) DB.koperasi.saham.jenis = [];
-  if(!DB.koperasi.aturKeuangan || typeof DB.koperasi.aturKeuangan !== 'object' || Object.keys(DB.koperasi.aturKeuangan).length===0) {
-    DB.koperasi.aturKeuangan = {
+  if(!DB.koperasi.saham.jenis) DB.koperasi.saham = { pemupukanPersen: 35, jenis: [] };
+  if(!DB.koperasi.aturKeuangan) DB.koperasi.aturKeuangan = { marginPersen: 20, pools: [], dana: {} };
+  if(!DB.koperasi.info) DB.koperasi.info = {};
+  if(!DB.koperasi.sertifikat) DB.koperasi.sertifikat = { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' };
+  if(!DB.tabunganAccounts) DB.tabunganAccounts = [];
+  if(!DB.tabunganTx) DB.tabunganTx = [];
+  if(!DB.kepemilikanSaham) DB.kepemilikanSaham = [];
+  if(!DB.setoran) DB.setoran = [];
+  if(!DB.logs) DB.logs = [];
+  if(!DB.angsuran) DB.angsuran = [];
+}
+
+function loadLocalDB() {
+  let raw = localStorage.getItem(DB_KEY);
+  if(!raw){ seedLocalDB(); raw = localStorage.getItem(DB_KEY); }
+  const db = JSON.parse(raw);
+  // Migration logic (copy from original loadDB)
+  if(!db.koperasi.aturKeuangan || db.koperasi.aturKeuangan.angsuranKeModal!==undefined){
+    db.koperasi.aturKeuangan = {
       marginPersen: 20,
       pools: [
         {id:'operasional', label:'Operasional', persen:5},
@@ -788,41 +606,46 @@ function ensureDefaults() {
       dana: {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0}
     };
   }
-  if(!DB.koperasi.aturKeuangan.marginPersen && DB.koperasi.aturKeuangan.marginPersen !== 0) DB.koperasi.aturKeuangan.marginPersen = 20;
-  if(!DB.koperasi.aturKeuangan.marginMax && DB.koperasi.aturKeuangan.marginMax !== 0) DB.koperasi.aturKeuangan.marginMax = 30;
-  if(!DB.koperasi.aturKeuangan.pools || !DB.koperasi.aturKeuangan.pools.length) {
-    DB.koperasi.aturKeuangan.pools = [
-      {id:'operasional', label:'Operasional', persen:5},
-      {id:'cadangan_resiko', label:'Cadangan Resiko', persen:5},
-      {id:'bagi_hasil_tabungan', label:'Bagi Hasil Tabungan', persen:2},
-      {id:'shu_saham', label:'SHU Saham', persen:2},
-      {id:'cad_zakat', label:'Cad. Zakat', persen:2},
-      {id:'dana_sosial', label:'Dana Sosial', persen:2},
-      {id:'penyusutan', label:'Penyusutan', persen:2}
-    ];
+  if(!db.koperasi.aturKeuangan.dana){
+    db.koperasi.aturKeuangan.dana = {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0};
   }
-  if(!DB.koperasi.aturKeuangan.dana) DB.koperasi.aturKeuangan.dana = {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0};
-  if(!DB.koperasi.info || typeof DB.koperasi.info !== 'object' || Object.keys(DB.koperasi.info).length===0) DB.koperasi.info = {};
-  if(!DB.koperasi.sertifikat || typeof DB.koperasi.sertifikat !== 'object' || Object.keys(DB.koperasi.sertifikat).length===0) {
-    DB.koperasi.sertifikat = { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' };
+  if(db.koperasi.aturKeuangan.marginMax===undefined){
+    db.koperasi.aturKeuangan.marginMax = Math.max(30, db.koperasi.aturKeuangan.marginPersen||20);
   }
-  if(!DB.tabunganAccounts) DB.tabunganAccounts = [];
-  if(!DB.tabunganTx) DB.tabunganTx = [];
-  if(!DB.kepemilikanSaham) DB.kepemilikanSaham = [];
-  if(!DB.setoran) DB.setoran = [];
-  if(!DB.logs) DB.logs = [];
-  if(!DB.angsuran) DB.angsuran = [];
+  if(!db.setoran) db.setoran = [];
+  if(!db.koperasi.saham.jenis) db.koperasi.saham = { pemupukanPersen: 35, jenis: [
+    {id:'s_A', nama:'SAHAM A', nominalPerLembar:100000, shuPersen:50},
+    {id:'s_B', nama:'SAHAM B', nominalPerLembar:50000, shuPersen:30},
+    {id:'s_C', nama:'SAHAM C', nominalPerLembar:10000, shuPersen:20}
+  ]};
+  (db.koperasi.saham.jenis||[]).forEach(j=>{ if(j.shuPersen===undefined) j.shuPersen=0; });
+  if(db.koperasi.saham.pemupukanPersen===undefined) db.koperasi.saham.pemupukanPersen = 35;
+  if(!db.koperasi.info) db.koperasi.info = {};
+  if(!db.koperasi.sertifikat) db.koperasi.sertifikat = { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' };
+  if(!db.tabunganAccounts) db.tabunganAccounts = [];
+  if(!db.tabunganTx) db.tabunganTx = [];
+  if(!db.kepemilikanSaham) db.kepemilikanSaham = [];
+  if(!db.logs) db.logs = [];
+  if(!db.angsuran) db.angsuran = [];
+  ensureDefaultsLocal(db);
+  DB = db;
+  DB_LOADED = true;
+  return db;
 }
 
-
+function ensureDefaultsLocal(db) {
+  // ... (original migration logic)
+}
 
 // ---- Persist to Supabase ----
 async function persistToSupabase(table, data, id = null) {
+  if (!SUPABASE_ENABLED) return { error: null };
+  
   try {
     if (id) {
-      return await supabaseClient.from(table).update(data).eq('id', id);
+      return await supabase.from(table).update(data).eq('id', id);
     }
-    return await supabaseClient.from(table).insert(data);
+    return await supabase.from(table).insert(data);
   } catch (err) {
     console.error(`Supabase persist error (${table}):`, err);
     return { error: err };
@@ -830,208 +653,67 @@ async function persistToSupabase(table, data, id = null) {
 }
 
 async function deleteFromSupabase(table, id) {
-  try {
-    return await supabaseClient.from(table).delete().eq('id', id);
-  } catch (err) {
-    console.error(`Supabase delete error (${table}):`, err);
-    return { error: err };
-  }
+  if (!SUPABASE_ENABLED) return { error: null };
+  return await supabase.from(table).delete().eq('id', id);
 }
 
-// ---- Upsert a single row/table directly, isolated from other tables ----
-async function upsertToSupabase(table, data) {
-  try {
-    return await supabaseClient.from(table).upsert(data, { onConflict: 'id' });
-  } catch (err) {
-    console.error(`Supabase upsert error (${table}):`, err);
-    return { error: err };
-  }
-}
-
-// ---- Persist: simpan langsung ke Supabase (tanpa localStorage) ----
-let _syncTimeout = null;
+// ---- Wrapper for backward compatibility ----
 function persist() {
-  if (_syncTimeout) clearTimeout(_syncTimeout);
-  _syncTimeout = setTimeout(() => {
-    syncAllToSupabase().catch(err => console.error('Auto-sync error:', err));
-  }, 2000);
-}
-
-// ---- Immediate persist (bypasses debounce, waits for confirmation) ----
-async function persistNow() {
-  if (_syncTimeout) { clearTimeout(_syncTimeout); _syncTimeout = null; }
-  try {
-    await syncAllToSupabase();
-    return { ok: true };
-  } catch (err) {
-    console.error('persistNow sync error:', err);
-    return { ok: false, err };
-  }
-}
-
-async function syncAllToSupabase() {
-  if (!DB_LOADED) return;
-
-  const errors = [];
-  async function safeUpsert(table, data, label){
-    if (!data || (Array.isArray(data) && data.length===0)) return;
-    try {
-      const { error } = await supabaseClient.from(table).upsert(data, { onConflict: 'id' });
-      if (error) { console.error(`Supabase sync error (${label||table}):`, error); errors.push({table: label||table, error}); }
-    } catch (err) {
-      console.error(`Supabase sync exception (${label||table}):`, err);
-      errors.push({table: label||table, error: err});
-    }
-  }
-
-  // Sync users (tabel login) + anggota (tabel data nasabah)
-  const usersTable = [];
-  const anggotaTable = [];
-  (DB.users||[]).forEach(u => {
-    const userRec = { id: u.id, username: u.username, password: u.password, role: u.role, nama: u.nama, created_at: u.createdAt };
-    const aggId = u.anggotaId || (u.role === 'nasabah' ? uid('agg') : null);
-    if (u.role === 'nasabah' && aggId) {
-      u.anggotaId = aggId;
-      userRec.anggota_id = aggId;
-      anggotaTable.push({
-        id: aggId, nama: u.nama, nik: u.nik||null, alamat: u.alamat||null,
-        no_hp: u.noHp||null, kelompok_id: u.kelompokId||null,
-        no_rekening: u.noRekening||null, saham: u.saham||{},
-        status: u.status||'aktif', created_at: u.createdAt
-      });
-    }
-    usersTable.push(userRec);
-  });
-  await safeUpsert(TABLES.users, usersTable);
-  await safeUpsert(TABLES.anggota, anggotaTable, 'anggota');
-  // Sync kelompok
-  await safeUpsert(TABLES.kelompok, toSnake(DB.koperasi?.kelompok));
-  // Sync jenis tabungan
-  await safeUpsert(TABLES.jenis_tabungan, toSnake(DB.koperasi?.jenisTabungan));
-  // Sync tabungan accounts
-  await safeUpsert(TABLES.tabungan_accounts, toSnake(DB.tabunganAccounts));
-  // Sync tabungan tx
-  const txSnake = DB.tabunganTx?.map(t => {
-    const s = toSnake(t);
-    if (t.tanggal) s.tanggal = t.tanggal;
-    return s;
-  });
-  await safeUpsert(TABLES.tabungan_tx, txSnake);
-  // Sync pembiayaan
-  const pSnake = DB.pembiayaan?.map(p => {
-    const s = toSnake(p);
-    if (p.mulai) s.mulai = p.mulai.split('T')[0]; // YYYY-MM-DD
-    if (p.riwayatAngsuran) {
-      s.riwayat_angsuran = p.riwayatAngsuran;
-    }
-    return s;
-  });
-  await safeUpsert(TABLES.pembiayaan, pSnake);
-  // Sync angsuran
-  await safeUpsert(TABLES.angsuran, toSnake(DB.angsuran));
-  // Sync jenis saham
-  await safeUpsert(TABLES.jenis_saham, toSnake(DB.koperasi?.saham?.jenis));
-  // Sync kepemilikan saham
-  await safeUpsert(TABLES.kepemilikan_saham, toSnake(DB.kepemilikanSaham));
-  // Sync setoran
-  await safeUpsert(TABLES.setoran, toSnake(DB.setoran), 'setoran');
-  // Sync logs + cleanup (keep max 500 row)
-  await safeUpsert(TABLES.logs, toSnake(DB.logs));
-  try {
-    const { count } = await supabaseClient.from(TABLES.logs).select('*', { count: 'exact', head: true });
-    if (count && count > 500) {
-      const { data: old } = await supabaseClient.from(TABLES.logs).select('id').order('created_at', {ascending: true}).limit(count - 500);
-      if (old && old.length) {
-        const ids = old.map(r=>r.id);
-        for (let i = 0; i < ids.length; i += 100) {
-          await supabaseClient.from(TABLES.logs).delete().in('id', ids.slice(i, i + 100));
-        }
-      }
-    }
-  } catch(e){} // cleanup error aman diabaikan
-  // Sync pengaturan koperasi (single row) - JSONB fields jangan di-toSnake
-  const pg = {
-    id: 'koperasi',
-    nama: DB.koperasi.nama,
-    icon: DB.koperasi.icon,
-    icon_image: DB.koperasi.iconImage || null,
-    info: DB.koperasi.info || {},
-    sertifikat: DB.koperasi.sertifikat || {},
-    saham: { pemupukanPersen: DB.koperasi.saham?.pemupukanPersen || 35 },
-    atur_keuangan: DB.koperasi.aturKeuangan || {}
-  };
-  await safeUpsert(TABLES.pengaturan_koperasi, [pg], 'pengaturan_koperasi');
-
-  if (errors.length) {
-    console.error('Auto-sync selesai dengan error pada tabel:', errors.map(e=>e.table).join(', '));
-    throw new Error('Sync gagal pada: ' + errors.map(e=>e.table).join(', '));
-  }
-  console.log('Auto-sync to Supabase berhasil');
+  // Called frequently - only sync to localStorage for now
+  // Supabase sync can be manual or debounced
+  localStorage.setItem(DB_KEY, JSON.stringify(DB));
+  localStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
 }
 
 // ---- Seed Functions ----
 async function seedSupabase() {
+  if (!SUPABASE_ENABLED) return seedLocalDB();
+  
   // Check if already seeded
-  const { count } = await supabaseClient.from(TABLES.users).select('*', { count: 'exact', head: true });
+  const { count } = await supabase.from(TABLES.users).select('*', { count: 'exact', head: true });
   if (count && count > 0) return;
 
-  async function insertOrThrow(table, rows, label){
-    const res = await supabaseClient.from(table).insert(rows);
-    if (res.error) {
-      throw new Error('Gagal mengisi ' + label + ': ' + res.error.message + (res.error.details ? ' (' + res.error.details + ')' : ''));
-    }
-  }
-
   // Seed in order (respect FK)
-  await insertOrThrow(TABLES.kelompok, [
+  await supabase.from(TABLES.kelompok).insert([
     {id:'kel_melati', nama:'Kelompok Melati', koor_id:null},
     {id:'kel_mawar', nama:'Kelompok Mawar', koor_id:null}
-  ], 'kelompok');
-
-  await insertOrThrow(TABLES.jenis_tabungan, [
+  ]);
+  
+  await supabase.from(TABLES.jenis_tabungan).insert([
     {id:'jt_mudharabah', nama:'Mudharabah', wajib_minimal:0},
     {id:'jt_wadiah', nama:'Wadi\'ah', wajib_minimal:0},
     {id:'jt_umroh', nama:'Umroh/Haji', wajib_minimal:0}
-  ], 'jenis tabungan');
-
-  await insertOrThrow(TABLES.jenis_saham, [
+  ]);
+  
+  await supabase.from(TABLES.jenis_saham).insert([
     {id:'s_A', nama:'SAHAM A', nominal_per_lembar:100000, shu_persen:50},
     {id:'s_B', nama:'SAHAM B', nominal_per_lembar:50000, shu_persen:30},
     {id:'s_C', nama:'SAHAM C', nominal_per_lembar:10000, shu_persen:20}
-  ], 'jenis saham');
-
-  // Seed users (akun login)
-  await insertOrThrow(TABLES.users, [
-    {id:'u_admin', username:'admin', password:'354', role:'admin', nama:'Administrator Koperasi'},
-    {id:'u_koor1', username:'koordinator1', password:'koor123', role:'koordinator', nama:'Siti Aminah'},
-    {id:'u_koor2', username:'koordinator2', password:'koor123', role:'koordinator', nama:'Budi Santoso'},
-    {id:'u_nasabah1', username:'nasabah1', password:'nasabah123', role:'nasabah', nama:'Rahmawati', anggota_id:'agg_001'},
-    {id:'u_nasabah2', username:'nasabah2', password:'nasabah123', role:'nasabah', nama:'Joko Prasetyo', anggota_id:'agg_002'},
-    {id:'u_nasabah3', username:'nasabah3', password:'nasabah123', role:'nasabah', nama:'Wulan Sari', anggota_id:'agg_003'},
-    {id:'u_nasabah4', username:'nasabah4', password:'nasabah123', role:'nasabah', nama:'Agus Setiawan', anggota_id:'agg_004'}
-  ], 'akun pengguna');
-
-  // Seed anggota (data nasabah)
-  await insertOrThrow(TABLES.anggota, [
-    {id:'agg_001', nama:'Rahmawati', nik:'3273016808900001', alamat:'Jl. Merdeka No. 12', no_hp:'081233333331', kelompok_id:'kel_melati', no_rekening:'2026010001', saham:{s_A:3,s_B:1,s_C:0}, status:'aktif'},
-    {id:'agg_002', nama:'Joko Prasetyo', nik:'3273011205910002', alamat:'Jl. Diponegoro No. 45', no_hp:'081233333332', kelompok_id:'kel_melati', no_rekening:'2026010002', saham:{s_A:1,s_B:0,s_C:2}, status:'aktif'},
-    {id:'agg_003', nama:'Wulan Sari', nik:'3273012506920003', alamat:'Jl. Sudirman No. 78', no_hp:'081233333333', kelompok_id:'kel_mawar', no_rekening:'2026010003', saham:{s_A:2,s_B:0,s_C:1}, status:'aktif'},
-    {id:'agg_004', nama:'Agus Setiawan', nik:'3273011407930004', alamat:'Jl. Ahmad Yani No. 33', no_hp:'081233333334', kelompok_id:'kel_mawar', no_rekening:'2026010004', saham:{s_A:0,s_B:0,s_C:0}, status:'aktif'}
-  ], 'data anggota');
-
+  ]);
+  
+  await supabase.from(TABLES.users).insert([
+    {id:'u_admin', username:'admin', password:'admin123', role:'admin', nama:'Administrator Koperasi', no_hp:'081200000000'},
+    {id:'u_koor1', username:'koordinator1', password:'koor123', role:'koordinator', nama:'Siti Aminah', no_hp:'081211111111', kelompok_id:'kel_melati'},
+    {id:'u_koor2', username:'koordinator2', password:'koor123', role:'koordinator', nama:'Budi Santoso', no_hp:'081222222222', kelompok_id:'kel_mawar'},
+    {id:'u_nasabah1', username:'nasabah1', password:'nasabah123', role:'nasabah', nama:'Rahmawati', nik:'3273016808900001', alamat:'Jl. Merdeka No. 12', no_hp:'081233333331', kelompok_id:'kel_melati', no_rekening:'2026010001', saham:{s_A:3,s_B:1,s_C:0}, status:'aktif'},
+    {id:'u_nasabah2', username:'nasabah2', password:'nasabah123', role:'nasabah', nama:'Joko Prasetyo', nik:'3273011205910002', alamat:'Jl. Diponegoro No. 45', no_hp:'081233333332', kelompok_id:'kel_melati', no_rekening:'2026010002', saham:{s_A:1,s_B:0,s_C:2}, status:'aktif'},
+    {id:'u_nasabah3', username:'nasabah3', password:'nasabah123', role:'nasabah', nama:'Wulan Sari', nik:'3273012506920003', alamat:'Jl. Sudirman No. 78', no_hp:'081233333333', kelompok_id:'kel_mawar', no_rekening:'2026010003', saham:{s_A:2,s_B:0,s_C:1}, status:'aktif'},
+    {id:'u_nasabah4', username:'nasabah4', password:'nasabah123', role:'nasabah', nama:'Agus Setiawan', nik:'3273011407930004', alamat:'Jl. Ahmad Yani No. 33', no_hp:'081233333334', kelompok_id:'kel_mawar', no_rekening:'2026010004', saham:{s_A:0,s_B:0,s_C:0}, status:'aktif'}
+  ]);
+  
   // Seed tabungan accounts
   const nasabahIds = ['u_nasabah1','u_nasabah2','u_nasabah3','u_nasabah4'];
   const jenisIds = ['jt_mudharabah','jt_wadiah','jt_umroh'];
   const accounts = [];
-  for (const nid of nasabahIds) {
+  for (const uid of nasabahIds) {
     for (const jid of jenisIds) {
-      accounts.push({id:uid('acc'), user_id:nid, jenis_id:jid, saldo:0});
+      accounts.push({id:uid('acc'), user_id:uid, jenis_id:jid, saldo:0});
     }
   }
-  await insertOrThrow(TABLES.tabungan_accounts, accounts, 'rekening tabungan');
-
+  await supabase.from(TABLES.tabungan_accounts).insert(accounts);
+  
   // Seed pengaturan
-  await insertOrThrow(TABLES.pengaturan_koperasi, [{
+  await supabase.from(TABLES.pengaturan_koperasi).insert({
     id: 'koperasi',
     nama: 'UB Rukun Barokah',
     icon: '🏦',
@@ -1039,42 +721,292 @@ async function seedSupabase() {
     sertifikat: { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' },
     saham: { pemupukanPersen: 35, jenis: [] },
     atur_keuangan: { marginPersen: 20, pools: [], dana: {} }
-  }], 'pengaturan koperasi');
-
+  });
+  
   // Reload
   await initSupabaseDB();
 }
 
 // ---- Local fallback seed ----
+function seedLocalDB() { /* original seedDB logic */ }
 
 // ---- Helper functions (keep same API) ----
+function userById(id) { return DB.users?.find(u=>u.id===id); }
 function kelompokName(kid) { const k = DB.koperasi?.kelompok?.find(x=>x.id===kid); return k?k.nama:'-'; }
 function userAccounts(userId) { return (DB.tabunganAccounts||[]).filter(a=>a.user_id===userId || a.userId===userId).map(a=>({j: DB.koperasi.jenisTabungan.find(j=>j.id===(a.jenis_id||a.jenisId)), acc:a})); }
 function txForUser(userId) { return (DB.tabunganTx||[]).filter(t=>t.user_id===userId || t.userId===userId).sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)); }
 function totalSaldoUser(userId) { return userAccounts(userId).reduce((s,a)=>s+(a.acc?.saldo||0),0); }
 function pembiayaanForUser(userId) { return (DB.pembiayaan||[]).filter(p=>p.user_id===userId || p.userId===userId); }
 function jenisName(jid) { const j = DB.koperasi?.jenisTabungan?.find(x=>x.id===jid); return j?j.nama:'-'; }
-function koordinatorForKelompok(kid) { const k = DB.koperasi?.kelompok?.find(x=>x.id===kid); return k?userById(k.koor_id||k.koorId||k.koordinatorId):null; }
+function koordinatorForKelompok(kid) { const k = DB.koperasi?.kelompok?.find(x=>x.id===kid); return k?userById(k.koor_id||k.koorId):null; }
 
 // ---- Boot ----
 async function boot() {
-  await initSupabaseDB();
   applyKoperasiBranding();
-  const user = currentUser();
-  if(!user){
-    document.getElementById('login-screen').style.display='flex';
-    document.getElementById('app-screen').style.display='none';
-    return;
+  if (SUPABASE_ENABLED) {
+    await initSupabaseDB();
+  } else {
+    loadLocalDB();
   }
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app-screen').style.display='flex';
-  document.getElementById('header-role').textContent = roleLabel(user.role);
-  currentPage = defaultPageFor(user.role);
-  currentSubState = {};
-  renderNav();
-  renderContent();
+  // ... rest of boot logic
+}
+  let raw = localStorage.getItem(DB_KEY);
+  if(!raw){ seedDB(); raw = localStorage.getItem(DB_KEY); }
+  const db = JSON.parse(raw);
+  if(!db.koperasi.aturKeuangan || db.koperasi.aturKeuangan.angsuranKeModal!==undefined){
+    db.koperasi.aturKeuangan = {
+      marginPersen: 20,
+      pools: [
+        {id:'operasional', label:'Operasional', persen:5},
+        {id:'cadangan_resiko', label:'Cadangan Resiko', persen:5},
+        {id:'bagi_hasil_tabungan', label:'Bagi Hasil Tabungan', persen:2},
+        {id:'shu_saham', label:'SHU Saham', persen:2},
+        {id:'cad_zakat', label:'Cad. Zakat', persen:2},
+        {id:'dana_sosial', label:'Dana Sosial', persen:2},
+        {id:'penyusutan', label:'Penyusutan', persen:2}
+      ],
+      dana: {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0}
+    };
+  }
+  if(!db.koperasi.aturKeuangan.dana){
+    db.koperasi.aturKeuangan.dana = {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0};
+  }
+  if(db.koperasi.aturKeuangan.marginMax===undefined){
+    db.koperasi.aturKeuangan.marginMax = Math.max(30, db.koperasi.aturKeuangan.marginPersen||20);
+  }
+  if(!db.setoran) db.setoran = [];
+  if(!db.koperasi.saham.jenis) db.koperasi.saham = { pemupukanPersen: 35, jenis: [
+    {id:'s_A', nama:'SAHAM A', nominalPerLembar:100000, shuPersen:50},
+    {id:'s_B', nama:'SAHAM B', nominalPerLembar:50000, shuPersen:30},
+    {id:'s_C', nama:'SAHAM C', nominalPerLembar:10000, shuPersen:20}
+  ]};
+  (db.koperasi.saham.jenis||[]).forEach(j=>{ if(j.shuPersen===undefined) j.shuPersen=0; });
+  if(db.koperasi.saham.pemupukanPersen===undefined) db.koperasi.saham.pemupukanPersen = 35;
+  if(!db.koperasi.info) db.koperasi.info = {};
+  if(!db.koperasi.sertifikat) db.koperasi.sertifikat = {};
+  const ds = db.koperasi.sertifikat;
+  if(ds.judul===undefined) ds.judul = 'SERTIFIKAT SAHAM';
+  if(ds.subjudul===undefined) ds.subjudul = '';
+  if(ds.teksPembuka===undefined) ds.teksPembuka = 'Diberikan kepada';
+  if(ds.teksPenutup===undefined) ds.teksPenutup = 'Sertifikat ini merupakan bukti kepemilikan saham pada koperasi syariah yang dikelola berdasarkan prinsip muamalah Islam. Semoga menjadi keberkahan bagi semua pihak.';
+  if(ds.warnaBorder===undefined) ds.warnaBorder = '#6B4226';
+  if(ds.warnaJudul===undefined) ds.warnaJudul = '#6B4226';
+  if(ds.tampilLogo===undefined) ds.tampilLogo = true;
+  if(ds.tandaTangan===undefined) ds.tandaTangan = true;
+  if(ds.namaPenandatangan===undefined) ds.namaPenandatangan = '';
+  if(ds.jabatanPenandatangan===undefined) ds.jabatanPenandatangan = '';
+  if(!db.tabunganAccounts) db.tabunganAccounts = [];
+  if(!db.tabunganTx) db.tabunganTx = [];
+  const jenisMap = {jt_pokok:'jt_mudharabah', jt_wajib:'jt_wadiah', jt_sukarela:'jt_umroh'};
+  ['tabunganAccounts','tabunganTx'].forEach(k=>{
+    (db[k]||[]).forEach(x=>{
+      if(x.jenisId && jenisMap[x.jenisId]) x.jenisId = jenisMap[x.jenisId];
+    });
+  });
+  (db.koperasi.jenisTabungan||[]).forEach(j=>{
+    db.users.filter(u=>u.role==='nasabah').forEach(u=>{
+      if(!db.tabunganAccounts.some(a=>a.userId===u.id && a.jenisId===j.id)){
+        db.tabunganAccounts.push({id:uid('acc'), userId:u.id, jenisId:j.id, saldo:0});
+      }
+    });
+  });
+  db.users.forEach(u=>{
+    if(u.lembarSaham!==undefined && !u.saham){
+      u.saham = {s_A:u.lembarSaham||0,s_B:0,s_C:0};
+      delete u.lembarSaham;
+    }
+    if(!u.saham) u.saham = {s_A:0,s_B:0,s_C:0};
+  });
+  (db.pembiayaan||[]).forEach(p=>{ if(p.marginPersen===undefined) p.marginPersen = db.koperasi.aturKeuangan.marginPersen||20; if(p.statusPengajuan===undefined) p.statusPengajuan = p.status==='berjalan' ? 'approved' : p.status; });
+  if(!db.kepemilikanSaham){
+    db.kepemilikanSaham = [];
+    db.users.forEach(u=>{
+      const sh = u.saham||{};
+      (db.koperasi.saham.jenis||[]).forEach(j=>{
+        const lembar = sh[j.id]||0;
+        if(lembar>0) db.kepemilikanSaham.push({id:uid('ks'), nama:u.nama, anggotaId:u.id, jenisId:j.id, lembar});
+      });
+    });
+  }
+  return db;
+}
+function saveDB(db){ 
+  localStorage.setItem(DB_KEY, JSON.stringify(db)); 
+  localStorage.setItem(SESSION_KEY, JSON.stringify(currentSession));
 }
 
+// ---- Full Sync to Supabase (manual/periodic) ----
+async function syncToSupabase() {
+  if (!SUPABASE_ENABLED) return { error: 'Supabase disabled' };
+  
+  try {
+    // Sync each table (upsert)
+    const tables = [
+      { key: 'users', table: TABLES.users, transform: toSnake },
+      { key: 'koperasi.kelompok', table: TABLES.kelompok, transform: toSnake },
+      { key: 'koperasi.jenisTabungan', table: TABLES.jenis_tabungan, transform: toSnake },
+      { key: 'tabunganAccounts', table: TABLES.tabungan_accounts, transform: toSnake },
+      { key: 'tabunganTx', table: TABLES.tabungan_tx, transform: toSnake },
+      { key: 'pembiayaan', table: TABLES.pembiayaan, transform: toSnake },
+      { key: 'angsuran', table: TABLES.angsuran, transform: toSnake },
+      { key: 'koperasi.saham.jenis', table: TABLES.jenis_saham, transform: toSnake },
+      { key: 'kepemilikanSaham', table: TABLES.kepemilikan_saham, transform: toSnake },
+      { key: 'setoran', table: TABLES.setoran, transform: toSnake },
+      { key: 'logs', table: TABLES.logs, transform: toSnake }
+    ];
+    
+    for (const t of tables) {
+      const data = t.key.split('.').reduce((o, k) => o?.[k], DB);
+      if (data && Array.isArray(data) && data.length > 0) {
+        const snakeData = t.transform(data);
+        await supabase.from(t.table).upsert(snakeData, { onConflict: 'id' });
+      }
+    }
+    
+    // Sync pengaturan koperasi (single row)
+    const pengaturanData = toSnake({
+      id: 'koperasi',
+      ...DB.koperasi
+    });
+    await supabase.from(TABLES.pengaturan_koperasi).upsert(pengaturanData, { onConflict: 'id' });
+    
+    toast('Sync ke Supabase berhasil');
+    return { error: null };
+  } catch (err) {
+    console.error('Sync error:', err);
+    toast('Sync gagal: ' + err.message);
+    return { error: err };
+  }
+}
+
+// Auto-sync every 5 minutes
+if (SUPABASE_ENABLED) {
+  setInterval(syncToSupabase, 5 * 60 * 1000);
+}
+
+function seedDB(){
+  const db = {
+    koperasi: {
+      nama: 'UB Rukun Barokah',
+      icon: 'ðŸ¦',
+      iconImage: null,
+      jenisTabungan: [
+        {id:'jt_mudharabah', nama:'Mudharabah', wajibMinimal:0},
+        {id:'jt_wadiah', nama:'Wadi\'ah', wajibMinimal:0},
+        {id:'jt_umroh', nama:'Tabungan Umroh/Haji', wajibMinimal:0}
+      ],
+      saham: {
+        pemupukanPersen: 35,
+        jenis: [
+          {id:'s_A', nama:'SAHAM A', nominalPerLembar:100000, shuPersen:50},
+          {id:'s_B', nama:'SAHAM B', nominalPerLembar:50000, shuPersen:30},
+          {id:'s_C', nama:'SAHAM C', nominalPerLembar:10000, shuPersen:20}
+        ]
+      },
+      kelompok: [
+        {id:'kel_melati', nama:'Kelompok Melati', koordinatorId:'u_koor1'},
+        {id:'kel_mawar', nama:'Kelompok Mawar', koordinatorId:'u_koor2'}
+      ],
+      aturKeuangan: {
+        marginPersen: 20,
+        marginMax: 30,
+        pools: [
+          {id:'operasional', label:'Operasional', persen:5},
+          {id:'cadangan_resiko', label:'Cadangan Resiko', persen:5},
+          {id:'bagi_hasil_tabungan', label:'Bagi Hasil Tabungan', persen:2},
+          {id:'shu_saham', label:'SHU Saham', persen:2},
+          {id:'cad_zakat', label:'Cad. Zakat', persen:2},
+          {id:'dana_sosial', label:'Dana Sosial', persen:2},
+          {id:'penyusutan', label:'Penyusutan', persen:2}
+        ],
+        dana: {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0}
+      }
+    },
+    users: [
+      {id:'u_admin', username:'admin', password:'admin123', role:'admin', nama:'Administrator Koperasi', noHp:'081200000000', createdAt: nowISO()},
+      {id:'u_koor1', username:'koordinator1', password:'koor123', role:'koordinator', nama:'Siti Aminah', noHp:'081211111111', kelompokId:'kel_melati', createdAt: nowISO()},
+      {id:'u_koor2', username:'koordinator2', password:'koor123', role:'koordinator', nama:'Budi Santoso', noHp:'081222222222', kelompokId:'kel_mawar', createdAt: nowISO()},
+      {id:'u_nasabah1', username:'nasabah1', password:'nasabah123', role:'nasabah', nama:'Rahmawati', nik:'3273016808900001', alamat:'Jl. Merdeka No. 12, RT 03 RW 05', noHp:'081233333331', kelompokId:'kel_melati', noRekening:'2026010001', saham:{s_A:3,s_B:1,s_C:0}, status:'aktif', createdAt: nowISO()},
+      {id:'u_nasabah2', username:'nasabah2', password:'nasabah123', role:'nasabah', nama:'Joko Prasetyo', nik:'3273011205910002', alamat:'Jl. Diponegoro No. 45, RT 01 RW 03', noHp:'081233333332', kelompokId:'kel_melati', noRekening:'2026010002', saham:{s_A:1,s_B:0,s_C:2}, status:'aktif', createdAt: nowISO()},
+      {id:'u_nasabah3', username:'nasabah3', password:'nasabah123', role:'nasabah', nama:'Wulan Sari', nik:'3273012506920003', alamat:'Jl. Sudirman No. 78, RT 02 RW 04', noHp:'081233333333', kelompokId:'kel_mawar', noRekening:'2026010003', saham:{s_A:2,s_B:0,s_C:1}, status:'aktif', createdAt: nowISO()},
+      {id:'u_nasabah4', username:'nasabah4', password:'nasabah123', role:'nasabah', nama:'Agus Setiawan', nik:'3273011407930004', alamat:'Jl. Ahmad Yani No. 33, RT 05 RW 02', noHp:'081233333334', kelompokId:'kel_mawar', noRekening:'2026010004', saham:{s_A:0,s_B:0,s_C:0}, status:'aktif', createdAt: nowISO()}
+    ],
+    tabunganAccounts: [],
+    tabunganTx: [],
+    pembiayaan: [],
+    setoran: [],
+    kepemilikanSaham: [],
+    logs: []
+  };
+
+  // seed tabungan for each nasabah across all jenis
+  const nasabahIds = ['u_nasabah1','u_nasabah2','u_nasabah3','u_nasabah4'];
+  const jenisSeed = {jt_mudharabah:50000, jt_wadiah:120000, jt_umroh:0};
+  nasabahIds.forEach((uidn, idx)=>{
+    db.koperasi.jenisTabungan.forEach(j=>{
+      const acc = {id:uid('acc'), userId:uidn, jenisId:j.id, saldo:0};
+      db.tabunganAccounts.push(acc);
+    });
+  });
+
+  function seedSetor(userId, jenisId, jumlah, daysAgo, oleh){
+    const acc = db.tabunganAccounts.find(a=>a.userId===userId && a.jenisId===jenisId);
+    acc.saldo += jumlah;
+    const d = new Date(); d.setDate(d.getDate()-daysAgo);
+    db.tabunganTx.push({id:uid('tx'), userId, jenisId, tipe:'setor', jumlah, saldoSetelah:acc.saldo, tanggal:d.toISOString(), oleh, keterangan:'Setoran awal'});
+  }
+  seedSetor('u_nasabah1','jt_mudharabah',50000,60,'u_admin');
+  seedSetor('u_nasabah1','jt_wadiah',10000,60,'u_koor1');
+  seedSetor('u_nasabah1','jt_wadiah',10000,30,'u_koor1');
+  seedSetor('u_nasabah1','jt_umroh',75000,20,'u_koor1');
+  seedSetor('u_nasabah1','jt_umroh',25000,5,'u_koor1');
+  seedSetor('u_nasabah2','jt_mudharabah',50000,55,'u_admin');
+  seedSetor('u_nasabah2','jt_wadiah',10000,25,'u_koor1');
+  seedSetor('u_nasabah3','jt_mudharabah',50000,50,'u_admin');
+  seedSetor('u_nasabah3','jt_wadiah',10000,15,'u_koor2');
+  seedSetor('u_nasabah3','jt_umroh',40000,10,'u_koor2');
+  seedSetor('u_nasabah4','jt_mudharabah',50000,45,'u_admin');
+
+  // seed pembiayaan
+  function makePembiayaan(userId, jumlah, tenor, mulaiDaysAgo, angsuranSudahDibayar, marginPersen, status='berjalan'){
+    const mp = marginPersen || db.koperasi.aturKeuangan.marginPersen||20;
+    const total = jumlah + Math.round(jumlah*mp/100);
+    const p = {
+      id: uid('pemb'), userId, jumlahPinjaman: jumlah, tenor,
+      marginPersen: mp,
+      angsuranPerBulan: Math.round(total/tenor/1000)*1000,
+      mulai: (()=>{const d=new Date(); d.setDate(d.getDate()-mulaiDaysAgo); return d.toISOString();})(),
+      sisaAngsuran: tenor, status, riwayatAngsuran:[],
+      statusPengajuan: status==='berjalan' ? 'approved' : status
+    };
+    for(let i=0;i<angsuranSudahDibayar;i++){
+      const d = new Date(); d.setDate(d.getDate()-(mulaiDaysAgo-30*(i+1)));
+      p.riwayatAngsuran.push({id:uid('ang'), tanggal:d.toISOString(), jumlah:p.angsuranPerBulan, oleh:'u_koor1', angsuranKe:i+1});
+      p.sisaAngsuran--;
+    }
+    if(p.sisaAngsuran<=0) p.status='lunas';
+    db.pembiayaan.push(p);
+  }
+  makePembiayaan('u_nasabah1', 1200000, 12, 75, 2);
+  makePembiayaan('u_nasabah3', 600000, 6, 40, 1);
+  makePembiayaan('u_nasabah2', 800000, 12, 10, 0, 20, 'pending');
+
+  // seed logs
+  function log(oleh, peran, aksi, detail, daysAgo){
+    const d = new Date(); d.setDate(d.getDate()-(daysAgo||0));
+    db.logs.push({id:uid('log'), waktu:d.toISOString(), oleh, peran, aksi, detail});
+  }
+  log('u_admin','admin','Membuat pengguna','Menambahkan koordinator: Siti Aminah',80);
+  log('u_admin','admin','Membuat pengguna','Menambahkan koordinator: Budi Santoso',80);
+  log('u_koor1','koordinator','Setor tabungan','Rahmawati - Simpanan Sukarela - Rp75.000',20);
+  log('u_koor2','koordinator','Bayar angsuran','Wulan Sari - Angsuran ke-1',10);
+  log('u_admin','admin','Ubah pengaturan','Memperbarui nama koperasi',5);
+
+  saveDB(db);
+}
+
+let DB = loadDB();
+function persist(){ saveDB(DB); }
 
 function addLog(aksi, detail){
   const s = getSession();
@@ -1099,17 +1031,14 @@ function currentUser(){
   return DB.users.find(u=>u.id===s.userId) || null;
 }
 
-async function handleLogin(){
-  const submitBtn = document.getElementById('login-submit-btn');
-  submitBtn.classList.add('btn-loading');
-  submitBtn.disabled = true;
+function handleLogin(){
   try{
     const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
     const errBox = document.getElementById('login-error');
     if(!DB || !Array.isArray(DB.users)){
       console.warn('DB tidak valid saat login, mencoba memuat ulang DB');
-      await loadDB();
+      DB = loadDB();
     }
     const user = (DB.users||[]).find(u=>u.username===username && u.password===password);
     if(!user){
@@ -1131,15 +1060,7 @@ async function handleLogin(){
     const errBox = document.getElementById('login-error');
     errBox.textContent = 'Terjadi kesalahan saat login. Cek konsol untuk detail.';
     errBox.style.display = 'block';
-  }finally{
-    submitBtn.classList.remove('btn-loading');
-    submitBtn.disabled = false;
   }
-}
-function togglePasswordVisibility(){
-  const input = document.getElementById('login-password');
-  const isHidden = input.type === 'password';
-  input.type = isHidden ? 'text' : 'password';
 }
 function handleLogout(){
   const u = currentUser();
@@ -1149,17 +1070,6 @@ function handleLogout(){
   document.getElementById('login-password').value='';
   boot();
 }
-function toggleProfileDropdown(){
-  document.getElementById('dropdown-menu').classList.toggle('show');
-}
-function closeProfileDropdown(){
-  document.getElementById('dropdown-menu').classList.remove('show');
-}
-// Tutup dropdown kalo klik di luar
-document.addEventListener('click', function(e){
-  const dd = document.getElementById('profile-dropdown');
-  if(dd && !dd.contains(e.target)) closeProfileDropdown();
-});
 
 /* =========================================================
    NAVIGATION STATE
@@ -1178,10 +1088,6 @@ function go(page, sub){
    BOOT / RENDER SHELL
 ========================================================= */
 function applyKoperasiBranding(){
-  if(!DB.koperasi){
-    console.warn('DB.koperasi belum tersedia saat applyKoperasiBranding dipanggil');
-    return;
-  }
   document.getElementById('login-koperasi-name').textContent = DB.koperasi.nama;
   document.getElementById('header-koperasi-name').textContent = DB.koperasi.nama;
   document.title = DB.koperasi.nama;
@@ -1196,6 +1102,25 @@ function applyKoperasiBranding(){
   }
 }
 
+async function boot(){
+  applyKoperasiBranding();
+  if (SUPABASE_ENABLED) {
+    await initSupabaseDB();
+  }
+  const user = currentUser();
+  if(!user){
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('app-screen').style.display='none';
+    return;
+  }
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
+  document.getElementById('header-role').textContent = roleLabel(user.role);
+  currentPage = defaultPageFor(user.role);
+  currentSubState = {};
+  renderNav();
+  renderContent();
+}
 function roleLabel(r){ return r==='admin'?'Administrator':(r==='koordinator'?'Koordinator':'Nasabah'); }
 function defaultPageFor(role){
   if(role==='admin') return 'admin_beranda';
@@ -1206,33 +1131,18 @@ function defaultPageFor(role){
 /* =========================================================
    BOTTOM NAV (koordinator & nasabah)
 ========================================================= */
-// Menu tambahan admin: langsung tampil di sidebar (desktop),
-// tapi dikumpulkan di popup "Lainnya" pada bottom-nav (mobile)
-const ADMIN_MORE_ITEMS = [
-  {p:'admin_usermgmt', ic:'user_cog', label:'User Management'},
-  {p:'admin_shu', ic:'finance', label:'SHU'},
-  {p:'admin_laporan', ic:'report', label:'Laporan'},
-  {p:'admin_pengaturan', ic:'settings', label:'Pengaturan'},
-  {p:'admin_log', ic:'log', label:'Log Transaksi'}
-];
-
 function renderNav(){
   const user = currentUser();
   if(!user) return;
-  const hasMyTab = user.role==='admin'||user.role==='koordinator' ? true : DB.tabunganAccounts.some(a=>a.userId===user.id);
-  const hasMyPem = user.role==='admin'||user.role==='koordinator' ? true : DB.pembiayaan.some(p=>p.userId===user.id);
-  const hasMySah = user.role==='admin'||user.role==='koordinator' ? true : DB.kepemilikanSaham.some(k=>k.userId===user.id);
   let items = [];
-  let moreItems = [];
   if(user.role==='admin'){
     items = [
       {p:'admin_beranda', ic:'home', label:'Beranda'},
-      {p:'admin_anggota', ic:'users', label:'Anggota'},
       {p:'admin_tabungan', ic:'wallet', label:'Tabungan'},
       {p:'admin_pembiayaan', ic:'finance', label:'Pembiayaan'},
-      {p:'admin_saham', ic:'coin', label:'Saham'}
+      {p:'admin_saham', ic:'coin', label:'Saham'},
+      {p:'admin_pengaturan', ic:'settings', label:'Pengaturan'}
     ];
-    moreItems = ADMIN_MORE_ITEMS;
   } else if(user.role==='koordinator'){
     items = [
       {p:'koor_beranda', ic:'home', label:'Beranda'},
@@ -1245,27 +1155,27 @@ function renderNav(){
       {p:'nas_beranda', ic:'home', label:'Beranda'},
       {p:'nas_info', ic:'report', label:'Info Koperasi'}
     ];
-    if(hasMyTab) items.push({p:'nas_tabungan', ic:'wallet', label:'Tabungan'});
-    if(hasMyPem) items.push({p:'nas_pembiayaan', ic:'finance', label:'Pembiayaan'});
   }
   const renderBtn = (it, active) => {
     const ic = ICONS[it.ic] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>';
     return '<button class="'+(active?'active':'')+'" onclick="go(\''+it.p+'\')"><span class="ic">'+ic+'</span>'+it.label+'</button>';
   };
-  const moreIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>';
-  const moreActive = moreItems.some(it=>currentPage===it.p);
-  const moreBtn = '<button class="'+(moreActive?'active':'')+'" onclick="openMoreMenu()"><span class="ic">'+moreIcon+'</span>Lainnya</button>';
-
-  // Render bottom nav (mobile): menu inti + tombol "Lainnya" (kalau ada menu tambahan)
+  // Render bottom nav (mobile)
   const bottomNav = document.getElementById('bottom-nav');
-  bottomNav.innerHTML = items.map(it=>renderBtn(it, currentPage===it.p)).join('') + (moreItems.length ? moreBtn : '');
-
-  // Render sidebar (desktop): semua menu langsung ditampilkan, tanpa "Lainnya"
+  bottomNav.innerHTML = items.map(it=>renderBtn(it, currentPage===it.p)).join('');
+  // Render sidebar (desktop)
   const sidebar = document.getElementById('sidebar');
-  sidebar.innerHTML = items.concat(moreItems).map(it=>renderBtn(it, currentPage===it.p)).join('');
+  sidebar.innerHTML = items.map(it=>renderBtn(it, currentPage===it.p)).join('');
+}
 }
 function openMoreMenu(){
-  const items = ADMIN_MORE_ITEMS;
+  const items = [
+    {p:'admin_anggota', ic:'users', label:'Anggota'},
+    {p:'admin_usermgmt', ic:'user_cog', label:'User Management'},
+    {p:'admin_shu', ic:'finance', label:'SHU'},
+    {p:'admin_laporan', ic:'report', label:'Laporan'},
+    {p:'admin_log', ic:'log', label:'Log Transaksi'}
+  ];
   openModal(`
     <h3 style="margin-bottom:12px;">Menu lain</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -1348,7 +1258,7 @@ function nextAccNo(){
 }
 function getAccount(userId, jenisId){
   let acc = DB.tabunganAccounts.find(a=>a.userId===userId && a.jenisId===jenisId);
-  if(!acc) return null;
+  if(!acc){ acc = {id:uid('acc'), userId, jenisId, saldo:0, noRekening:nextAccNo()}; DB.tabunganAccounts.push(acc); }
   if(!acc.noRekening) acc.noRekening = nextAccNo();
   return acc;
 }
@@ -1362,8 +1272,6 @@ function hapusSemuaRekening(userId){
     DB.tabunganAccounts = DB.tabunganAccounts.filter(a=>!ids.includes(a.id));
     DB.tabunganTx = DB.tabunganTx.filter(t=>t.userId!==userId);
     persist();
-    ids.forEach(id => supabaseClient.from(TABLES.tabungan_accounts).delete().eq('id', id).then());
-    supabaseClient.from(TABLES.tabungan_tx).delete().eq('user_id', userId).then();
     addLog('Hapus semua rekening', user.nama);
     toast('Semua rekening berhasil dihapus');
     renderContent();
@@ -1383,7 +1291,7 @@ function kelompokName(kelompokId){
   const k = DB.koperasi.kelompok.find(k=>k.id===kelompokId);
   return k ? k.nama : '-';
 }
-function userById(id){ return DB.users?.find(u=>u.id===id) || { nama:'-', kelompokId:null, role:'-', noRekening:'-' }; }
+function userById(id){ return DB.users.find(u=>u.id===id); }
 function nasabahOfKelompok(kelompokId){ return DB.users.filter(u=>u.role==='nasabah' && u.kelompokId===kelompokId); }
 function pembiayaanForUser(userId){ return DB.pembiayaan.filter(p=>p.userId===userId).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai)); }
 function koordinatorForKelompok(kelompokId){
@@ -1393,7 +1301,6 @@ function koordinatorForKelompok(kelompokId){
 
 function doSetor(userId, jenisId, jumlah, keterangan){
   const acc = getAccount(userId, jenisId);
-  if(!acc) throw new Error('Rekening tabungan belum dibuka untuk jenis ini.');
   acc.saldo += jumlah;
   const s = getSession();
   DB.tabunganTx.push({id:uid('tx'), userId, jenisId, tipe:'setor', jumlah, saldoSetelah:acc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: keterangan||'Setoran tunai'});
@@ -1406,7 +1313,7 @@ function doSetorKoordinator(userId, jenisId, jumlah, keterangan){
   DB.setoran.push({id:uid('st'), userId, jenisId, jumlah, keterangan: keterangan||'Setoran tunai', tanggal:nowISO(), dibuatOleh:s.userId, status:'di_koordinator'});
   persist();
 }
-async function confirmSetoran(setoranId){
+function confirmSetoran(setoranId){
   const st = DB.setoran.find(s=>s.id===setoranId);
   if(!st || st.status!=='di_koordinator') return {ok:false, msg:'Setoran tidak ditemukan atau sudah dikonfirmasi.'};
   const s = getSession();
@@ -1414,10 +1321,6 @@ async function confirmSetoran(setoranId){
   st.status = 'sudah_di_admin';
   st.dikonfirmasiOleh = s.userId;
   st.waktuKonfirmasi = nowISO();
-  if(SUPABASE_ENABLED){
-    const { error } = await upsertToSupabase(TABLES.setoran, toSnake(st));
-    if(error) console.error('Gagal konfirmasi setoran di Supabase:', error);
-  }
   persist();
   if(st.jenis==='angsuran'){
     addLog('Terima angsuran dari koordinator', rupiah(st.jumlah)+' - '+userById(st.userId).nama+' (Angsuran ke-...)');
@@ -1428,7 +1331,6 @@ async function confirmSetoran(setoranId){
 }
 function doTarik(userId, jenisId, jumlah, keterangan){
   const acc = getAccount(userId, jenisId);
-  if(!acc) return {ok:false, msg:'Rekening tabungan belum dibuka untuk jenis ini.'};
   if(acc.saldo < jumlah) return {ok:false, msg:'Saldo tidak mencukupi.'};
   acc.saldo -= jumlah;
   const s = getSession();
@@ -1473,10 +1375,6 @@ function renderContent(){
   const el = document.getElementById('content');
   const user = currentUser();
   if(!user) return;
-  const active = document.activeElement;
-  const activeId = (active && el.contains(active) && active.id) ? active.id : null;
-  const selStart = activeId && active.selectionStart!=null ? active.selectionStart : null;
-  const selEnd = activeId && active.selectionEnd!=null ? active.selectionEnd : null;
   const routes = {
     admin_beranda: renderAdminBeranda,
     admin_anggota: renderAdminAnggota,
@@ -1495,22 +1393,11 @@ function renderContent(){
     nas_beranda: renderNasBeranda,
     nas_info: renderNasInfo,
     nas_tabungan: renderNasTabungan,
-    nas_pembiayaan: renderNasPembiayaan,
-    profil_saya: renderProfilSaya
+    nas_pembiayaan: renderNasPembiayaan
   };
   const fn = routes[currentPage] || routes[defaultPageFor(user.role)];
   el.innerHTML = fn(user);
-  if(activeId){
-    const toFocus = document.getElementById(activeId);
-    if(toFocus){
-      toFocus.focus();
-      if(selStart!=null && toFocus.setSelectionRange){
-        try{ toFocus.setSelectionRange(selStart, selEnd); }catch(e){}
-      }
-    }
-  } else {
-    el.scrollTop = 0;
-  }
+  el.scrollTop = 0;
 }
 
 /* =========================================================
@@ -1596,10 +1483,9 @@ function confirmSetoranUI(setoranId){
   const detail = st.jenis==='angsuran'
     ? rupiah(st.jumlah) + ' angsuran dari ' + userById(st.userId).nama
     : rupiah(st.jumlah) + ' dari ' + userById(st.userId).nama + ' (' + jenisName(st.jenisId) + ')';
-  confirmDialog('Terima setoran?', detail, 'warning', async ()=>{
-    toast('Menyimpan...');
-    const r = await confirmSetoran(setoranId);
-    if(!r.ok){ toast(r.msg); renderContent(); return; }
+  confirmDialog('Terima setoran?', detail, 'warning', ()=>{
+    const r = confirmSetoran(setoranId);
+    if(!r.ok){ toast(r.msg); return; }
     toast('Setoran diterima dari koordinator');
     renderContent();
   }, 'Ya, terima');
@@ -1614,10 +1500,8 @@ function renderAdminAnggota(user){
   if(q) list = list.filter(u=>u.nama.toLowerCase().includes(q) || u.noRekening.includes(q));
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
-    </div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah anggota</button>
+    <div class="search-box">${ICONS.search}<input placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
     <div class="card" style="padding:0;">
       ${list.length ? list.map(u=>`
         <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="go('admin_anggota_detail', {userId:'${u.id}'})">
@@ -1631,7 +1515,7 @@ function renderAdminAnggota(user){
             <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusAnggota('${u.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
           </div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">Coba kata kunci lain</div></div>`}
+      `).join('') : `<div class="empty-state"><div class="ic">ðŸ”</div><div class="t">Tidak ditemukan</div><div class="d">Coba kata kunci lain</div></div>`}
     </div>
   `;
 }
@@ -1683,10 +1567,7 @@ function renderMemberDetail(nas, backPage){
    ADMIN: TABUNGAN (overview semua)
 ========================================================= */
 function renderAdminTabungan(user){
-  const allNasabah = DB.users.filter(u=>u.role==='nasabah');
-  const q = (currentSubState.q||'').toLowerCase();
-  let nasabah = allNasabah.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
-  if(q) nasabah = nasabah.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const nasabah = DB.users.filter(u=>u.role==='nasabah' && DB.tabunganAccounts.some(a=>a.userId===u.id));
   const pending = DB.setoran.filter(s=>s.status==='di_koordinator');
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
@@ -1700,17 +1581,14 @@ function renderAdminTabungan(user){
         </div>
       `).join('')}
     </div>` : ''}
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
-    </div>
+    <button class="btn btn-primary btn-block" onclick="openTambahRekeningModal()">${ICONS.plus} Buka rekening baru</button>
     <div class="card" style="padding:6px 18px;">
       ${nasabah.length ? nasabah.map(u=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('admin_tabungan_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div></div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
+      `).join('') : emptyRow('Belum ada anggota yang memiliki rekening tabungan')}
     </div>
   `;
 }
@@ -1794,23 +1672,18 @@ function submitTx(tipe){
   const forcedEl = document.getElementById('tx-user-forced');
   const userId = forcedEl ? forcedEl.value : document.getElementById('tx-user').value;
   const jenisId = document.getElementById('tx-jenis-selected').value;
-  const jumlah = parseIdr(document.getElementById('tx-jumlah').value);
+  const jumlah = Number(document.getElementById('tx-jumlah').value);
   const ket = document.getElementById('tx-ket').value;
   if(!jenisId){ toast('Pilih rekening tabungan terlebih dahulu'); return; }
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
   const s = getSession();
   if(tipe==='setor'){
-    try {
-      if(s.role==='koordinator'){
-        doSetorKoordinator(userId, jenisId, jumlah, ket);
-        toast('Setoran dicatat, menunggu konfirmasi admin');
-      } else {
-        doSetor(userId, jenisId, jumlah, ket);
-        toast('Setoran berhasil dicatat');
-      }
-    } catch(e) {
-      toast(e.message);
-      return;
+    if(s.role==='koordinator'){
+      doSetorKoordinator(userId, jenisId, jumlah, ket);
+      toast('Setoran dicatat, menunggu konfirmasi admin');
+    } else {
+      doSetor(userId, jenisId, jumlah, ket);
+      toast('Setoran berhasil dicatat');
     }
   } else {
     const r = doTarik(userId, jenisId, jumlah, ket);
@@ -1836,7 +1709,7 @@ function openTambahAnggotaModal(forcedKelompokId){
       <select id="ta-kelompok" ${forcedKelompokId?'disabled':''}>${kelompokOptions}</select>
       ${forcedKelompokId?`<input type="hidden" id="ta-kelompok-forced" value="${forcedKelompokId}">`:''}
     </div>
-    <div class="hint">Anggota baru otomatis mendapat nomor rekening anggota. Rekening tabungan & pembiayaan baru muncul saat dibuka lewat menu Tabungan/Pembiayaan. Username & password dapat diatur di Manajemen Pengguna.</div>
+    <div class="hint">Anggota baru otomatis mendapat nomor rekening dan rekening Simpanan Pokok. Username & password dapat diatur di Manajemen Pengguna.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitTambahAnggota()">Simpan</button>
@@ -1860,12 +1733,15 @@ function submitTambahAnggota(){
 
   const newUser = {
     id: uid('u'), username, password, role:'nasabah', nama, nik, alamat, noHp, kelompokId,
-    noRekening: '2026'+String(1000+DB.users.length), saham:{s_A:0,s_B:0,s_C:0}, status:'aktif',
-    anggotaId: uid('agg'), createdAt: nowISO()
+    noRekening: '2026'+String(1000+DB.users.length), saham:{s_A:0,s_B:0,s_C:0}, status:'aktif', createdAt: nowISO()
   };
   DB.users.push(newUser);
-  persist();
 
+  const jtMudharabah = DB.koperasi.jenisTabungan.find(j=>j.id==='jt_mudharabah') || DB.koperasi.jenisTabungan[0];
+  if(jtMudharabah){
+    DB.tabunganAccounts.push({id:uid('acc'), userId:newUser.id, jenisId:jtMudharabah.id, saldo:0});
+  }
+  persist();
   addLog('Tambah anggota', 'Menambahkan anggota baru: ' + nama + ' (' + kelompokName(kelompokId) + ')');
   toast('Anggota baru berhasil ditambahkan');
   closeModal();
@@ -1906,7 +1782,7 @@ function submitTambahRekening(){
   const forcedEl = document.getElementById('tr-user-forced');
   const userId = forcedEl ? forcedEl.value : document.getElementById('tr-user').value;
   const jenisId = document.getElementById('tr-jenis').value;
-  const jumlah = parseIdr(document.getElementById('tr-jumlah').value) || 0;
+  const jumlah = Number(document.getElementById('tr-jumlah').value) || 0;
   if(!userId || !jenisId){ toast('Pilih nasabah dan jenis simpanan'); return; }
   if(DB.tabunganAccounts.some(a=>a.userId===userId && a.jenisId===jenisId)){ toast('Rekening jenis ini sudah dibuka'); return; }
   const acc = {id:uid('acc'), userId, jenisId, saldo:0, noRekening:nextAccNo()};
@@ -1927,22 +1803,17 @@ function submitTambahRekening(){
    ADMIN: PEMBIAYAAN
 ========================================================= */
 function renderAdminPembiayaan(user){
-  const q = (currentSubState.q||'').toLowerCase();
-  let list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
-  if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q) || (p.keterangan||'').toLowerCase().includes(q));
+  const list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
   const pending = list.filter(p=>p.statusPengajuan==='pending');
   return `
-    <div class="page-title">Pembiayaan<span class="sub">${DB.pembiayaan.length} pengajuan tercatat</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
-    </div>
+    <div class="page-title">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openPengajuanModal()">${ICONS.plus} Buat pengajuan baru</button>
     ${pending.length ? `
     <div class="section-label">Pengajuan Menunggu ACC (${pending.length})</div>
     <div class="card" style="padding:6px 18px;">
       ${pending.map(p=>`
         <div class="list-row">
-          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; margin ${p.marginPersen}%${p.keterangan?' &middot; "'+p.keterangan+'"':''} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
+          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; margin ${p.marginPersen}%${p.keterangan?' &middot; "'+p.keterangan+'"':''} &middot; oleh ${koordinatorForKelompok(userById(p.userId).kelompokId).nama}</div></div>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
             <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
@@ -1960,7 +1831,7 @@ function renderAdminPembiayaan(user){
           <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
           <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div>`}
+      `).join('') : emptyRow('Belum ada pembiayaan')}
     </div>
   `;
 }
@@ -2000,11 +1871,7 @@ function hapusPembiayaan(pembId){
     confirmDialog('Konfirmasi lagi', 'Yakin ingin menghapus pembiayaan ini? Data tidak bisa dikembalikan.', 'danger', ()=>{
       DB.pembiayaan = DB.pembiayaan.filter(x=>x.id!==pembId);
       DB.setoran = DB.setoran.filter(s=>s.pembiayaanId!==pembId);
-      DB.angsuran = DB.angsuran.filter(a=>a.pembiayaanId!==pembId);
       persist();
-      supabaseClient.from(TABLES.pembiayaan).delete().eq('id', pembId).then();
-      supabaseClient.from(TABLES.setoran).delete().eq('pembiayaan_id', pembId).then();
-      supabaseClient.from(TABLES.angsuran).delete().eq('pembiayaan_id', pembId).then();
       addLog('Hapus pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman));
       toast('Pembiayaan berhasil dihapus');
       if(currentPage.includes('detail')) go('admin_pembiayaan');
@@ -2105,9 +1972,9 @@ function openPengajuanModal(prefUserId){
 function updatePengajuanPreview(){
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const jumlah = parseIdr(document.getElementById('pemb-jumlah').value)||0;
-  const tenor = parseIdr(document.getElementById('pemb-tenor').value)||0;
-  let margin = parseIdr(document.getElementById('pemb-margin').value)||mMin;
+  const jumlah = Number(document.getElementById('pemb-jumlah').value)||0;
+  const tenor = Number(document.getElementById('pemb-tenor').value)||0;
+  let margin = Number(document.getElementById('pemb-margin').value)||mMin;
   const el = document.getElementById('pemb-preview');
   if(margin < mMin || margin > mMax){
     el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
@@ -2124,11 +1991,11 @@ function updatePengajuanPreview(){
 function submitPengajuan(){
   const forced = document.getElementById('pemb-user-forced');
   const userId = forced ? forced.value : document.getElementById('pemb-user').value;
-  const jumlah = parseIdr(document.getElementById('pemb-jumlah').value);
-  const tenor = parseIdr(document.getElementById('pemb-tenor').value);
+  const jumlah = Number(document.getElementById('pemb-jumlah').value);
+  const tenor = Number(document.getElementById('pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
+  const mp = Number(document.getElementById('pemb-margin').value)||mMin;
   const ket = document.getElementById('pemb-ket').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
   if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
@@ -2168,9 +2035,9 @@ function openEditPengajuanModal(pembId){
 function updateEditPengajuanPreview(){
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah').value)||0;
-  const tenor = parseIdr(document.getElementById('edit-pemb-tenor').value)||0;
-  let margin = parseIdr(document.getElementById('edit-pemb-margin').value)||mMin;
+  const jumlah = Number(document.getElementById('edit-pemb-jumlah').value)||0;
+  const tenor = Number(document.getElementById('edit-pemb-tenor').value)||0;
+  let margin = Number(document.getElementById('edit-pemb-margin').value)||mMin;
   const el = document.getElementById('edit-pemb-preview');
   if(margin < mMin || margin > mMax){
     el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
@@ -2188,11 +2055,11 @@ function submitEditPengajuan(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p) return;
   const userId = document.getElementById('edit-pemb-user').value;
-  const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah').value);
-  const tenor = parseIdr(document.getElementById('edit-pemb-tenor').value);
+  const jumlah = Number(document.getElementById('edit-pemb-jumlah').value);
+  const tenor = Number(document.getElementById('edit-pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const mp = parseIdr(document.getElementById('edit-pemb-margin').value)||mMin;
+  const mp = Number(document.getElementById('edit-pemb-margin').value)||mMin;
   const ket = document.getElementById('edit-pemb-ket').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
   if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
@@ -2219,40 +2086,6 @@ function submitEditPengajuan(pembId){
   addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (margin '+mp+'%)' + (ket?' - '+ket:''));
   toast('Pengajuan berhasil diperbarui');
   closeModal();
-  renderContent();
-}
-
-/* =========================================================
-   PROFIL SAYA
-========================================================= */
-function renderProfilSaya(user){
-  const u = currentUser();
-  if(!u) return '';
-  return `
-    <div class="page-title">Profil Saya<span class="sub">Informasi akun Anda</span></div>
-    <div class="card">
-      <div class="form-row"><label>Nama lengkap</label><input type="text" id="ps-nama" value="${u.nama}" placeholder="Nama lengkap"></div>
-      <div class="form-row"><label>Username</label><input type="text" id="ps-username" value="${u.username||''}" placeholder="Nama pengguna"></div>
-      <div class="form-row"><label>Role</label><input type="text" value="${roleLabel(u.role)}" disabled style="opacity:.6;"></div>
-      <div class="form-row"><label>Kata sandi baru <span class="hint" style="font-weight:400;">(kosongkan jika tidak ingin ganti)</span></label><input type="text" id="ps-password" placeholder="Kata sandi baru"></div>
-      <button class="btn btn-primary btn-block" onclick="simpanProfilSaya()">Simpan Profil</button>
-    </div>
-  `;
-}
-function simpanProfilSaya(){
-  const u = currentUser();
-  if(!u) return;
-  const nama = document.getElementById('ps-nama').value.trim();
-  const username = document.getElementById('ps-username').value.trim();
-  const password = document.getElementById('ps-password').value;
-  if(!nama){ toast('Nama tidak boleh kosong'); return; }
-  u.nama = nama;
-  u.username = username || u.username;
-  if(password) u.password = password;
-  persist();
-  addLog('Ubah profil', 'Memperbarui profil sendiri');
-  applyKoperasiBranding();
-  toast('Profil disimpan');
   renderContent();
 }
 
@@ -2332,10 +2165,10 @@ function submitUser(existingId){
   } else {
     const newUser = {id:uid('u'), username, password, role, nama, createdAt: nowISO()};
     if(role!=='admin') newUser.kelompokId = kelompokId;
-    if(role==='nasabah'){ newUser.anggotaId = uid('agg'); newUser.noRekening = '2026'+String(1000+DB.users.length); newUser.saham = {s_A:0,s_B:0,s_C:0}; }
+    if(role==='nasabah'){ newUser.noRekening = '2026'+String(1000+DB.users.length); newUser.saham = {s_A:0,s_B:0,s_C:0}; }
     if(role==='koordinator'){
       const k = DB.koperasi.kelompok.find(k=>k.id===kelompokId);
-      if(k) k.koorId = newUser.id;
+      if(k) k.koordinatorId = newUser.id;
     }
     DB.users.push(newUser);
     addLog('Tambah pengguna', 'Menambahkan ' + roleLabel(role).toLowerCase() + ': ' + nama);
@@ -2348,16 +2181,10 @@ function submitUser(existingId){
 function deleteUser(userId){
   const u = userById(userId);
   confirmDialog('Hapus pengguna?', 'Akun ' + u.nama + ' akan dihapus permanen.', 'danger', ()=>{
-    const aggId = u.anggotaId;
     DB.users = DB.users.filter(x=>x.id!==userId);
     persist();
-    if (SUPABASE_ENABLED) {
-      supabaseClient.from(TABLES.users).delete().eq('id', userId).then();
-      if (aggId) supabaseClient.from(TABLES.anggota).delete().eq('id', aggId).then();
-    }
     addLog('Hapus pengguna', 'Menghapus akun ' + u.nama);
     toast('Pengguna dihapus');
-    closeModal();
     renderContent();
   });
 }
@@ -2403,17 +2230,11 @@ function hapusAnggota(userId){
         'Yakin ingin menghapus ' + u.nama + ' beserta seluruh datanya?',
         'danger',
         ()=>{
-          const aggId = u.anggotaId;
           DB.users = DB.users.filter(x=>x.id!==userId);
           DB.tabunganAccounts = DB.tabunganAccounts.filter(a=>a.userId!==userId);
           DB.tabunganTx = DB.tabunganTx.filter(t=>t.userId!==userId);
           DB.pembiayaan = DB.pembiayaan.filter(p=>p.userId!==userId);
           persist();
-          // Hapus dari Supabase juga (upsert tidak menghapus baris yg hilang)
-          if (SUPABASE_ENABLED) {
-            supabaseClient.from(TABLES.users).delete().eq('id', userId).then();
-            if (aggId) supabaseClient.from(TABLES.anggota).delete().eq('id', aggId).then();
-          }
           addLog('Hapus anggota', 'Menghapus anggota ' + u.nama + ' beserta seluruh data');
           toast('Anggota dan semua data berhasil dihapus');
           go( currentPage.startsWith('admin') ? 'admin_anggota' : 'koor_anggota' );
@@ -2432,7 +2253,6 @@ function totalNilaiSaham(u){
   return holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
 }
 function nilaiSahamPerLembar(j){
-  if(!j || !j.nominalPerLembar) return 0;
   var pct = (DB.koperasi.saham.pemupukanPersen||0);
   return Math.round(j.nominalPerLembar * (1 + pct/100));
 }
@@ -2565,23 +2385,14 @@ let _pendingIconImage = null;
 function handleIconFileChange(ev){
   const file = ev.target.files && ev.target.files[0];
   if(!file) return;
-  const img = new Image();
-  img.onload = function(){
-    const MAX = 300;
-    let w = img.width, h = img.height;
-    if(w>MAX || h>MAX){ const r=Math.min(MAX/w,MAX/h); w=Math.round(w*r); h=Math.round(h*r); }
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    const ctx = c.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    URL.revokeObjectURL(url);
-    _pendingIconImage = c.toDataURL('image/png');
+  if(file.type !== 'image/png'){ toast('File harus berformat .png'); ev.target.value=''; return; }
+  if(file.size > 1024*1024){ toast('Ukuran file maksimal 1MB'); ev.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    _pendingIconImage = e.target.result;
     document.getElementById('set-icon-preview').innerHTML = '<img src="'+_pendingIconImage+'" alt="logo" style="width:100%;height:100%;object-fit:cover;">';
-    ev.target.value = '';
   };
-  img.onerror = function(){ toast('Gagal membaca file gambar'); URL.revokeObjectURL(img.src); ev.target.value=''; };
-  const url = URL.createObjectURL(file);
-  img.src = url;
+  reader.readAsDataURL(file);
 }
 function renderPengaturanJenisTabungan(){
   return `
@@ -2616,7 +2427,7 @@ function renderPengaturanKelompok(){
     <div class="flex-between" style="margin-bottom:10px;"><div class="hint" style="margin:0;">${DB.koperasi.kelompok.length} kelompok terdaftar</div><button class="btn btn-outline btn-sm" onclick="openKelompokModal()">${ICONS.plus} Tambah</button></div>
     <div class="card" style="padding:6px 18px;">
       ${DB.koperasi.kelompok.map(k=>`
-        <div class="list-row"><div class="info"><div class="title">${k.nama}</div><div class="sub">Koordinator: ${k.koordinatorId||k.koorId? userById(k.koordinatorId||k.koorId).nama : 'Belum ditentukan'}</div></div>
+        <div class="list-row"><div class="info"><div class="title">${k.nama}</div><div class="sub">Koordinator: ${k.koordinatorId? userById(k.koordinatorId).nama : 'Belum ditentukan'}</div></div>
         <button class="btn btn-danger btn-sm" onclick="deleteKelompok('${k.id}')">Hapus</button></div>
       `).join('') || emptyRow('Belum ada kelompok')}
     </div>
@@ -2633,7 +2444,7 @@ function renderPengaturanKeuangan(){
   const totalAngsuran = DB.setoran.filter(s=>s.jenis==='angsuran').reduce((s,t)=>s+t.jumlah,0);
   let poolChips = pools.map(p=>'<span style="background:#f3f3f3;padding:3px 8px;border-radius:5px;font-size:11px;">'+p.label+' '+p.persen+'%</span>').join('');
   let poolRows = pools.map(p=>'<div class="list-row"><div class="info"><div class="sub" style="padding-left:12px;">'+p.label+'</div></div><div class="amt mono">'+rupiah(dana[p.id]||0)+'</div></div>').join('');
-  let poolInputs = pools.map((p,i)=>'<div class="form-row" style="margin:2px 0;"><label style="font-size:13px;flex:1;">'+(i+1)+'. '+p.label+'</label><div style="display:flex;align-items:center;gap:4px;"><input type="number" id="pool-'+p.id+'" value="'+p.persen+'" min="0" max="100" style="width:60px;text-align:center;"><span>%</span></div></div>').join('');
+  let poolInputs = pools.map((p,i)=>'<div class="form-row" style="margin:2px 0;"><label style="font-size:13px;">'+(i+1)+'. '+p.label+'</label><input type="number" id="pool-'+p.id+'" value="'+p.persen+'" min="0" max="100" style="width:70px;"></div>').join('');
   return `
     <div class="section-label">Alur Keuangan Koperasi</div>
     <div class="card" style="padding:18px;font-size:14px;line-height:1.7;">
@@ -2696,10 +2507,10 @@ function saveProfilKoperasi(){
   renderContent();
 }
 function simpanAturKeuangan(){
-  const marginPersen = Math.max(0, parseIdr(document.getElementById('atur-margin').value)||0);
-  const marginMax = Math.max(0, parseIdr(document.getElementById('atur-margin-max').value)||0);
+  const marginPersen = Math.max(0, parseFloat(document.getElementById('atur-margin').value)||0);
+  const marginMax = Math.max(0, parseFloat(document.getElementById('atur-margin-max').value)||0);
   if(marginMax < marginPersen){ toast('Margin maksimum tidak boleh lebih kecil dari margin minimum'); return; }
-  const pools = (DB.koperasi.aturKeuangan.pools||[]).map(p=>({...p, persen: Math.max(0, parseIdr(document.getElementById('pool-'+p.id).value)||0)}));
+  const pools = (DB.koperasi.aturKeuangan.pools||[]).map(p=>({...p, persen: Math.max(0, parseFloat(document.getElementById('pool-'+p.id).value)||0)}));
   const total = pools.reduce((s,p)=>s+p.persen,0);
   if(Math.abs(total-marginPersen)>0.01){ toast('Total alokasi pool harus = margin minimum ('+marginPersen+'%)'); return; }
   if(!DB.koperasi.aturKeuangan) DB.koperasi.aturKeuangan = {};
@@ -2722,7 +2533,7 @@ function openJenisTabunganModal(){
 }
 function submitJenisTabungan(){
   const nama = document.getElementById('jt-nama').value.trim();
-  const min = parseIdr(document.getElementById('jt-min').value)||0;
+  const min = Number(document.getElementById('jt-min').value)||0;
   if(!nama){ toast('Nama wajib diisi'); return; }
   DB.koperasi.jenisTabungan.push({id:uid('jt'), nama, wajibMinimal:min});
   persist();
@@ -2733,9 +2544,7 @@ function submitJenisTabungan(){
 function deleteJenisTabungan(id){
   confirmDialog('Hapus jenis tabungan?', 'Data terkait tetap tersimpan.', 'danger', ()=>{
     DB.koperasi.jenisTabungan = DB.koperasi.jenisTabungan.filter(j=>j.id!==id);
-    persist();
-    supabaseClient.from(TABLES.jenis_tabungan).delete().eq('id', id).then();
-    toast('Jenis tabungan dihapus'); renderContent();
+    persist(); toast('Jenis tabungan dihapus'); renderContent();
   });
 }
 function openKelompokModal(){
@@ -2748,34 +2557,20 @@ function openKelompokModal(){
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="submitKelompok()">Simpan</button></div>
   `);
 }
-async function submitKelompok(){
+function submitKelompok(){
   const nama = document.getElementById('kel-nama').value.trim();
   const koorId = document.getElementById('kel-koor').value || null;
   if(!nama){ toast('Nama wajib diisi'); return; }
-  const newKel = {id:uid('kel'), nama, koorId: koorId};
-  DB.koperasi.kelompok.push(newKel);
-  addLog('Ubah pengaturan', 'Menambahkan kelompok: ' + nama);
-  if(SUPABASE_ENABLED){
-    const { error } = await upsertToSupabase(TABLES.kelompok, toSnake(newKel));
-    if(error) console.error('Supabase upsert kelompok error:', error);
-  }
+  DB.koperasi.kelompok.push({id:uid('kel'), nama, koordinatorId: koorId});
   persist();
+  addLog('Ubah pengaturan', 'Menambahkan kelompok: ' + nama);
   toast('Kelompok ditambahkan');
   closeModal(); renderContent();
 }
 function deleteKelompok(id){
-  confirmDialog('Hapus kelompok?', 'Anggota dalam kelompok ini tetap tersimpan.', 'danger', async ()=>{
-    const idx = DB.koperasi.kelompok.findIndex(k=>k.id===id);
-    if(idx===-1) return;
-    DB.koperasi.kelompok.splice(idx,1);
-    addLog('Ubah pengaturan', 'Menghapus kelompok: ' + id);
-    if(SUPABASE_ENABLED){
-      const { error } = await deleteFromSupabase(TABLES.kelompok, id);
-      if(error) console.error('Supabase delete kelompok error:', error);
-    }
-    persist();
-    toast('Kelompok dihapus');
-    renderContent();
+  confirmDialog('Hapus kelompok?', 'Anggota dalam kelompok ini tetap tersimpan.', 'danger', ()=>{
+    DB.koperasi.kelompok = DB.koperasi.kelompok.filter(k=>k.id!==id);
+    persist(); toast('Kelompok dihapus'); renderContent();
   });
 }
 
@@ -2841,7 +2636,7 @@ function renderPengaturanSaham(){
   `;
 }
 function simpanPemupukanPersen(){
-  const v = parseIdr(document.getElementById('pemupukan-persen').value)||0;
+  const v = parseInt(document.getElementById('pemupukan-persen').value)||0;
   DB.koperasi.saham.pemupukanPersen = Math.max(0, Math.min(200, v));
   persist();
   addLog('Pemupukan saham', 'Mengubah persentase pemupukan saham menjadi '+DB.koperasi.saham.pemupukanPersen+'%');
@@ -2906,8 +2701,8 @@ function openTambahSahamModal(){
 }
 function submitSahamBaru(){
   const nama = document.getElementById('sh-nama').value.trim();
-  const nominal = parseIdr(document.getElementById('sh-nominal').value)||0;
-  const shuPersen = parseIdr(document.getElementById('sh-shu').value)||0;
+  const nominal = Number(document.getElementById('sh-nominal').value)||0;
+  const shuPersen = Number(document.getElementById('sh-shu').value)||0;
   if(!nama || !nominal){ toast('Lengkapi nama dan nominal'); return; }
   const id = 's_'+nama.replace(/[^A-Za-z0-9]/g,'_').toUpperCase();
   DB.koperasi.saham.jenis.push({id, nama, nominalPerLembar:nominal, shuPersen});
@@ -2932,8 +2727,8 @@ function simpanEditSahamJenis(id){
   const j = DB.koperasi.saham.jenis.find(j=>j.id===id);
   if(!j) return;
   j.nama = document.getElementById('sh-nama').value.trim() || j.nama;
-  j.nominalPerLembar = parseIdr(document.getElementById('sh-nominal').value)||j.nominalPerLembar;
-  j.shuPersen = parseIdr(document.getElementById('sh-shu').value)||0;
+  j.nominalPerLembar = Number(document.getElementById('sh-nominal').value)||j.nominalPerLembar;
+  j.shuPersen = Number(document.getElementById('sh-shu').value)||0;
   persist();
   addLog('Ubah saham', 'Memperbarui jenis saham: '+j.nama);
   toast('Jenis saham diperbarui');
@@ -2942,9 +2737,7 @@ function simpanEditSahamJenis(id){
 function deleteSahamJenis(id){
   confirmDialog('Hapus jenis saham?', 'Kepemilikan saham jenis ini pada anggota akan tetap tersimpan.', 'danger', ()=>{
     DB.koperasi.saham.jenis = DB.koperasi.saham.jenis.filter(j=>j.id!==id);
-    persist();
-    supabaseClient.from(TABLES.jenis_saham).delete().eq('id', id).then();
-    toast('Jenis saham dihapus'); renderContent();
+    persist(); toast('Jenis saham dihapus'); renderContent();
   });
 }
 /* =========================================================
@@ -3041,7 +2834,7 @@ function pilihTabSHU(tab){
 function simpanShuPersenSHU(){
   var total = 0;
   (DB.koperasi.saham.jenis||[]).forEach(function(j){
-    var v = Math.max(0, parseIdr(document.getElementById('shupersen-'+j.id).value)||0);
+    var v = Math.max(0, parseFloat(document.getElementById('shupersen-'+j.id).value)||0);
     j.shuPersen = v;
     total += v;
   });
@@ -3052,7 +2845,7 @@ function simpanShuPersenSHU(){
   renderContent();
 }
 function simpanBagiHasilPersen(){
-  var v = Math.max(0, parseIdr(document.getElementById('bh-persen').value)||0);
+  var v = Math.max(0, parseFloat(document.getElementById('bh-persen').value)||0);
   if(!DB.koperasi.aturKeuangan) DB.koperasi.aturKeuangan = {};
   DB.koperasi.aturKeuangan.bagiHasilPersen = Math.min(100, v);
   persist();
@@ -3138,7 +2931,7 @@ function renderAdminSaham(user){
     <div class="card" style="padding:6px 18px;">
       ${daftarPemilik.length ? daftarPemilik.map((nama,i)=>{
         const holdings = ks.filter(k=>k.nama===nama);
-        const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+        const total = holdings.reduce((s,k)=>s+k.lembar*nilaiSahamPerLembar(jns.find(j=>j.id===k.jenisId)),0);
         return `<div class="list-row"${i>0?' style="border-top:1px dashed var(--border);"':''}>
           <div class="info" style="cursor:pointer;" onclick="go('admin_saham_certificate',{namaSaham:'${nama}'})"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:10px;margin-top:4px;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt mono">${rupiah(total)}</div><button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();editKepemilikanSaham('${nama}')">✎</button></div>
@@ -3172,7 +2965,7 @@ function bukaPemilikSahamBaru(){
 function simpanKepemilikanSahamBaru(){
   const nama = document.getElementById('ks-nama').value.trim();
   const jenisId = document.getElementById('ks-jenis').value;
-  const lembar = parseIdr(document.getElementById('ks-lembar').value)||0;
+  const lembar = parseInt(document.getElementById('ks-lembar').value)||0;
   if(!nama || !lembar){ toast('Lengkapi nama dan jumlah lembar'); return; }
   const anggota = DB.users.find(u=>u.role==='nasabah'&&u.nama===nama);
   DB.kepemilikanSaham.push({id:uid('ks'), nama, anggotaId: anggota?anggota.id:null, jenisId, lembar});
@@ -3324,7 +3117,7 @@ function editKepemilikanSaham(nama){
 }
 function tambahLembarSaham(nama){
   const jenisId = document.getElementById('ks-tambah-jenis').value;
-  const lembar = parseIdr(document.getElementById('ks-tambah-lembar').value)||0;
+  const lembar = parseInt(document.getElementById('ks-tambah-lembar').value)||0;
   if(!lembar){ toast('Isi jumlah lembar'); return; }
   let k = DB.kepemilikanSaham.find(x=>x.nama===nama&&x.jenisId===jenisId);
   let existingId;
@@ -3345,10 +3138,9 @@ function tambahLembarSaham(nama){
 function simpanEditKepemilikanSaham(nama){
   const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama);
   holdings.forEach(k=>{
-    const v = Math.max(0, parseIdr(document.getElementById('ks-edit-'+k.id).value)||0);
+    const v = Math.max(0, parseInt(document.getElementById('ks-edit-'+k.id).value)||0);
     if(v===0){
       DB.kepemilikanSaham = DB.kepemilikanSaham.filter(x=>x.id!==k.id);
-      supabaseClient.from(TABLES.kepemilikan_saham).delete().eq('id', k.id).then();
     } else {
       k.lembar = v;
     }
@@ -3371,7 +3163,6 @@ function hapusKepemilikanSaham(nama){
     const u = DB.users.find(u=>u.role==='nasabah'&&u.nama===nama);
     if(u){ (DB.koperasi.saham.jenis||[]).forEach(j=>{ if(u.saham) u.saham[j.id]=0; }); }
     persist();
-    supabaseClient.from(TABLES.kepemilikan_saham).delete().eq('nama', nama).then();
     addLog('Hapus kepemilikan saham', 'Menghapus saham '+nama);
     toast('Kepemilikan saham dihapus');
     renderContent();
@@ -3431,22 +3222,17 @@ function renderKoorBeranda(user){
    KOORDINATOR: ANGGOTA (hanya kelompoknya)
 ========================================================= */
 function renderKoorAnggota(user){
-  const q = (currentSubState.q||'').toLowerCase();
-  let anggota = nasabahOfKelompok(user.kelompokId).filter(u=>u.status!=='nonaktif');
-  if(q) anggota = anggota.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const anggota = nasabahOfKelompok(user.kelompokId).filter(u=>u.status!=='nonaktif');
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah</button>
-    </div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah anggota</button>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map(u=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_anggota_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">No. Rek ${u.noRekening}</div></div></div>
           <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota aktif di kelompok ini'}</div></div>`}
+      `).join('') : emptyRow('Belum ada anggota aktif di kelompok ini')}
     </div>
   `;
 }
@@ -3460,23 +3246,17 @@ function renderKoorAnggotaDetail(user, userId){
    KOORDINATOR: TABUNGAN (buku + tarik/setor)
 ========================================================= */
 function renderKoorTabungan(user){
-  const allAnggota = nasabahOfKelompok(user.kelompokId);
-  const q = (currentSubState.q||'').toLowerCase();
-  let anggota = allAnggota.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
-  if(q) anggota = anggota.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const anggota = nasabahOfKelompok(user.kelompokId).filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
   return `
     <div class="page-title">Tabungan<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
-    </div>
+    <button class="btn btn-primary btn-block" onclick="openTambahRekeningModal()">${ICONS.plus} Buka rekening baru</button>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map(u=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_tabungan_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${u.noRekening}</div></div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
+      `).join('') : emptyRow('Belum ada anggota yang memiliki rekening tabungan')}
     </div>
   `;
 }
@@ -3516,15 +3296,10 @@ function renderKoorTabunganDetail(user, userId){
 function renderKoorPembiayaan(user){
   const anggota = nasabahOfKelompok(user.kelompokId);
   const anggotaIds = anggota.map(u=>u.id);
-  const q = (currentSubState.q||'').toLowerCase();
-  let list = DB.pembiayaan.filter(p=>anggotaIds.includes(p.userId)).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
-  if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q) || (p.keterangan||'').toLowerCase().includes(q));
+  const list = DB.pembiayaan.filter(p=>anggotaIds.includes(p.userId)).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
   return `
     <div class="page-title">Pembiayaan<span class="sub">Anggota ${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan</button>
-    </div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan Pembiayaan</button>
     <div class="card" style="padding:6px 18px;">
       ${list.length ? list.map(p=>`
         <div class="list-row">
@@ -3534,7 +3309,7 @@ function renderKoorPembiayaan(user){
             : p.statusPengajuan==='approved' ? `<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();bayarAngsuranPrompt('${p.id}')">Bayar angsuran</button>`
             : `<button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModalKoor('${p.id}')" title="Edit">✎</button>`}
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Tidak ada pembiayaan di kelompok ini'}</div></div>`}
+      `).join('') : emptyRow('Tidak ada pembiayaan di kelompok ini')}
     </div>
   `;
 }
@@ -3562,9 +3337,9 @@ function openPengajuanModalKoor(){
 function updatePengajuanPreviewKoor(){
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const jumlah = parseIdr(document.getElementById('pemb-jumlah').value)||0;
-  const tenor = parseIdr(document.getElementById('pemb-tenor').value)||0;
-  let margin = parseIdr(document.getElementById('pemb-margin').value)||mMin;
+  const jumlah = Number(document.getElementById('pemb-jumlah').value)||0;
+  const tenor = Number(document.getElementById('pemb-tenor').value)||0;
+  let margin = Number(document.getElementById('pemb-margin').value)||mMin;
   const el = document.getElementById('pemb-preview-koor');
   if(margin < mMin || margin > mMax){
     el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
@@ -3580,11 +3355,11 @@ function updatePengajuanPreviewKoor(){
 }
 function submitPengajuanKoor(){
   const userId = document.getElementById('pemb-user').value;
-  const jumlah = parseIdr(document.getElementById('pemb-jumlah').value);
-  const tenor = parseIdr(document.getElementById('pemb-tenor').value);
+  const jumlah = Number(document.getElementById('pemb-jumlah').value);
+  const tenor = Number(document.getElementById('pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
+  const mp = Number(document.getElementById('pemb-margin').value)||mMin;
   const ket = document.getElementById('pemb-ket').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
   if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
@@ -3624,9 +3399,9 @@ function openEditPengajuanModalKoor(pembId){
 function updateEditPengajuanPreviewKoor(){
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah-koor').value)||0;
-  const tenor = parseIdr(document.getElementById('edit-pemb-tenor-koor').value)||0;
-  let margin = parseIdr(document.getElementById('edit-pemb-margin-koor').value)||mMin;
+  const jumlah = Number(document.getElementById('edit-pemb-jumlah-koor').value)||0;
+  const tenor = Number(document.getElementById('edit-pemb-tenor-koor').value)||0;
+  let margin = Number(document.getElementById('edit-pemb-margin-koor').value)||mMin;
   const el = document.getElementById('edit-pemb-preview-koor');
   if(margin < mMin || margin > mMax){
     el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
@@ -3644,11 +3419,11 @@ function submitEditPengajuanKoor(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.statusPengajuan!=='pending'){ toast('Pengajuan sudah diproses, tidak bisa diedit'); return; }
   const userId = document.getElementById('edit-pemb-user-koor').value;
-  const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah-koor').value);
-  const tenor = parseIdr(document.getElementById('edit-pemb-tenor-koor').value);
+  const jumlah = Number(document.getElementById('edit-pemb-jumlah-koor').value);
+  const tenor = Number(document.getElementById('edit-pemb-tenor-koor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
-  const mp = parseIdr(document.getElementById('edit-pemb-margin-koor').value)||mMin;
+  const mp = Number(document.getElementById('edit-pemb-margin-koor').value)||mMin;
   const ket = document.getElementById('edit-pemb-ket-koor').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
   if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
@@ -3685,7 +3460,7 @@ function bayarAngsuranPrompt(pembId){
   `);
 }
 function confirmBayarAngsuran(pembId){
-  const jumlah = parseIdr(document.getElementById('bayar-angsuran-jumlah').value);
+  const jumlah = Number(document.getElementById('bayar-angsuran-jumlah').value);
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
   const s = getSession();
   const r = doBayarAngsuran(pembId, s.userId, jumlah);
@@ -3821,7 +3596,7 @@ function renderNasPembiayaan(user){
   if(!list.length){
     return `
       <div class="page-title">Pembiayaan<span class="sub">${user.nama}</span></div>
-      <div class="empty-state"><div class="ic">📄</div><div class="t">Belum ada pembiayaan</div><div class="d">Hubungi koordinator kelompok untuk mengajukan pembiayaan.</div></div>
+      <div class="empty-state"><div class="ic">ðŸ“„</div><div class="t">Belum ada pembiayaan</div><div class="d">Hubungi koordinator kelompok untuk mengajukan pembiayaan.</div></div>
     `;
   }
   return `
@@ -3872,53 +3647,8 @@ renderContent = function(){
 };
 
 /* =========================================================
-   PWA INSTALL
-========================================================= */
-let deferredPrompt = null;
-const installOverlay = document.getElementById('install-overlay');
-const installBtn = document.getElementById('install-btn');
-const installSkip = document.getElementById('install-skip');
-const installIcon = document.getElementById('install-icon');
-const installTitle = document.getElementById('install-title');
-
-window.addEventListener('beforeinstallprompt', e => {
-  if (localStorage.getItem('pwa-skip') === '1') return;
-  e.preventDefault();
-  deferredPrompt = e;
-  if (installIcon && DB.koperasi) {
-    if (DB.koperasi.iconImage) installIcon.innerHTML = '<img src="'+DB.koperasi.iconImage+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
-    else installIcon.textContent = DB.koperasi.icon || '🏦';
-  }
-  if (installTitle && DB.koperasi) installTitle.textContent = DB.koperasi.nama || 'UB Rukun Barokah';
-  installOverlay.style.display = 'flex';
-});
-
-if (installBtn) installBtn.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  installOverlay.style.display = 'none';
-});
-
-if (installSkip) installSkip.addEventListener('click', () => {
-  installOverlay.style.display = 'none';
-  localStorage.setItem('pwa-skip', '1');
-});
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-
-/* =========================================================
    INIT
 ========================================================= */
-const loginYearEl = document.getElementById('login-year');
-if(loginYearEl) loginYearEl.textContent = new Date().getFullYear();
-['login-username','login-password'].forEach(id=>{
-  const el = document.getElementById(id);
-  if(el) el.addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
-});
 boot();
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>

@@ -1,0 +1,46 @@
+-- ============================================================
+-- CLEANUP: Hapus semua data kecuali pengaturan_koperasi
+-- Jalankan di Supabase Dashboard -> SQL Editor
+-- ============================================================
+
+-- Matikan RLS sementara biar gampang hapus
+ALTER TABLE logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE setoran DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kepemilikan_saham DISABLE ROW LEVEL SECURITY;
+ALTER TABLE angsuran DISABLE ROW LEVEL SECURITY;
+ALTER TABLE pembiayaan DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tabungan_tx DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tabungan_accounts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE jenis_saham DISABLE ROW LEVEL SECURITY;
+ALTER TABLE jenis_tabungan DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kelompok DISABLE ROW LEVEL SECURITY;
+ALTER TABLE anggota DISABLE ROW LEVEL SECURITY;
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+
+-- Hapus semua data (urutan penting karena FK)
+DELETE FROM logs;
+DELETE FROM setoran;
+DELETE FROM kepemilikan_saham;
+DELETE FROM angsuran;
+DELETE FROM pembiayaan;
+DELETE FROM tabungan_tx;
+DELETE FROM tabungan_accounts;
+DELETE FROM jenis_saham;
+DELETE FROM jenis_tabungan;
+DELETE FROM anggota;
+DELETE FROM users;
+DELETE FROM kelompok;
+
+-- Nyalakan lagi RLS
+ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE setoran ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kepemilikan_saham ENABLE ROW LEVEL SECURITY;
+ALTER TABLE angsuran ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pembiayaan ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tabungan_tx ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tabungan_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jenis_saham ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jenis_tabungan ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kelompok ENABLE ROW LEVEL SECURITY;
+ALTER TABLE anggota ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;

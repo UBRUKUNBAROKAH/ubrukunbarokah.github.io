@@ -314,11 +314,8 @@ input,select{font-family:inherit;}
 .tabs button{flex:1;border:none;background:transparent;padding:9px 6px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--primary);}
 .tabs button.active{background:var(--primary);color:#fff;}
 
-.search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;margin-bottom:14px;flex:1;min-width:0;}
-.search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;min-width:0;}
-.toolbar-row{display:flex;gap:8px;align-items:center;margin-bottom:0;}
-.toolbar-row .search-box{margin-bottom:0;}
-.btn-compact{padding:9px 14px;font-size:12.5px;white-space:nowrap;flex-shrink:0;border-radius:10px;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;margin-bottom:14px;}
+.search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;}
 
 .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
 .empty-state .ic{font-size:34px;margin-bottom:10px;}
@@ -506,6 +503,7 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
       </div>
       <button class="btn-pill" id="login-submit-btn" onclick="handleLogin()">Masuk</button>
       <div class="login-footer-link" onclick="toast('Hubungi koordinator atau admin koperasi Anda')">Lupa kata sandi?</div>
+      <div class="login-footer-link" id="login-seed-link" onclick="handleSeedFirstRun()" style="margin-top:4px;">Setup pertama kali? Isi data awal</div>
       <div class="login-footer-note">© <span id="login-year"></span> · Aplikasi Koperasi Digital</div>
     </div>
   </div>
@@ -1076,6 +1074,77 @@ async function boot() {
 }
 
 
+// ---- Full Sync to Supabase (manual/periodic) ----
+async function syncToSupabase() {
+  try {
+    // Split users into users + anggota tables
+    const usersTable = [];
+    const anggotaTable = [];
+    (DB.users||[]).forEach(u => {
+      const userRec = { id: u.id, username: u.username, password: u.password, role: u.role, nama: u.nama, created_at: u.createdAt };
+      const aggId = u.anggotaId || (u.role === 'nasabah' ? uid('agg') : null);
+      if (u.role === 'nasabah' && aggId) {
+        u.anggotaId = aggId;
+        userRec.anggota_id = aggId;
+        anggotaTable.push({
+          id: aggId, nama: u.nama, nik: u.nik||null, alamat: u.alamat||null,
+          no_hp: u.noHp||null, kelompok_id: u.kelompokId||null,
+          no_rekening: u.noRekening||null, saham: u.saham||{},
+          status: u.status||'aktif', created_at: u.createdAt
+        });
+      }
+      usersTable.push(userRec);
+    });
+    if (usersTable.length) await supabaseClient.from(TABLES.users).upsert(usersTable, { onConflict: 'id' });
+    if (anggotaTable.length) await supabaseClient.from(TABLES.anggota).upsert(anggotaTable, { onConflict: 'id' });
+
+    // Sync remaining tables
+    const tables = [
+      { key: 'koperasi.kelompok', table: TABLES.kelompok, transform: toSnake },
+      { key: 'koperasi.jenisTabungan', table: TABLES.jenis_tabungan, transform: toSnake },
+      { key: 'tabunganAccounts', table: TABLES.tabungan_accounts, transform: toSnake },
+      { key: 'tabunganTx', table: TABLES.tabungan_tx, transform: toSnake },
+      { key: 'pembiayaan', table: TABLES.pembiayaan, transform: toSnake },
+      { key: 'angsuran', table: TABLES.angsuran, transform: toSnake },
+      { key: 'koperasi.saham.jenis', table: TABLES.jenis_saham, transform: toSnake },
+      { key: 'kepemilikanSaham', table: TABLES.kepemilikan_saham, transform: toSnake },
+      { key: 'setoran', table: TABLES.setoran, transform: toSnake },
+      { key: 'logs', table: TABLES.logs, transform: toSnake }
+    ];
+    
+    for (const t of tables) {
+      const data = t.key.split('.').reduce((o, k) => o?.[k], DB);
+      if (data && Array.isArray(data) && data.length > 0) {
+        const snakeData = t.transform(data);
+        await supabaseClient.from(t.table).upsert(snakeData, { onConflict: 'id' });
+      }
+    }
+    
+    // Sync pengaturan koperasi (single row) - JSONB fields jangan di-toSnake
+    const pengaturanData = {
+      id: 'koperasi',
+      nama: DB.koperasi.nama,
+      icon: DB.koperasi.icon,
+      icon_image: DB.koperasi.iconImage || null,
+      info: DB.koperasi.info || {},
+      sertifikat: DB.koperasi.sertifikat || {},
+      saham: { pemupukanPersen: DB.koperasi.saham?.pemupukanPersen || 35 },
+      atur_keuangan: DB.koperasi.aturKeuangan || {}
+    };
+    await supabaseClient.from(TABLES.pengaturan_koperasi).upsert(pengaturanData, { onConflict: 'id' });
+    
+    toast('Sync ke Supabase berhasil');
+    return { error: null };
+  } catch (err) {
+    console.error('Sync error:', err);
+    toast('Sync gagal: ' + err.message);
+    return { error: err };
+  }
+}
+
+// Auto-sync every 5 minutes
+setInterval(syncToSupabase, 5 * 60 * 1000);
+
 function addLog(aksi, detail){
   const s = getSession();
   DB.logs.unshift({id:uid('log'), waktu:nowISO(), oleh: s? s.userId : 'system', peran: s? s.role : '-', aksi, detail});
@@ -1134,6 +1203,27 @@ async function handleLogin(){
   }finally{
     submitBtn.classList.remove('btn-loading');
     submitBtn.disabled = false;
+  }
+}
+async function handleSeedFirstRun(){
+  const link = document.getElementById('login-seed-link');
+  const original = link.textContent;
+  try{
+    link.textContent = 'Memeriksa data...';
+    const { count, error } = await supabaseClient.from(TABLES.users).select('*', { count: 'exact', head: true });
+    if(error) throw error;
+    if(count && count > 0){
+      toast('Data sudah ada. Coba login dengan admin / 354.');
+      return;
+    }
+    link.textContent = 'Mengisi data awal...';
+    await seedSupabase();
+    toast('Data awal berhasil diisi. Silakan login: admin / 354');
+  }catch(err){
+    console.error('Gagal mengisi data awal:', err);
+    toast('Gagal: ' + (err?.message || 'Cek koneksi Supabase.'));
+  }finally{
+    link.textContent = original;
   }
 }
 function togglePasswordVisibility(){
@@ -1473,10 +1563,6 @@ function renderContent(){
   const el = document.getElementById('content');
   const user = currentUser();
   if(!user) return;
-  const active = document.activeElement;
-  const activeId = (active && el.contains(active) && active.id) ? active.id : null;
-  const selStart = activeId && active.selectionStart!=null ? active.selectionStart : null;
-  const selEnd = activeId && active.selectionEnd!=null ? active.selectionEnd : null;
   const routes = {
     admin_beranda: renderAdminBeranda,
     admin_anggota: renderAdminAnggota,
@@ -1500,17 +1586,7 @@ function renderContent(){
   };
   const fn = routes[currentPage] || routes[defaultPageFor(user.role)];
   el.innerHTML = fn(user);
-  if(activeId){
-    const toFocus = document.getElementById(activeId);
-    if(toFocus){
-      toFocus.focus();
-      if(selStart!=null && toFocus.setSelectionRange){
-        try{ toFocus.setSelectionRange(selStart, selEnd); }catch(e){}
-      }
-    }
-  } else {
-    el.scrollTop = 0;
-  }
+  el.scrollTop = 0;
 }
 
 /* =========================================================
@@ -1614,10 +1690,8 @@ function renderAdminAnggota(user){
   if(q) list = list.filter(u=>u.nama.toLowerCase().includes(q) || u.noRekening.includes(q));
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
-    </div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah anggota</button>
+    <div class="search-box">${ICONS.search}<input placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
     <div class="card" style="padding:0;">
       ${list.length ? list.map(u=>`
         <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="go('admin_anggota_detail', {userId:'${u.id}'})">
@@ -1684,9 +1758,7 @@ function renderMemberDetail(nas, backPage){
 ========================================================= */
 function renderAdminTabungan(user){
   const allNasabah = DB.users.filter(u=>u.role==='nasabah');
-  const q = (currentSubState.q||'').toLowerCase();
-  let nasabah = allNasabah.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
-  if(q) nasabah = nasabah.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const nasabah = allNasabah.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
   const pending = DB.setoran.filter(s=>s.status==='di_koordinator');
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
@@ -1700,17 +1772,14 @@ function renderAdminTabungan(user){
         </div>
       `).join('')}
     </div>` : ''}
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
-    </div>
+    <button class="btn btn-primary btn-block" onclick="openTambahRekeningModal()">${ICONS.plus} Buka rekening baru</button>
     <div class="card" style="padding:6px 18px;">
       ${nasabah.length ? nasabah.map(u=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('admin_tabungan_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div></div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
+      `).join('') : emptyRow('Belum ada anggota yang memiliki rekening tabungan')}
     </div>
   `;
 }
@@ -1927,16 +1996,11 @@ function submitTambahRekening(){
    ADMIN: PEMBIAYAAN
 ========================================================= */
 function renderAdminPembiayaan(user){
-  const q = (currentSubState.q||'').toLowerCase();
-  let list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
-  if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q) || (p.keterangan||'').toLowerCase().includes(q));
+  const list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
   const pending = list.filter(p=>p.statusPengajuan==='pending');
   return `
-    <div class="page-title">Pembiayaan<span class="sub">${DB.pembiayaan.length} pengajuan tercatat</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
-    </div>
+    <div class="page-title">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openPengajuanModal()">${ICONS.plus} Buat pengajuan baru</button>
     ${pending.length ? `
     <div class="section-label">Pengajuan Menunggu ACC (${pending.length})</div>
     <div class="card" style="padding:6px 18px;">
@@ -1960,7 +2024,7 @@ function renderAdminPembiayaan(user){
           <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
           <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div>`}
+      `).join('') : emptyRow('Belum ada pembiayaan')}
     </div>
   `;
 }
@@ -3431,22 +3495,17 @@ function renderKoorBeranda(user){
    KOORDINATOR: ANGGOTA (hanya kelompoknya)
 ========================================================= */
 function renderKoorAnggota(user){
-  const q = (currentSubState.q||'').toLowerCase();
-  let anggota = nasabahOfKelompok(user.kelompokId).filter(u=>u.status!=='nonaktif');
-  if(q) anggota = anggota.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const anggota = nasabahOfKelompok(user.kelompokId).filter(u=>u.status!=='nonaktif');
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah</button>
-    </div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah anggota</button>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map(u=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_anggota_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">No. Rek ${u.noRekening}</div></div></div>
           <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota aktif di kelompok ini'}</div></div>`}
+      `).join('') : emptyRow('Belum ada anggota aktif di kelompok ini')}
     </div>
   `;
 }
@@ -3461,22 +3520,17 @@ function renderKoorAnggotaDetail(user, userId){
 ========================================================= */
 function renderKoorTabungan(user){
   const allAnggota = nasabahOfKelompok(user.kelompokId);
-  const q = (currentSubState.q||'').toLowerCase();
-  let anggota = allAnggota.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
-  if(q) anggota = anggota.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const anggota = allAnggota.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
   return `
     <div class="page-title">Tabungan<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
-    </div>
+    <button class="btn btn-primary btn-block" onclick="openTambahRekeningModal()">${ICONS.plus} Buka rekening baru</button>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map(u=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_tabungan_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${u.noRekening}</div></div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
+      `).join('') : emptyRow('Belum ada anggota yang memiliki rekening tabungan')}
     </div>
   `;
 }
@@ -3516,15 +3570,10 @@ function renderKoorTabunganDetail(user, userId){
 function renderKoorPembiayaan(user){
   const anggota = nasabahOfKelompok(user.kelompokId);
   const anggotaIds = anggota.map(u=>u.id);
-  const q = (currentSubState.q||'').toLowerCase();
-  let list = DB.pembiayaan.filter(p=>anggotaIds.includes(p.userId)).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
-  if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q) || (p.keterangan||'').toLowerCase().includes(q));
+  const list = DB.pembiayaan.filter(p=>anggotaIds.includes(p.userId)).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
   return `
     <div class="page-title">Pembiayaan<span class="sub">Anggota ${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan</button>
-    </div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan Pembiayaan</button>
     <div class="card" style="padding:6px 18px;">
       ${list.length ? list.map(p=>`
         <div class="list-row">
@@ -3534,7 +3583,7 @@ function renderKoorPembiayaan(user){
             : p.statusPengajuan==='approved' ? `<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();bayarAngsuranPrompt('${p.id}')">Bayar angsuran</button>`
             : `<button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModalKoor('${p.id}')" title="Edit">✎</button>`}
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Tidak ada pembiayaan di kelompok ini'}</div></div>`}
+      `).join('') : emptyRow('Tidak ada pembiayaan di kelompok ini')}
     </div>
   `;
 }

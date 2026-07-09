@@ -1,0 +1,40 @@
+name: Backup Supabase to Google Drive
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # setiap Minggu jam 2 pagi
+  workflow_dispatch:       # bisa dijalanin manual juga
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install rclone
+        run: curl -fsSL https://rclone.org/install.sh | bash
+
+      - name: Backup all tables via REST API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          TABLES="users anggota kelompok jenis_tabungan tabungan_accounts tabungan_tx pembiayaan angsuran jenis_saham kepemilikan_saham setoran pengaturan_koperasi logs"
+          echo '{' > backup.json
+          first=true
+          for t in $TABLES; do
+            $first && first=false || echo ',' >> backup.json
+            echo "\"$t\": " >> backup.json
+            curl -s "${SUPABASE_URL}/rest/v1/${t}?select=*" \
+              -H "apikey: ${SUPABASE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_KEY}" >> backup.json
+          done
+          echo '}' >> backup.json
+          gzip backup.json
+          mv backup.json.gz "koperasi-$(date +%Y-%m-%d).json.gz"
+
+      - name: Upload to Google Drive
+        env:
+          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "$RCLONE_CONFIG" > ~/.config/rclone/rclone.conf
+          rclone copy "koperasi-$(date +%Y-%m-%d).json.gz" "gdrive:Backup Koperasi/"
