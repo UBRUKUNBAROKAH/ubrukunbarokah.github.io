@@ -1728,7 +1728,17 @@ function renderMemberDetail(nas, backPage){
    ADMIN: TABUNGAN (overview semua)
 ========================================================= */
 function renderAdminTabungan(user){
-  const nasabah = DB.users.filter(u=>u.role==='nasabah' && DB.tabunganAccounts.some(a=>a.userId===u.id));
+  // DEBUG: Check why new members appear in Tabungan menu
+  const allNasabah = DB.users.filter(u=>u.role==='nasabah');
+  const nasabahWithAccounts = allNasabah.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
+  const nasabahWithoutAccounts = allNasabah.filter(u=>!DB.tabunganAccounts.some(a=>a.userId===u.id));
+  console.log('DEBUG Tabungan:', {
+    totalNasabah: allNasabah.length,
+    withAccounts: nasabahWithAccounts.length,
+    withoutAccounts: nasabahWithoutAccounts.length,
+    tabunganAccountsCount: DB.tabunganAccounts.length
+  });
+  const nasabah = nasabahWithAccounts;
   const pending = DB.setoran.filter(s=>s.status==='di_koordinator');
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
@@ -3488,7 +3498,16 @@ function renderKoorAnggotaDetail(user, userId){
    KOORDINATOR: TABUNGAN (buku + tarik/setor)
 ========================================================= */
 function renderKoorTabungan(user){
-  const anggota = nasabahOfKelompok(user.kelompokId).filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
+  const allAnggota = nasabahOfKelompok(user.kelompokId);
+  const anggotaWithAccounts = allAnggota.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
+  const anggotaWithoutAccounts = allAnggota.filter(u=>!DB.tabunganAccounts.some(a=>a.userId===u.id));
+  console.log('DEBUG Koor Tabungan:', {
+    totalAnggota: allAnggota.length,
+    withAccounts: anggotaWithAccounts.length,
+    withoutAccounts: anggotaWithoutAccounts.length,
+    tabunganAccountsCount: DB.tabunganAccounts.length
+  });
+  const anggota = anggotaWithAccounts;
   return `
     <div class="page-title">Tabungan<span class="sub">${kelompokName(user.kelompokId)}</span></div>
     <button class="btn btn-primary btn-block" onclick="openTambahRekeningModal()">${ICONS.plus} Buka rekening baru</button>
