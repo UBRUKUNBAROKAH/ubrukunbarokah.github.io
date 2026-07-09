@@ -1915,6 +1915,11 @@ function submitTambahAnggota(){
   DB.users.push(newUser);
   persist();
   addLog('Tambah anggota', 'Menambahkan anggota baru: ' + nama + ' (' + kelompokName(kelompokId) + ')');
+  console.log('DEBUG: New member added', {
+    userId: newUser.id,
+    hasTabunganAccounts: DB.tabunganAccounts.some(a=>a.userId===newUser.id),
+    tabunganAccountsCount: DB.tabunganAccounts.filter(a=>a.userId===newUser.id).length
+  });
   toast('Anggota baru berhasil ditambahkan');
   closeModal();
   renderContent();
