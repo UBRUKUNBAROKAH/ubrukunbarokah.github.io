@@ -3,12 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<<<<<<< HEAD
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-=======
->>>>>>> 92331cf826e27b7b634e9442b6d967a321afdeea
 <title>UB Rukun Barokah</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -322,16 +319,12 @@ input,select{font-family:inherit;}
 .empty-state .t{font-weight:700;color:var(--text);font-size:14px;}
 .empty-state .d{font-size:12.5px;margin-top:4px;}
 
-<<<<<<< HEAD
 /* install prompt */
 #install-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;}
 #install-card{background:#fff;border-radius:var(--radius-lg);padding:36px 28px 28px;width:340px;max-width:88vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);}
 #install-icon{width:64px;height:64px;border-radius:18px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 14px;}
 #install-title{font-family:'Sora',sans-serif;font-size:19px;font-weight:700;color:var(--text);margin-bottom:6px;}
 #install-desc{font-size:13px;color:var(--muted);line-height:1.5;}
-
-=======
->>>>>>> 92331cf826e27b7b634e9442b6d967a321afdeea
 /* passbook ledger */
 .ledger{border:2px solid var(--primary);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);}
 .ledger-head{background:var(--primary);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:10px 14px;}
@@ -464,7 +457,6 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 </head>
 <body>
 
-<<<<<<< HEAD
 <div id="install-overlay" style="display:none;">
   <div id="install-card">
     <div id="install-icon">🏦</div>
@@ -478,9 +470,6 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 </div>
 
 <div id="app">
-=======
-<div class="phone-wrap">
->>>>>>> 92331cf826e27b7b634e9442b6d967a321afdeea
 
   <!-- ================= LOGIN ================= -->
   <div id="login-screen">
@@ -940,7 +929,6 @@ async function syncAllToSupabase() {
   await safeUpsert(TABLES.kepemilikan_saham, toSnake(DB.kepemilikanSaham));
   // Sync setoran
   await safeUpsert(TABLES.setoran, toSnake(DB.setoran), 'setoran');
-<<<<<<< HEAD
   // Sync logs + cleanup (keep max 500 row)
   await safeUpsert(TABLES.logs, toSnake(DB.logs));
   try {
@@ -955,10 +943,6 @@ async function syncAllToSupabase() {
       }
     }
   } catch(e){} // cleanup error aman diabaikan
-=======
-  // Sync logs
-  await safeUpsert(TABLES.logs, toSnake(DB.logs));
->>>>>>> 92331cf826e27b7b634e9442b6d967a321afdeea
   // Sync pengaturan koperasi (single row) - JSONB fields jangan di-toSnake
   const pg = {
     id: 'koperasi',
@@ -3900,7 +3884,6 @@ renderContent = function(){
 };
 
 /* =========================================================
-<<<<<<< HEAD
    PWA INSTALL
 ========================================================= */
 let deferredPrompt = null;
@@ -3914,7 +3897,6 @@ window.addEventListener('beforeinstallprompt', e => {
   if (localStorage.getItem('pwa-skip') === '1') return;
   e.preventDefault();
   deferredPrompt = e;
-  // Update icon & name from DB if loaded
   if (installIcon && DB.koperasi) {
     if (DB.koperasi.iconImage) installIcon.innerHTML = '<img src="'+DB.koperasi.iconImage+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
     else installIcon.textContent = DB.koperasi.icon || '🏦';
@@ -3936,14 +3918,11 @@ if (installSkip) installSkip.addEventListener('click', () => {
   localStorage.setItem('pwa-skip', '1');
 });
 
-// Register service worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
 /* =========================================================
-=======
->>>>>>> 92331cf826e27b7b634e9442b6d967a321afdeea
    INIT
 ========================================================= */
 const loginYearEl = document.getElementById('login-year');
