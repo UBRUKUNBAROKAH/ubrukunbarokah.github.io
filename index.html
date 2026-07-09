@@ -607,6 +607,11 @@ function nowISO(){ return new Date().toISOString(); }
 function rupiah(n){ n = Number(n)||0; return 'Rp' + n.toLocaleString('id-ID'); }
 // Parse IDR: hapus titik (pemisah ribuan), ganti koma jadi titik (desimal)
 function parseIdr(v){ if(typeof v==='number') return v; if(!v) return 0; return parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0; }
+function marginNominalOf(p){
+  if(p.marginNominal) return p.marginNominal;
+  if(p.marginPersen) return Math.round(p.jumlahPinjaman * p.marginPersen / 100);
+  return 0;
+}
 
 // ---- Wrapper for backward compat ----
 async function loadDB() {
@@ -715,7 +720,8 @@ async function initSupabaseDB() {
           jenis: js 
         },
         aturKeuangan: {
-          marginPersen: 20,
+          marginNominal: 50000,
+          marginMaxNominal: 200000,
           pools: [
             {id:'operasional', label:'Operasional', persen:5},
             {id:'cadangan_resiko', label:'Cadangan Resiko', persen:5},
@@ -775,7 +781,8 @@ function ensureDefaults() {
   if(!DB.koperasi.saham.jenis) DB.koperasi.saham.jenis = [];
   if(!DB.koperasi.aturKeuangan || typeof DB.koperasi.aturKeuangan !== 'object' || Object.keys(DB.koperasi.aturKeuangan).length===0) {
     DB.koperasi.aturKeuangan = {
-      marginPersen: 20,
+      marginNominal: 50000,
+      marginMaxNominal: 200000,
       pools: [
         {id:'operasional', label:'Operasional', persen:5},
         {id:'cadangan_resiko', label:'Cadangan Resiko', persen:5},
@@ -788,8 +795,8 @@ function ensureDefaults() {
       dana: {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0}
     };
   }
-  if(!DB.koperasi.aturKeuangan.marginPersen && DB.koperasi.aturKeuangan.marginPersen !== 0) DB.koperasi.aturKeuangan.marginPersen = 20;
-  if(!DB.koperasi.aturKeuangan.marginMax && DB.koperasi.aturKeuangan.marginMax !== 0) DB.koperasi.aturKeuangan.marginMax = 30;
+  if(!DB.koperasi.aturKeuangan.marginNominal && DB.koperasi.aturKeuangan.marginNominal !== 0) DB.koperasi.aturKeuangan.marginNominal = 50000;
+  if(!DB.koperasi.aturKeuangan.marginMaxNominal && DB.koperasi.aturKeuangan.marginMaxNominal !== 0) DB.koperasi.aturKeuangan.marginMaxNominal = 200000;
   if(!DB.koperasi.aturKeuangan.pools || !DB.koperasi.aturKeuangan.pools.length) {
     DB.koperasi.aturKeuangan.pools = [
       {id:'operasional', label:'Operasional', persen:5},
@@ -1038,7 +1045,7 @@ async function seedSupabase() {
     info: {},
     sertifikat: { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' },
     saham: { pemupukanPersen: 35, jenis: [] },
-    atur_keuangan: { marginPersen: 20, pools: [], dana: {} }
+    atur_keuangan: { marginNominal: 50000, marginMaxNominal: 200000, pools: [], dana: {} }
   }], 'pengaturan koperasi');
 
   // Reload
@@ -1445,7 +1452,7 @@ function doBayarAngsuran(pembId, oleh, jumlah){
   const angsuranKe = p.tenor - p.sisaAngsuran + 1;
   p.riwayatAngsuran.push({id:uid('ang'), tanggal:nowISO(), jumlah, oleh, angsuranKe});
   p.sisaAngsuran--;
-  const totalKew = p.jumlahPinjaman + Math.round(p.jumlahPinjaman*p.marginPersen/100);
+  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
   if(totalDibayar >= totalKew || p.sisaAngsuran<=0) p.status='lunas';
   const olehUser = userById(oleh);
@@ -1454,10 +1461,10 @@ function doBayarAngsuran(pembId, oleh, jumlah){
   if(isAdmin){ st.dikonfirmasiOleh = oleh; st.waktuKonfirmasi = nowISO(); }
   DB.setoran.push(st);
   const atur = DB.koperasi.aturKeuangan;
-  if(atur && atur.pools && atur.dana && p.marginPersen){
-    const marginPerAngsuran = Math.round(p.jumlahPinjaman * p.marginPersen / 100 / p.tenor);
+  if(atur && atur.pools && atur.dana && marginNominalOf(p)){
+    const marginPerAngsuran = Math.round(marginNominalOf(p) / p.tenor);
     atur.pools.forEach(pool=>{
-      const alokasi = Math.round(marginPerAngsuran * pool.persen / atur.marginPersen);
+      const alokasi = Math.round(marginPerAngsuran * pool.persen / 100);
       atur.dana[pool.id] = (atur.dana[pool.id]||0) + alokasi;
     });
   }
@@ -1551,7 +1558,7 @@ function renderAdminBeranda(user){
     <div class="card" style="padding:6px 18px;">
       ${pendingPemb.map(p=>`
         <div class="list-row">
-          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; margin ${p.marginPersen}%${p.keterangan?' &middot; "'+p.keterangan+'"':''} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
+          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))}${p.keterangan?' &middot; "'+p.keterangan+'"':''} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
             <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
@@ -1942,7 +1949,7 @@ function renderAdminPembiayaan(user){
     <div class="card" style="padding:6px 18px;">
       ${pending.map(p=>`
         <div class="list-row">
-          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; margin ${p.marginPersen}%${p.keterangan?' &middot; "'+p.keterangan+'"':''} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
+          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))}${p.keterangan?' &middot; "'+p.keterangan+'"':''} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
             <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
@@ -2025,9 +2032,9 @@ function detailPengajuanModal(pembId){
         <div><span style="color:var(--muted);font-size:11px;">Kelompok</span><br><b>${kelompokName(nas.kelompokId)}</b></div>
         <div><span style="color:var(--muted);font-size:11px;">Jumlah Pinjaman</span><br><b class="mono">${rupiah(p.jumlahPinjaman)}</b></div>
         <div><span style="color:var(--muted);font-size:11px;">Jangka waktu</span><br><b>${p.tenor} bulan</b></div>
-        <div><span style="color:var(--muted);font-size:11px;">Margin</span><br><b>${p.marginPersen}%</b></div>
+        <div><span style="color:var(--muted);font-size:11px;">Keuntungan</span><br><b>${rupiah(marginNominalOf(p))}</b></div>
         <div><span style="color:var(--muted);font-size:11px;">Angsuran/bulan</span><br><b class="mono">${rupiah(p.angsuranPerBulan)}</b></div>
-        <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Total Kewajiban</span><br><b class="mono">${rupiah(p.jumlahPinjaman + Math.round(p.jumlahPinjaman*p.marginPersen/100))}</b></div>
+        <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Total Kewajiban</span><br><b class="mono">${rupiah(p.jumlahPinjaman + marginNominalOf(p))}</b></div>
         <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Diajukan oleh</span><br><b>${koor?koor.nama:'-'} (Koordinator)</b></div>
         ${p.keterangan ? `<div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Keterangan</span><br><b>${p.keterangan}</b></div>` : ''}
       </div>
@@ -2045,7 +2052,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
   if(!p) return `<div class="empty-state">Pembiayaan tidak ditemukan</div>`;
   const nas = userById(p.userId);
   const angsuranBayar = p.riwayatAngsuran.length;
-  const totalKew = p.jumlahPinjaman + Math.round(p.jumlahPinjaman*p.marginPersen/100);
+  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
   const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
   const progres = totalKew>0 ? ((totalDibayar/totalKew)*100).toFixed(0) : 0;
@@ -2055,7 +2062,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
     <div class="card balance-card">
       <div class="label">${nas.nama}</div>
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
-      <div class="rekening">${p.tenor} bulan &middot; margin ${p.marginPersen}% &middot; ${rupiah(p.angsuranPerBulan)}/bln</div>
+      <div class="rekening">${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; ${rupiah(p.angsuranPerBulan)}/bln</div>
     </div>
     <div class="stat-grid" style="margin-bottom:14px;">
       <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(totalKew)}</div><div class="l">Total kewajiban</div></div>
@@ -2084,18 +2091,18 @@ function openPengajuanModal(prefUserId){
   const nasabah = DB.users.filter(u=>u.role==='nasabah');
   const initialUser = prefUserId || (nasabah[0] && nasabah[0].id);
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   openModal(`
     <h3>Pengajuan Pembiayaan Baru</h3>
     <div class="form-row"><label>Nasabah</label><select id="pemb-user" ${prefUserId?'disabled':''}>${nasabah.map(u=>`<option value="${u.id}" ${initialUser===u.id?'selected':''}>${u.nama} &middot; ${kelompokName(u.kelompokId)}</option>`).join('')}</select>${prefUserId?`<input type="hidden" id="pemb-user-forced" value="${prefUserId}">`:''}</div>
     <div class="form-row"><label>Jumlah pinjaman (Rp)</label><input type="number" id="pemb-jumlah" min="50000" step="50000" placeholder="cth. 1000000" oninput="updatePengajuanPreview()"></div>
     <div class="form-row"><label>Jangka waktu (bulan)</label><input type="number" id="pemb-tenor" min="1" max="36" placeholder="cth. 12" oninput="updatePengajuanPreview()"></div>
     <div class="form-row">
-      <label>Margin (%) &mdash; sesuai kesepakatan ${mMin}%&ndash;${mMax}%</label>
-      <input type="number" id="pemb-margin" value="${mMin}" min="${mMin}" max="${mMax}" step="0.5" oninput="updatePengajuanPreview()">
+      <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
+      <input type="number" id="pemb-margin" value="${mMin}" min="${mMin}" max="${mMax}" step="1000" oninput="updatePengajuanPreview()">
     </div>
     <div class="form-row"><label>Keterangan (opsional)</label><textarea id="pemb-ket" placeholder="cth. Untuk biaya pendidikan anak" rows="2"></textarea></div>
-    <div class="hint" id="pemb-preview">Angsuran per bulan dihitung otomatis: (pokok + margin) &divide; jangka waktu.</div>
+    <div class="hint" id="pemb-preview">Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitPengajuan()">Ajukan</button>
@@ -2104,22 +2111,22 @@ function openPengajuanModal(prefUserId){
 }
 function updatePengajuanPreview(){
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const jumlah = parseIdr(document.getElementById('pemb-jumlah').value)||0;
   const tenor = parseIdr(document.getElementById('pemb-tenor').value)||0;
   let margin = parseIdr(document.getElementById('pemb-margin').value)||mMin;
   const el = document.getElementById('pemb-preview');
   if(margin < mMin || margin > mMax){
-    el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
+    el.innerHTML = '<span style="color:var(--danger);">Keuntungan harus antara '+rupiah(mMin)+'&ndash;'+rupiah(mMax)+'.</span>';
     return;
   }
   if(!jumlah || !tenor){
-    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + margin) ÷ jangka waktu.';
+    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + keuntungan) ÷ jangka waktu.';
     return;
   }
-  const total = jumlah + Math.round(jumlah*margin/100);
+  const total = jumlah + margin;
   const angsuran = Math.ceil(total/tenor/1000)*1000;
-  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Margin <b>'+margin+'%</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
+  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Keuntungan <b>'+rupiah(margin)+'</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
 }
 function submitPengajuan(){
   const forced = document.getElementById('pemb-user-forced');
@@ -2127,16 +2134,16 @@ function submitPengajuan(){
   const jumlah = parseIdr(document.getElementById('pemb-jumlah').value);
   const tenor = parseIdr(document.getElementById('pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
   const ket = document.getElementById('pemb-ket').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
-  const total = jumlah + Math.round(jumlah*mp/100);
-  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved', keterangan:ket};
+  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+  const total = jumlah + mp;
+  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved', keterangan:ket};
   DB.pembiayaan.push(p);
   persist();
-  addLog('Buat pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (margin '+mp+'%)' + (ket?' - '+ket:''));
+  addLog('Buat pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
   toast('Pengajuan berhasil dibuat');
   closeModal();
   renderContent();
@@ -2146,15 +2153,16 @@ function openEditPengajuanModal(pembId){
   if(!p) return;
   const nasabah = DB.users.filter(u=>u.role==='nasabah');
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
+  const curMargin = p.marginNominal || p.marginPersen || mMin;
   openModal(`
     <h3>Edit Pengajuan Pembiayaan</h3>
     <div class="form-row"><label>Nasabah</label><select id="edit-pemb-user">${nasabah.map(u=>`<option value="${u.id}" ${u.id===p.userId?'selected':''}>${u.nama}</option>`).join('')}</select></div>
     <div class="form-row"><label>Jumlah pinjaman (Rp)</label><input type="number" id="edit-pemb-jumlah" min="50000" step="50000" value="${p.jumlahPinjaman}" oninput="updateEditPengajuanPreview()"></div>
     <div class="form-row"><label>Jangka waktu (bulan)</label><input type="number" id="edit-pemb-tenor" min="1" max="36" value="${p.tenor}" oninput="updateEditPengajuanPreview()"></div>
     <div class="form-row">
-      <label>Margin (%) &mdash; sesuai kesepakatan ${mMin}%&ndash;${mMax}%</label>
-      <input type="number" id="edit-pemb-margin" value="${p.marginPersen}" min="${mMin}" max="${mMax}" step="0.5" oninput="updateEditPengajuanPreview()">
+      <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
+      <input type="number" id="edit-pemb-margin" value="${curMargin}" min="${mMin}" max="${mMax}" step="1000" oninput="updateEditPengajuanPreview()">
     </div>
     <div class="form-row"><label>Keterangan (opsional)</label><textarea id="edit-pemb-ket" rows="2">${p.keterangan||''}</textarea></div>
     <div class="hint" id="edit-pemb-preview"></div>
@@ -2167,22 +2175,22 @@ function openEditPengajuanModal(pembId){
 }
 function updateEditPengajuanPreview(){
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah').value)||0;
   const tenor = parseIdr(document.getElementById('edit-pemb-tenor').value)||0;
   let margin = parseIdr(document.getElementById('edit-pemb-margin').value)||mMin;
   const el = document.getElementById('edit-pemb-preview');
   if(margin < mMin || margin > mMax){
-    el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
+    el.innerHTML = '<span style="color:var(--danger);">Keuntungan harus antara '+rupiah(mMin)+'&ndash;'+rupiah(mMax)+'.</span>';
     return;
   }
   if(!jumlah || !tenor){
-    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + margin) &divide; jangka waktu.';
+    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.';
     return;
   }
-  const total = jumlah + Math.round(jumlah*margin/100);
+  const total = jumlah + margin;
   const angsuran = Math.ceil(total/tenor/1000)*1000;
-  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Margin <b>'+margin+'%</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
+  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Keuntungan <b>'+rupiah(margin)+'</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
 }
 function submitEditPengajuan(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
@@ -2191,18 +2199,19 @@ function submitEditPengajuan(pembId){
   const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah').value);
   const tenor = parseIdr(document.getElementById('edit-pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const mp = parseIdr(document.getElementById('edit-pemb-margin').value)||mMin;
   const ket = document.getElementById('edit-pemb-ket').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
-  const total = jumlah + Math.round(jumlah*mp/100);
+  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+  const total = jumlah + mp;
   const angsuranBaru = Math.ceil(total/tenor/1000)*1000;
   const sudahBayar = p.riwayatAngsuran.length;
   p.userId = userId;
   p.jumlahPinjaman = jumlah;
   p.tenor = tenor;
-  p.marginPersen = mp;
+  p.marginPersen = 0;
+  p.marginNominal = mp;
   p.angsuranPerBulan = angsuranBaru;
   if(sudahBayar>0 && p.statusPengajuan==='approved'){
     p.sisaAngsuran = Math.max(tenor - sudahBayar, 0);
@@ -2216,7 +2225,7 @@ function submitEditPengajuan(pembId){
   }
   p.keterangan = ket;
   persist();
-  addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (margin '+mp+'%)' + (ket?' - '+ket:''));
+  addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
   toast('Pengajuan berhasil diperbarui');
   closeModal();
   renderContent();
@@ -2634,6 +2643,7 @@ function renderPengaturanKeuangan(){
   let poolChips = pools.map(p=>'<span style="background:#f3f3f3;padding:3px 8px;border-radius:5px;font-size:11px;">'+p.label+' '+p.persen+'%</span>').join('');
   let poolRows = pools.map(p=>'<div class="list-row"><div class="info"><div class="sub" style="padding-left:12px;">'+p.label+'</div></div><div class="amt mono">'+rupiah(dana[p.id]||0)+'</div></div>').join('');
   let poolInputs = pools.map((p,i)=>'<div class="form-row" style="margin:2px 0;"><label style="font-size:13px;flex:1;">'+(i+1)+'. '+p.label+'</label><div style="display:flex;align-items:center;gap:4px;"><input type="number" id="pool-'+p.id+'" value="'+p.persen+'" min="0" max="100" style="width:60px;text-align:center;"><span>%</span></div></div>').join('');
+  let totalPoolPersen = pools.reduce((s,p)=>s+(p.persen||0),0);
   return `
     <div class="section-label">Alur Keuangan Koperasi</div>
     <div class="card" style="padding:18px;font-size:14px;line-height:1.7;">
@@ -2641,7 +2651,7 @@ function renderPengaturanKeuangan(){
         <div style="background:var(--primary-soft);padding:8px 16px;border-radius:8px;font-weight:600;">💵 Sumber Modal</div>
         <div style="color:var(--muted);font-size:13px;">Tabungan Mudharabah + Saham</div>
         <div style="font-size:12px;color:var(--muted);">⬇</div>
-        <div style="background:#e8f5e9;padding:8px 16px;border-radius:8px;font-weight:600;">📋 Pembiayaan (margin ${atur.marginPersen||0}%&ndash;${atur.marginMax||atur.marginPersen||0}% dari pokok)</div>
+        <div style="background:#e8f5e9;padding:8px 16px;border-radius:8px;font-weight:600;">📋 Pembiayaan (keuntungan ${rupiah(atur.marginNominal||0)}&ndash;${rupiah(atur.marginMaxNominal||atur.marginNominal||0)})</div>
         <div style="font-size:12px;color:var(--muted);">⬇</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
           <span style="background:#e3f2fd;padding:4px 10px;border-radius:6px;font-size:12px;">🏦 Pokok → Modal</span>
@@ -2661,16 +2671,16 @@ function renderPengaturanKeuangan(){
       <div class="list-row" style="border-top:1px solid var(--border);"><div class="info"><div class="title">Pool Dana (dari margin)</div></div><div class="amt"></div></div>
       ${poolRows}
     </div>
-    <div class="section-label" style="margin-top:14px;">Atur Margin Pembiayaan &amp; Alokasi</div>
+    <div class="section-label" style="margin-top:14px;">Atur Keuntungan Pembiayaan &amp; Alokasi</div>
     <div class="card" style="padding:12px 18px;">
       <div style="display:flex;gap:10px;">
-        <div class="form-row" style="flex:1;"><label>Margin minimum (%)</label><input type="number" id="atur-margin" value="${atur.marginPersen||20}" min="0" max="100" step="0.5"></div>
-        <div class="form-row" style="flex:1;"><label>Margin maksimum (%)</label><input type="number" id="atur-margin-max" value="${atur.marginMax||30}" min="0" max="100" step="0.5"></div>
+        <div class="form-row" style="flex:1;"><label>Keuntungan minimum (Rp)</label><input type="number" id="atur-margin" value="${atur.marginNominal||50000}" min="0" step="1000"></div>
+        <div class="form-row" style="flex:1;"><label>Keuntungan maksimum (Rp)</label><input type="number" id="atur-margin-max" value="${atur.marginMaxNominal||200000}" min="0" step="1000"></div>
       </div>
-      <div class="hint" style="margin:-4px 0 10px;">Sesuai kesepakatan, margin pembiayaan ditentukan per pengajuan dalam rentang minimum&ndash;maksimum ini oleh nasabah/koordinator saat mengajukan.</div>
-      <div style="margin:10px 0 4px;font-weight:600;font-size:13px;">Alokasi margin ke pool (% dari pokok, dihitung dari margin minimum):</div>
+      <div class="hint" style="margin:-4px 0 10px;">Keuntungan koperasi (selisih di luar pokok pinjaman) ditentukan per pengajuan dalam rentang minimum&ndash;maksimum ini oleh nasabah/koordinator saat mengajukan. Total hutang = pokok + keuntungan.</div>
+      <div style="margin:10px 0 4px;font-weight:600;font-size:13px;">Alokasi keuntungan ke pool (% dari total keuntungan):</div>
       ${poolInputs}
-      <div class="hint" style="margin-bottom:8px;">Total alokasi harus = margin minimum (${atur.marginPersen||20}%)</div>
+      <div class="hint" style="margin-bottom:8px;">Total alokasi harus = 100% (saat ini ${totalPoolPersen}%)</div>
       <button class="btn btn-primary btn-block" onclick="simpanAturKeuangan()">Simpan Aturan</button>
     </div>
   `;
@@ -2696,19 +2706,19 @@ function saveProfilKoperasi(){
   renderContent();
 }
 function simpanAturKeuangan(){
-  const marginPersen = Math.max(0, parseIdr(document.getElementById('atur-margin').value)||0);
-  const marginMax = Math.max(0, parseIdr(document.getElementById('atur-margin-max').value)||0);
-  if(marginMax < marginPersen){ toast('Margin maksimum tidak boleh lebih kecil dari margin minimum'); return; }
+  const marginNominal = Math.max(0, parseIdr(document.getElementById('atur-margin').value)||0);
+  const marginMaxNominal = Math.max(0, parseIdr(document.getElementById('atur-margin-max').value)||0);
+  if(marginMaxNominal < marginNominal){ toast('Keuntungan maksimum tidak boleh lebih kecil dari minimum'); return; }
   const pools = (DB.koperasi.aturKeuangan.pools||[]).map(p=>({...p, persen: Math.max(0, parseIdr(document.getElementById('pool-'+p.id).value)||0)}));
   const total = pools.reduce((s,p)=>s+p.persen,0);
-  if(Math.abs(total-marginPersen)>0.01){ toast('Total alokasi pool harus = margin minimum ('+marginPersen+'%)'); return; }
+  if(Math.abs(total-100)>0.01){ toast('Total alokasi pool harus = 100% (sekarang '+total+'%)'); return; }
   if(!DB.koperasi.aturKeuangan) DB.koperasi.aturKeuangan = {};
-  DB.koperasi.aturKeuangan.marginPersen = marginPersen;
-  DB.koperasi.aturKeuangan.marginMax = marginMax;
+  DB.koperasi.aturKeuangan.marginNominal = marginNominal;
+  DB.koperasi.aturKeuangan.marginMaxNominal = marginMaxNominal;
   DB.koperasi.aturKeuangan.pools = pools;
   if(!DB.koperasi.aturKeuangan.dana) DB.koperasi.aturKeuangan.dana = {};
   persist();
-  addLog('Atur keuangan', 'Memperbarui margin (min-maks) dan alokasi pool');
+  addLog('Atur keuangan', 'Memperbarui keuntungan (min-maks) dan alokasi pool');
   toast('Aturan keuangan disimpan');
   renderContent();
 }
@@ -3541,18 +3551,18 @@ function renderKoorPembiayaan(user){
 function openPengajuanModalKoor(){
   const anggota = nasabahOfKelompok(currentUser().kelompokId);
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   openModal(`
     <h3>Ajukan Pembiayaan Baru</h3>
     <div class="form-row"><label>Anggota</label><select id="pemb-user">${anggota.map(u=>`<option value="${u.id}">${u.nama}</option>`).join('')}</select></div>
     <div class="form-row"><label>Jumlah pinjaman (Rp)</label><input type="number" id="pemb-jumlah" min="50000" step="50000" placeholder="cth. 1000000" oninput="updatePengajuanPreviewKoor()"></div>
     <div class="form-row"><label>Jangka waktu (bulan)</label><input type="number" id="pemb-tenor" min="1" max="36" placeholder="cth. 12" oninput="updatePengajuanPreviewKoor()"></div>
     <div class="form-row">
-      <label>Margin (%) &mdash; sesuai kesepakatan ${mMin}%&ndash;${mMax}%</label>
-      <input type="number" id="pemb-margin" value="${mMin}" min="${mMin}" max="${mMax}" step="0.5" oninput="updatePengajuanPreviewKoor()">
+      <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
+      <input type="number" id="pemb-margin" value="${mMin}" min="${mMin}" max="${mMax}" step="1000" oninput="updatePengajuanPreviewKoor()">
     </div>
     <div class="form-row"><label>Keterangan (opsional)</label><textarea id="pemb-ket" placeholder="cth. Untuk biaya pendidikan anak" rows="2"></textarea></div>
-    <div class="hint" id="pemb-preview-koor">Angsuran per bulan dihitung otomatis: (pokok + margin) &divide; jangka waktu.</div>
+    <div class="hint" id="pemb-preview-koor">Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitPengajuanKoor()">Ajukan</button>
@@ -3561,38 +3571,38 @@ function openPengajuanModalKoor(){
 }
 function updatePengajuanPreviewKoor(){
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const jumlah = parseIdr(document.getElementById('pemb-jumlah').value)||0;
   const tenor = parseIdr(document.getElementById('pemb-tenor').value)||0;
   let margin = parseIdr(document.getElementById('pemb-margin').value)||mMin;
   const el = document.getElementById('pemb-preview-koor');
   if(margin < mMin || margin > mMax){
-    el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
+    el.innerHTML = '<span style="color:var(--danger);">Keuntungan harus antara '+rupiah(mMin)+'&ndash;'+rupiah(mMax)+'.</span>';
     return;
   }
   if(!jumlah || !tenor){
-    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + margin) ÷ jangka waktu.';
+    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + keuntungan) ÷ jangka waktu.';
     return;
   }
-  const total = jumlah + Math.round(jumlah*margin/100);
+  const total = jumlah + margin;
   const angsuran = Math.ceil(total/tenor/1000)*1000;
-  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Margin <b>'+margin+'%</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
+  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Keuntungan <b>'+rupiah(margin)+'</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
 }
 function submitPengajuanKoor(){
   const userId = document.getElementById('pemb-user').value;
   const jumlah = parseIdr(document.getElementById('pemb-jumlah').value);
   const tenor = parseIdr(document.getElementById('pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
   const ket = document.getElementById('pemb-ket').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
-  const total = jumlah + Math.round(jumlah*mp/100);
-  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'pending', riwayatAngsuran:[], statusPengajuan:'pending', keterangan:ket};
+  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+  const total = jumlah + mp;
+  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'pending', riwayatAngsuran:[], statusPengajuan:'pending', keterangan:ket};
   DB.pembiayaan.push(p);
   persist();
-  addLog('Ajukan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (margin '+mp+'%)' + (ket?' - '+ket:''));
+  addLog('Ajukan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
   toast('Pengajuan pembiayaan dikirim, menunggu ACC admin');
   closeModal();
   renderContent();
@@ -3602,15 +3612,16 @@ function openEditPengajuanModalKoor(pembId){
   if(!p || p.statusPengajuan!=='pending'){ toast('Hanya pengajuan pending yang bisa diedit'); return; }
   const anggota = nasabahOfKelompok(currentUser().kelompokId);
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
+  const curMargin = p.marginNominal || p.marginPersen || mMin;
   openModal(`
     <h3>Edit Pengajuan Pembiayaan</h3>
     <div class="form-row"><label>Anggota</label><select id="edit-pemb-user-koor">${anggota.map(u=>`<option value="${u.id}" ${u.id===p.userId?'selected':''}>${u.nama}</option>`).join('')}</select></div>
     <div class="form-row"><label>Jumlah pinjaman (Rp)</label><input type="number" id="edit-pemb-jumlah-koor" min="50000" step="50000" value="${p.jumlahPinjaman}" oninput="updateEditPengajuanPreviewKoor()"></div>
     <div class="form-row"><label>Jangka waktu (bulan)</label><input type="number" id="edit-pemb-tenor-koor" min="1" max="36" value="${p.tenor}" oninput="updateEditPengajuanPreviewKoor()"></div>
     <div class="form-row">
-      <label>Margin (%) &mdash; sesuai kesepakatan ${mMin}%&ndash;${mMax}%</label>
-      <input type="number" id="edit-pemb-margin-koor" value="${p.marginPersen}" min="${mMin}" max="${mMax}" step="0.5" oninput="updateEditPengajuanPreviewKoor()">
+      <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
+      <input type="number" id="edit-pemb-margin-koor" value="${curMargin}" min="${mMin}" max="${mMax}" step="1000" oninput="updateEditPengajuanPreviewKoor()">
     </div>
     <div class="form-row"><label>Keterangan (opsional)</label><textarea id="edit-pemb-ket-koor" rows="2">${p.keterangan||''}</textarea></div>
     <div class="hint" id="edit-pemb-preview-koor"></div>
@@ -3623,22 +3634,22 @@ function openEditPengajuanModalKoor(pembId){
 }
 function updateEditPengajuanPreviewKoor(){
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah-koor').value)||0;
   const tenor = parseIdr(document.getElementById('edit-pemb-tenor-koor').value)||0;
   let margin = parseIdr(document.getElementById('edit-pemb-margin-koor').value)||mMin;
   const el = document.getElementById('edit-pemb-preview-koor');
   if(margin < mMin || margin > mMax){
-    el.innerHTML = '<span style="color:var(--danger);">Margin harus antara '+mMin+'%&ndash;'+mMax+'%.</span>';
+    el.innerHTML = '<span style="color:var(--danger);">Keuntungan harus antara '+rupiah(mMin)+'&ndash;'+rupiah(mMax)+'.</span>';
     return;
   }
   if(!jumlah || !tenor){
-    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + margin) &divide; jangka waktu.';
+    el.textContent = 'Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.';
     return;
   }
-  const total = jumlah + Math.round(jumlah*margin/100);
+  const total = jumlah + margin;
   const angsuran = Math.ceil(total/tenor/1000)*1000;
-  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Margin <b>'+margin+'%</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
+  el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Keuntungan <b>'+rupiah(margin)+'</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
 }
 function submitEditPengajuanKoor(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
@@ -3647,21 +3658,22 @@ function submitEditPengajuanKoor(pembId){
   const jumlah = parseIdr(document.getElementById('edit-pemb-jumlah-koor').value);
   const tenor = parseIdr(document.getElementById('edit-pemb-tenor-koor').value);
   const atur = DB.koperasi.aturKeuangan||{};
-  const mMin = atur.marginPersen||20, mMax = atur.marginMax||30;
+  const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
   const mp = parseIdr(document.getElementById('edit-pemb-margin-koor').value)||mMin;
   const ket = document.getElementById('edit-pemb-ket-koor').value.trim();
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Margin harus antara '+mMin+'%-'+mMax+'%'); return; }
-  const total = jumlah + Math.round(jumlah*mp/100);
+  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+  const total = jumlah + mp;
   p.userId = userId;
   p.jumlahPinjaman = jumlah;
   p.tenor = tenor;
-  p.marginPersen = mp;
+  p.marginPersen = 0;
+  p.marginNominal = mp;
   p.angsuranPerBulan = Math.ceil(total/tenor/1000)*1000;
   p.sisaAngsuran = tenor;
   p.keterangan = ket;
   persist();
-  addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (margin '+mp+'%)' + (ket?' - '+ket:''));
+  addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
   toast('Pengajuan berhasil diperbarui');
   closeModal();
   renderContent();
@@ -3669,7 +3681,7 @@ function submitEditPengajuanKoor(pembId){
 function bayarAngsuranPrompt(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   const angsuranKe = p.tenor - p.sisaAngsuran + 1;
-  const totalKew = p.jumlahPinjaman + Math.round(p.jumlahPinjaman*p.marginPersen/100);
+  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
   const sisaTagihan = totalKew - totalDibayar;
   openModal(`
