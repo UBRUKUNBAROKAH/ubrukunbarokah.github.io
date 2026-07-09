@@ -1,5 +1,5 @@
 const CACHE = 'rukun-barokah-v3';
-const URLS = ['.','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./logo.png'];
+const URLS = ['./app.html','./manifest.json','./icon-192.png','./icon-512.png','./logo.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
   self.skipWaiting();
