@@ -1,0 +1,17 @@
+# Ignore junk / local backups
+.git_old/
+DATAUB/
+data dari web lama/
+UB Rukun Barokah*.html
+app (1).html
+app (2).html
+appx.html
+c.html
+index2.html
+gemini-code-*.html
+UB Rukun Barokah - Copy.html
+
+# Node / OS
+node_modules/
+.DS_Store
+Thumbs.db
