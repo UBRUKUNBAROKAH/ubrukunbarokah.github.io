@@ -1912,14 +1912,24 @@ function submitTambahAnggota(){
     noRekening: '2026'+String(1000+DB.users.length), saham:{s_A:0,s_B:0,s_C:0}, status:'aktif',
     anggotaId: uid('agg'), createdAt: nowISO()
   };
+  // Check if any tabungan accounts exist for this user before adding
+  const existingAccounts = DB.tabunganAccounts.filter(a=>a.userId===newUser.id);
+  if(existingAccounts.length > 0) {
+    console.error('BUG: New member already has tabungan accounts!', existingAccounts);
+    alert('BUG: Anggota baru sudah punya rekening tabungan! Harusnya tidak boleh.');
+  }
+  
   DB.users.push(newUser);
   persist();
+  
+  // Check again after adding
+  const newAccounts = DB.tabunganAccounts.filter(a=>a.userId===newUser.id);
+  if(newAccounts.length > 0) {
+    console.error('BUG: Tabungan accounts created automatically for new member!', newAccounts);
+    alert('BUG: Rekening tabungan auto-created untuk anggota baru!');
+  }
+  
   addLog('Tambah anggota', 'Menambahkan anggota baru: ' + nama + ' (' + kelompokName(kelompokId) + ')');
-  console.log('DEBUG: New member added', {
-    userId: newUser.id,
-    hasTabunganAccounts: DB.tabunganAccounts.some(a=>a.userId===newUser.id),
-    tabunganAccountsCount: DB.tabunganAccounts.filter(a=>a.userId===newUser.id).length
-  });
   toast('Anggota baru berhasil ditambahkan');
   closeModal();
   renderContent();
