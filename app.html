@@ -73,36 +73,39 @@ input,select{font-family:inherit;}
   padding:32px 20px;
   position:relative;
   overflow:hidden;
-  background:linear-gradient(160deg, var(--primary) 0%, var(--primary-2) 55%, #14573F 100%);
+  color:#062f1d;
+  background-color:#ffffff;
+  background-image:
+    radial-gradient(circle at 10% 15%, rgba(16,185,129,.85) 0%, rgba(4,120,87,.75) 30%, transparent 70%),
+    radial-gradient(circle at 90% 85%, rgba(5,150,105,.85) 0%, rgba(6,78,59,.8) 35%, transparent 70%);
+  background-size:160% 160%;
+  animation:gerakCahaya 14s ease-in-out infinite alternate;
+}
+@keyframes gerakCahaya{
+  0%{background-position:0% 10%;}
+  50%{background-position:100% 90%;}
+  100%{background-position:20% 100%;}
 }
 #login-screen::before{
   content:'';
   position:absolute; inset:0;
-  background-image:radial-gradient(circle at 12px 12px, rgba(255,255,255,.06) 2px, transparent 2.5px);
+  background-image:radial-gradient(circle at 12px 12px, rgba(6,47,29,.04) 2px, transparent 2.5px);
   background-size:36px 36px;
-  pointer-events:none;
-}
-#login-screen::after{
-  content:'';
-  position:absolute;
-  width:360px;height:360px;
-  border-radius:50%;
-  background:var(--gold);
-  opacity:.18;
-  filter:blur(70px);
-  top:-120px; right:-100px;
   pointer-events:none;
 }
 .login-card{
   position:relative; z-index:1;
   width:100%; max-width:360px;
-  background:var(--surface);
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(255,255,255,.5);
   border-radius:32px;
   padding:34px 26px 28px;
   display:flex;
   flex-direction:column;
   gap:16px;
-  box-shadow:0 30px 60px -18px rgba(0,0,0,.4);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 30px 60px -18px rgba(4,120,87,.25);
   animation:loginSlideUp .45s cubic-bezier(.22,1,.36,1);
 }
 .login-illustration{
@@ -1406,7 +1409,7 @@ function nextAccNo(){
 }
 function getAccount(userId, jenisId){
   let acc = DB.tabunganAccounts.find(a=>a.userId===userId && a.jenisId===jenisId);
-  if(!acc){ acc = {id:uid('acc'), userId, jenisId, saldo:0, noRekening:nextAccNo()}; DB.tabunganAccounts.push(acc); }
+  if(!acc) return null;
   if(!acc.noRekening) acc.noRekening = nextAccNo();
   return acc;
 }
@@ -1451,6 +1454,7 @@ function koordinatorForKelompok(kelompokId){
 
 function doSetor(userId, jenisId, jumlah, keterangan){
   const acc = getAccount(userId, jenisId);
+  if(!acc) throw new Error('Rekening tabungan belum dibuka untuk jenis ini.');
   acc.saldo += jumlah;
   const s = getSession();
   DB.tabunganTx.push({id:uid('tx'), userId, jenisId, tipe:'setor', jumlah, saldoSetelah:acc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: keterangan||'Setoran tunai'});
@@ -1485,6 +1489,7 @@ async function confirmSetoran(setoranId){
 }
 function doTarik(userId, jenisId, jumlah, keterangan){
   const acc = getAccount(userId, jenisId);
+  if(!acc) return {ok:false, msg:'Rekening tabungan belum dibuka untuk jenis ini.'};
   if(acc.saldo < jumlah) return {ok:false, msg:'Saldo tidak mencukupi.'};
   acc.saldo -= jumlah;
   const s = getSession();
@@ -1834,12 +1839,17 @@ function submitTx(tipe){
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
   const s = getSession();
   if(tipe==='setor'){
-    if(s.role==='koordinator'){
-      doSetorKoordinator(userId, jenisId, jumlah, ket);
-      toast('Setoran dicatat, menunggu konfirmasi admin');
-    } else {
-      doSetor(userId, jenisId, jumlah, ket);
-      toast('Setoran berhasil dicatat');
+    try {
+      if(s.role==='koordinator'){
+        doSetorKoordinator(userId, jenisId, jumlah, ket);
+        toast('Setoran dicatat, menunggu konfirmasi admin');
+      } else {
+        doSetor(userId, jenisId, jumlah, ket);
+        toast('Setoran berhasil dicatat');
+      }
+    } catch(e) {
+      toast(e.message);
+      return;
     }
   } else {
     const r = doTarik(userId, jenisId, jumlah, ket);
@@ -1865,7 +1875,7 @@ function openTambahAnggotaModal(forcedKelompokId){
       <select id="ta-kelompok" ${forcedKelompokId?'disabled':''}>${kelompokOptions}</select>
       ${forcedKelompokId?`<input type="hidden" id="ta-kelompok-forced" value="${forcedKelompokId}">`:''}
     </div>
-    <div class="hint">Anggota baru otomatis mendapat nomor rekening dan rekening Simpanan Pokok. Username & password dapat diatur di Manajemen Pengguna.</div>
+    <div class="hint">Anggota baru otomatis mendapat nomor rekening anggota. Rekening tabungan & pembiayaan baru muncul saat dibuka lewat menu Tabungan/Pembiayaan. Username & password dapat diatur di Manajemen Pengguna.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitTambahAnggota()">Simpan</button>
@@ -1893,11 +1903,6 @@ function submitTambahAnggota(){
     anggotaId: uid('agg'), createdAt: nowISO()
   };
   DB.users.push(newUser);
-
-  const jtMudharabah = DB.koperasi.jenisTabungan.find(j=>j.id==='jt_mudharabah') || DB.koperasi.jenisTabungan[0];
-  if(jtMudharabah){
-    DB.tabunganAccounts.push({id:uid('acc'), userId:newUser.id, jenisId:jtMudharabah.id, saldo:0});
-  }
   persist();
   addLog('Tambah anggota', 'Menambahkan anggota baru: ' + nama + ' (' + kelompokName(kelompokId) + ')');
   toast('Anggota baru berhasil ditambahkan');
