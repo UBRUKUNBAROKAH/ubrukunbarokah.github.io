@@ -2705,7 +2705,7 @@ function saveProfilKoperasi(){
   toast('Profil koperasi disimpan');
   renderContent();
 }
-function simpanAturKeuangan(){
+async function simpanAturKeuangan(){
   const marginNominal = Math.max(0, parseIdr(document.getElementById('atur-margin').value)||0);
   const marginMaxNominal = Math.max(0, parseIdr(document.getElementById('atur-margin-max').value)||0);
   if(marginMaxNominal < marginNominal){ toast('Keuntungan maksimum tidak boleh lebih kecil dari minimum'); return; }
@@ -2713,11 +2713,22 @@ function simpanAturKeuangan(){
   const total = pools.reduce((s,p)=>s+p.persen,0);
   if(Math.abs(total-100)>0.01){ toast('Total alokasi pool harus = 100% (sekarang '+total+'%)'); return; }
   if(!DB.koperasi.aturKeuangan) DB.koperasi.aturKeuangan = {};
+  // Simpan backup nilai lama untuk rollback kalau gagal
+  const backup = JSON.parse(JSON.stringify(DB.koperasi.aturKeuangan));
   DB.koperasi.aturKeuangan.marginNominal = marginNominal;
   DB.koperasi.aturKeuangan.marginMaxNominal = marginMaxNominal;
   DB.koperasi.aturKeuangan.pools = pools;
   if(!DB.koperasi.aturKeuangan.dana) DB.koperasi.aturKeuangan.dana = {};
-  persistNow();
+  const btn = document.querySelector('button[onclick="simpanAturKeuangan()"]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  const result = await persistNow();
+  if(!result.ok){
+    // Gagal simpan ke Supabase -> rollback biar UI gak menyesatkan
+    DB.koperasi.aturKeuangan = backup;
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek konsol untuk detail'));
+    renderContent();
+    return;
+  }
   addLog('Atur keuangan', 'Memperbarui keuntungan (min-maks) dan alokasi pool');
   toast('Aturan keuangan disimpan');
   renderContent();
