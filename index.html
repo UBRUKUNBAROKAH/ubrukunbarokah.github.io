@@ -2311,9 +2311,13 @@ function renderAdminUserMgmt(user){
     {role:'koordinator', label:'Koordinator'},
     {role:'admin', label:'Admin'}
   ];
-  const filtered = DB.users.filter(u=>u.role===tabRole);
+  // Manajemen Pengguna hanya untuk akun login sungguhan (tabel users).
+  // Anggota tanpa akun (_noAkun, hasil merge dari tabel "anggota" yang belum
+  // punya baris login) tidak ditampilkan di sini — kelola akunnya lewat "Tambah pengguna".
+  const realUsers = DB.users.filter(u=>!u._noAkun);
+  const filtered = realUsers.filter(u=>u.role===tabRole);
   return `
-    <div class="page-title">Manajemen Pengguna<span class="sub">${DB.users.length} akun terdaftar</span></div>
+    <div class="page-title">Manajemen Pengguna<span class="sub">${realUsers.length} akun terdaftar</span></div>
     <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openUserModal()">${ICONS.plus} Tambah pengguna</button>
     <div class="tabs">
       ${groups.map(g=>`<button class="${tabRole===g.role?'active':''}" onclick="currentSubState.roleTab='${g.role}'; renderContent()">${g.label}</button>`).join('')}
