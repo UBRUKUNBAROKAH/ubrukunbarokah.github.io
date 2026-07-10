@@ -2838,7 +2838,7 @@ function renderPengaturanSaham(){
     <div class="flex-between" style="margin-bottom:10px;"><div class="hint" style="margin:0;">${DB.koperasi.saham.jenis.length} jenis saham terdaftar</div><button class="btn btn-outline btn-sm" onclick="openTambahSahamModal()">${ICONS.plus} Tambah</button></div>
     <div class="card" style="padding:6px 18px;">
       ${DB.koperasi.saham.jenis.map(j=>
-        `<div class="list-row"><div class="info"><div class="title">${j.nama}</div><div class="sub">${rupiah(nilaiSahamPerLembar(j))} / lembar ${pct>0?'<span style="color:var(--ok);font-size:11px;">(dari '+rupiah(j.nominalPerLembar)+')</span>':''} &middot; SHU ${j.shuPersen}%</div></div>
+        `<div class="list-row"><div class="info"><div class="title">${j.nama}${!j.nominalPerLembar?' <span style="font-size:10px;background:var(--danger-soft);color:var(--danger);padding:2px 8px;border-radius:6px;font-weight:600;">Nominal belum diatur</span>':''}</div><div class="sub">${rupiah(nilaiSahamPerLembar(j))} / lembar ${pct>0&&j.nominalPerLembar?'<span style="color:var(--ok);font-size:11px;">(dari '+rupiah(j.nominalPerLembar)+')</span>':''} &middot; SHU ${j.shuPersen}%</div></div>
         <div style="display:flex;gap:4px;">
           <button class="icon-btn-sm ic-primary" onclick="editSahamJenis('${j.id}')">✎</button>
           <button class="btn btn-danger btn-sm" onclick="deleteSahamJenis('${j.id}')">Hapus</button>
@@ -2879,10 +2879,17 @@ function renderPengaturanSaham(){
     </div>
   `;
 }
-function simpanPemupukanPersen(){
+async function simpanPemupukanPersen(){
   const v = parseIdr(document.getElementById('pemupukan-persen').value)||0;
+  const backup = DB.koperasi.saham.pemupukanPersen;
   DB.koperasi.saham.pemupukanPersen = Math.max(0, Math.min(200, v));
-  persist();
+  const result = await persistNow();
+  if(!result.ok){
+    DB.koperasi.saham.pemupukanPersen = backup;
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek konsol untuk detail'));
+    renderContent();
+    return;
+  }
   addLog('Pemupukan saham', 'Mengubah persentase pemupukan saham menjadi '+DB.koperasi.saham.pemupukanPersen+'%');
   toast('Persentase pemupukan saham disimpan');
   renderContent();
@@ -2943,7 +2950,7 @@ function openTambahSahamModal(){
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="submitSahamBaru()">Simpan</button></div>
   `);
 }
-function submitSahamBaru(){
+async function submitSahamBaru(){
   const nama = document.getElementById('sh-nama').value.trim();
   const nominal = parseIdr(document.getElementById('sh-nominal').value)||0;
   const shuPersen = parseIdr(document.getElementById('sh-shu').value)||0;
@@ -2951,7 +2958,13 @@ function submitSahamBaru(){
   const id = 's_'+nama.replace(/[^A-Za-z0-9]/g,'_').toUpperCase();
   DB.koperasi.saham.jenis.push({id, nama, nominalPerLembar:nominal, shuPersen});
   DB.users.forEach(u=>{ if(!u.saham) u.saham={}; u.saham[id]=0; });
-  persist();
+  const result = await persistNow();
+  if(!result.ok){
+    DB.koperasi.saham.jenis = DB.koperasi.saham.jenis.filter(j=>j.id!==id);
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek konsol untuk detail'));
+    renderContent();
+    return;
+  }
   addLog('Tambah saham', 'Menambahkan jenis saham: '+nama);
   toast('Jenis saham ditambahkan');
   closeModal(); renderContent();
@@ -2967,13 +2980,20 @@ function editSahamJenis(id){
     <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanEditSahamJenis('${id}')">Simpan</button></div>
   `);
 }
-function simpanEditSahamJenis(id){
+async function simpanEditSahamJenis(id){
   const j = DB.koperasi.saham.jenis.find(j=>j.id===id);
   if(!j) return;
+  const backup = {...j};
   j.nama = document.getElementById('sh-nama').value.trim() || j.nama;
   j.nominalPerLembar = parseIdr(document.getElementById('sh-nominal').value)||j.nominalPerLembar;
   j.shuPersen = parseIdr(document.getElementById('sh-shu').value)||0;
-  persist();
+  const result = await persistNow();
+  if(!result.ok){
+    Object.assign(j, backup);
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek konsol untuk detail'));
+    renderContent();
+    return;
+  }
   addLog('Ubah saham', 'Memperbarui jenis saham: '+j.nama);
   toast('Jenis saham diperbarui');
   closeModal(); renderContent();
@@ -3230,106 +3250,95 @@ function jnsName(id){
   const j = DB.koperasi.saham.jenis.find(j=>j.id===id);
   return j?j.nama:'-';
 }
-function renderSahamCertificate(nama){
+// Bangun konten sertifikat (dipakai bareng oleh preview di app & window cetak)
+function buildSertifikatCert(nama){
   const jns = DB.koperasi.saham.jenis||[];
   const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama);
-  if(!holdings.length) return '<div class="empty-state">Data saham tidak ditemukan</div>';
+  if(!holdings.length) return null;
   const bg = DB.koperasi.saham.sertifikatBackground||'';
-  const bgStyle = bg ? 'background:url('+bg+') center/cover no-repeat, linear-gradient(135deg,#fefce8,#fffbeb);' : 'background:linear-gradient(135deg,#fefce8,#fffbeb);';
-  const warna = WARNA_SAHAM;
+  const bgStyle = bg ? 'background:url('+bg+') center/cover no-repeat, linear-gradient(135deg,#fdfbf2,#faf5e6);' : 'background:linear-gradient(135deg,#fdfbf2,#faf5e6);';
+  const aksen = ['#0B3D2E','#B98F33'];
   const sert = DB.koperasi.sertifikat||{};
   const judul = sert.judul || 'SERTIFIKAT SAHAM';
   const subjudul = sert.subjudul || '';
   const pembuka = sert.teksPembuka || 'Diberikan kepada';
   const penutup = sert.teksPenutup || '';
-  const warnaBorder = sert.warnaBorder || '#333333';
-  const warnaJudul = sert.warnaJudul || '#333333';
+  const warnaBorder = sert.warnaBorder || '#B98F33';
+  const warnaJudul = sert.warnaJudul || '#0B3D2E';
   const tampilLogo = sert.tampilLogo !== false;
   const tandaTangan = sert.tandaTangan !== false;
   const namaTtd = sert.namaPenandatangan || '';
   const jabatanTtd = sert.jabatanPenandatangan || '';
-  const logoHtml = tampilLogo && DB.koperasi.iconImage ? '<div style="margin-bottom:8px;"><img src="'+DB.koperasi.iconImage+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;"></div>' : '';
+  const logoHtml = tampilLogo && DB.koperasi.iconImage ? '<div style="margin-bottom:10px;"><img src="'+DB.koperasi.iconImage+'" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid '+warnaBorder+';"></div>' : '';
+  const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+  const itemsHtml = holdings.map((k,i)=>{
+    const j = jns.find(j=>j.id===k.jenisId);
+    if(!j) return '';
+    const c = aksen[i%aksen.length];
+    const nominalKosong = !j.nominalPerLembar;
+    return `<div style="background:${c}0d;border:1px solid ${c}45;border-radius:10px;padding:13px 16px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div style="text-align:left;">
+        <div style="font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:${c};letter-spacing:.2px;">${j.nama}</div>
+        ${j.sertifikatTeks?'<div style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:10.5px;color:#8a8272;font-style:italic;margin-top:3px;max-width:220px;">'+j.sertifikatTeks+'</div>':''}
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:${nominalKosong?'#B3402A':'#8a8272'};margin-top:3px;">${nominalKosong?'Nominal per lembar belum diatur':rupiah(nilaiSahamPerLembar(j))+'/lembar'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:#2b271c;">${k.lembar} lembar</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8a8272;margin-top:2px;">${rupiah(k.lembar*nilaiSahamPerLembar(j))}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const totalHtml = `<div style="background:${warnaJudul}0d;border:1px solid ${warnaJudul}45;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-family:'Sora',sans-serif;font-weight:600;font-size:13px;color:${warnaJudul};letter-spacing:.3px;">TOTAL NILAI SAHAM</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:19px;color:${warnaJudul};">${rupiah(total)}</span>
+  </div>`;
+  const penutupHtml = penutup ? '<div style="margin-top:14px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:10px;color:#8a8272;font-style:italic;">'+penutup+'</div>' : '';
+  const ttdHtml = tandaTangan ? `<div style="display:flex;justify-content:flex-end;margin-top:26px;">
+      <div style="text-align:center;min-width:150px;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:#8a8272;margin-bottom:32px;">${DB.koperasi.nama}</div>
+        <div style="width:100%;border-top:1px solid #2b271c;padding-top:5px;">
+          <div style="font-family:'Sora',sans-serif;font-size:12.5px;font-weight:700;color:#2b271c;">${namaTtd||'-'}</div>
+          ${jabatanTtd?'<div style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:10px;color:#8a8272;">'+jabatanTtd+'</div>':''}
+        </div>
+      </div>
+    </div>` : '';
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const inner = `
+    <div style="border:1px solid ${warnaBorder}55;border-radius:6px;padding:34px 44px;">
+      ${logoHtml}
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;letter-spacing:3px;color:#a39b89;margin-bottom:6px;">KOPERASI ${DB.koperasi.nama.toUpperCase()}</div>
+      <div style="font-family:'Sora',sans-serif;font-size:24px;font-weight:800;letter-spacing:1px;margin-bottom:${subjudul?'4px':'16px'};color:${warnaJudul};">${judul}</div>
+      ${subjudul?'<div style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:12px;color:#8a8272;margin-bottom:16px;">'+subjudul+'</div>':''}
+      <div style="width:44px;height:2px;background:${warnaBorder};margin:0 auto 18px;"></div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:#8a8272;margin-bottom:5px;">${pembuka}</div>
+      <div style="font-family:'Sora',sans-serif;font-size:21px;font-weight:700;color:#2b271c;margin-bottom:22px;">${nama}</div>
+      <div style="display:flex;flex-direction:column;margin-bottom:16px;">${itemsHtml}</div>
+      ${totalHtml}
+      ${penutupHtml}
+      ${ttdHtml}
+      <div style="margin-top:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;color:#a39b89;">${DB.koperasi.nama} &middot; ${tgl}</div>
+    </div>`;
+  return { inner, warnaBorder, bgStyle };
+}
+function renderSahamCertificate(nama){
+  const cert = buildSertifikatCert(nama);
+  if(!cert) return '<div class="empty-state">Data saham tidak ditemukan</div>';
   return `
     <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevron.replace('m9 6','M15 6').replace('9 6l6','15 18l-6')}</button>Sertifikat Saham</span></div>
     <div class="sertifikat-wrapper" style="display:flex;justify-content:center;padding:10px 0;">
-      <div id="sertifikat-saham" style="width:210mm;min-height:297mm;border:3px double ${warnaBorder};padding:40px 50px;${bgStyle}text-align:center;box-sizing:border-box;">
-        ${logoHtml}
-        <div style="font-size:11px;letter-spacing:3px;color:#999;margin-bottom:6px;">KOPERASI ${DB.koperasi.nama.toUpperCase()}</div>
-        <div style="font-size:22px;font-weight:800;letter-spacing:1px;margin-bottom:${subjudul?'4px':'14px'};color:${warnaJudul};">${judul}</div>
-        ${subjudul?'<div style="font-size:12px;color:#666;margin-bottom:14px;">'+subjudul+'</div>':''}
-        <div style="width:60px;height:2px;background:${warnaBorder};margin:0 auto 14px;"></div>
-        <div style="font-size:12px;color:#666;margin-bottom:4px;">${pembuka}</div>
-        <div style="font-size:20px;font-weight:700;margin-bottom:20px;">${nama}</div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-          ${holdings.map((k,i)=>{
-            const j = jns.find(j=>j.id===k.jenisId);
-            if(!j) return '';
-            const c = warna[i%warna.length];
-            return `<div style="background:${c}15;border:1px solid ${c};border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:start;">
-              <div><div style="font-weight:700;font-size:14px;color:${c};">${j.nama}</div>${j.sertifikatTeks?'<div style="font-size:10px;color:#666;font-style:italic;margin-top:2px;max-width:180px;">'+j.sertifikatTeks+'</div>':''}<div style="font-size:11px;color:#666;margin-top:2px;">${rupiah(nilaiSahamPerLembar(j))}/lembar</div></div>
-              <div style="text-align:right;"><div style="font-weight:700;font-size:16px;">${k.lembar} lbr</div><div style="font-size:11px;color:#666;">${rupiah(k.lembar*nilaiSahamPerLembar(j))}</div></div>
-            </div>`;
-          }).join('')}
-        </div>
-        <div style="border-top:1px dashed #ccc;padding-top:12px;">
-          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;">
-            <span>Total nilai saham</span>
-            <span class="mono">${rupiah(holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0))}</span>
-          </div>
-        </div>
-        ${penutup?'<div style="margin-top:12px;font-size:10px;color:#666;font-style:italic;">'+penutup+'</div>':''}
-        ${tandaTangan?`
-        <div style="display:flex;justify-content:flex-end;margin-top:20px;">
-          <div style="text-align:center;min-width:140px;">
-            <div style="font-size:11px;color:#666;margin-bottom:30px;">${DB.koperasi.nama}</div>
-            <div style="width:100%;border-top:1px solid #333;padding-top:4px;">
-              <div style="font-size:12px;font-weight:600;">${namaTtd||'-'}</div>
-              ${jabatanTtd?'<div style="font-size:10px;color:#666;">'+jabatanTtd+'</div>':''}
-            </div>
-          </div>
-        </div>`:''}
-        <div style="margin-top:14px;font-size:10px;color:#999;">${DB.koperasi.nama} &middot; ${new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'})}</div>
+      <div id="sertifikat-saham" style="width:210mm;min-height:297mm;border:3px double ${cert.warnaBorder};padding:10px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
+        ${cert.inner}
       </div>
     </div>
     <button class="btn btn-primary btn-block" onclick="cetakSertifikatSaham('${nama}')">🖨 Cetak Sertifikat</button>
   `;
 }
 function cetakSertifikatSaham(nama){
-  const jns = DB.koperasi.saham.jenis||[];
-  const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama);
-  if(!holdings.length) return;
-  const warna = WARNA_SAHAM;
-  const bg = DB.koperasi.saham.sertifikatBackground||'';
-  const bgStyle = bg ? 'background:url('+bg+') center/cover no-repeat, linear-gradient(135deg,#fefce8,#fffbeb);' : 'background:linear-gradient(135deg,#fefce8,#fffbeb);';
-  const sert = DB.koperasi.sertifikat||{};
-  const judul = sert.judul || 'SERTIFIKAT SAHAM';
-  const subjudul = sert.subjudul || '';
-  const pembuka = sert.teksPembuka || 'Diberikan kepada';
-  const penutup = sert.teksPenutup || '';
-  const warnaBorder = sert.warnaBorder || '#333333';
-  const warnaJudul = sert.warnaJudul || '#333333';
-  const tampilLogo = sert.tampilLogo !== false;
-  const tandaTangan = sert.tandaTangan !== false;
-  const namaTtd = sert.namaPenandatangan || '';
-  const jabatanTtd = sert.jabatanPenandatangan || '';
+  const cert = buildSertifikatCert(nama);
+  if(!cert) return;
   const w = window.open('', '_blank');
   if(!w){ toast('Izinkan pop-up untuk mencetak'); return; }
-  const logoHtml = tampilLogo && DB.koperasi.iconImage ? '<div style="margin-bottom:8px;"><img src="'+DB.koperasi.iconImage+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;"></div>' : '';
-  const certHtml = holdings.map((k,i)=>{
-    const j = jns.find(j=>j.id===k.jenisId);
-    if(!j) return '';
-    const c = warna[i%warna.length];
-    return `<div style="background:${c}18;border:1.5px solid ${c};border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
-      <div><div style="font-weight:700;font-size:15px;color:${c};">${j.nama}</div>${j.sertifikatTeks?'<div style="font-size:11px;color:#666;font-style:italic;margin-top:3px;max-width:200px;">'+j.sertifikatTeks+'</div>':''}<div style="font-size:12px;color:#666;margin-top:3px;">${rupiah(nilaiSahamPerLembar(j))}/lembar</div></div>
-      <div style="text-align:right;"><div style="font-weight:700;font-size:17px;">${k.lembar} lembar</div><div style="font-size:12px;color:#666;">${rupiah(k.lembar*nilaiSahamPerLembar(j))}</div></div>
-    </div>`;
-  }).join('');
-  const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
-  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
-  const subLine = subjudul ? '<div style="font-size:12px;color:#666;margin-bottom:14px;">'+subjudul+'</div>' : '';
-  const penutupHtml = penutup ? '<div style="margin-top:12px;font-size:10px;color:#666;font-style:italic;">'+penutup+'</div>' : '';
-  const ttdHtml = tandaTangan ? '<div style="display:flex;justify-content:flex-end;margin-top:20px;"><div style="text-align:center;min-width:140px;"><div style="font-size:11px;color:#666;margin-bottom:30px;">'+DB.koperasi.nama+'</div><div style="width:100%;border-top:1px solid #333;padding-top:4px;"><div style="font-size:12px;font-weight:600;">'+(namaTtd||'-')+'</div>'+(jabatanTtd?'<div style="font-size:10px;color:#666;">'+jabatanTtd+'</div>':'')+'</div></div></div>' : '';
-  w.document.write('<!DOCTYPE html><html><head><title>Sertifikat Saham - '+nama+'</title><style>body{font-family:sans-serif;margin:0;padding:0;background:#f5f5f5;}@media print{body{background:#fff;}}@page{size:A4;margin:15mm;}</style></head><body><div style="width:210mm;min-height:297mm;margin:0 auto;border:3px double '+warnaBorder+';padding:40px 50px;'+bgStyle+'text-align:center;box-sizing:border-box;">'+logoHtml+'<div style="font-size:12px;letter-spacing:3px;color:#999;margin-bottom:8px;">KOPERASI '+DB.koperasi.nama.toUpperCase()+'</div><div style="font-size:26px;font-weight:800;letter-spacing:1px;margin-bottom:'+(subjudul?'6px':'18px')+';color:'+warnaJudul+';">'+judul+'</div>'+subLine+'<div style="width:80px;height:2px;background:'+warnaBorder+';margin:0 auto 18px;"></div><div style="font-size:13px;color:#666;margin-bottom:6px;">'+pembuka+'</div><div style="font-size:22px;font-weight:700;margin-bottom:28px;">'+nama+'</div>'+certHtml+'<div style="border-top:1px dashed #ccc;padding-top:14px;"><div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;"><span>Total nilai saham</span><span>'+rupiah(total)+'</span></div></div>'+penutupHtml+ttdHtml+'<div style="margin-top:18px;font-size:11px;color:#999;">'+DB.koperasi.nama+' &middot; '+tgl+'</div></div><script>window.onload=function(){window.print();window.close()}<\/script></body></html>');
+  w.document.write('<!DOCTYPE html><html><head><title>Sertifikat Saham - '+nama+'</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;background:#f5f5f5;}@media print{body{background:#fff;}}@page{size:A4;margin:15mm;}</style></head><body><div style="width:210mm;min-height:297mm;margin:0 auto;border:3px double '+cert.warnaBorder+';padding:10px;'+cert.bgStyle+'text-align:center;box-sizing:border-box;">'+cert.inner+'</div><script>window.onload=function(){window.print();window.close()}<\\/script></body></html>');
   w.document.close();
 }
 function editKepemilikanSaham(nama){
