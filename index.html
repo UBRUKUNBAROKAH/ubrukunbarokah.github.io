@@ -2341,7 +2341,7 @@ function openUserModal(userId, newRole){
   const orphanAnggota = DB.users.filter(u=>u.role==='nasabah' && u._noAkun);
   const semuaAnggota = DB.users.filter(u=>u.role==='nasabah');
   const orphanOptions = orphanAnggota.map(a=>`<option value="${a.id}">${a.nama} &middot; ${kelompokName(a.kelompokId)}${a.noRekening?' &middot; '+a.noRekening:''}</option>`).join('');
-  const semuaOptions = '<option value="">- Ketik nama manual (bukan anggota) -</option>' + semuaAnggota.map(a=>`<option value="${a.id}">${a.nama} &middot; ${kelompokName(a.kelompokId)}${a._noAkun?' (belum ada akun)':''}</option>`).join('');
+  const semuaOptions = semuaAnggota.map(a=>`<option value="${a.id}">${a.nama} &middot; ${kelompokName(a.kelompokId)}${a._noAkun?' (belum ada akun)':''}</option>`).join('');
   openModal(`
     <h3>${editing ? 'Ubah Pengguna' : 'Tambah ' + roleLabel(role)}</h3>
     <input type="hidden" id="um-role" value="${role}">
@@ -2349,7 +2349,7 @@ function openUserModal(userId, newRole){
     <div class="form-row" id="um-nama-row" ${!editing?'style="display:none;"':''}><label>Nama lengkap</label><input type="text" id="um-nama" value="${editing?editing.nama:''}"></div>
     <div class="form-row" id="um-anggota-row" ${editing?'style="display:none;"':''} data-orphan-options='${orphanOptions.replace(/'/g,"&#39;")}' data-semua-options='${semuaOptions.replace(/'/g,"&#39;")}'>
       <label>Pilih anggota</label>
-      <select id="um-anggota" onchange="onAnggotaPicked()"></select>
+      <select id="um-anggota"></select>
       <span class="hint" id="um-anggota-hint"></span>
     </div>
     <div class="form-row"><label>Nama pengguna (username)</label><input type="text" id="um-username" value="${editing?editing.username:''}" ${editing && editing.id==='u_admin'?'disabled':''}></div>
@@ -2384,21 +2384,8 @@ function toggleRoleFields(){
     if(!sel.innerHTML) sel.innerHTML = '<option value="">- Tidak ada anggota tanpa akun -</option>';
     hint.textContent = sel.options.length && sel.options[0].value ? 'Hanya anggota yang belum punya akun login yang muncul di sini. Anggota baru ditambahkan lewat menu Anggota.' : 'Semua anggota sudah punya akun. Tambahkan anggota baru lewat menu Anggota terlebih dahulu.';
   } else {
-    sel.innerHTML = anggotaRow.dataset.semuaOptions || '<option value="">- Ketik nama manual (bukan anggota) -</option>';
-    hint.textContent = 'Pilih dari daftar anggota untuk mengambil namanya, atau biarkan "Ketik nama manual" lalu isi nama di bawah.';
-  }
-  onAnggotaPicked();
-}
-function onAnggotaPicked(){
-  const role = document.getElementById('um-role').value;
-  if(role==='nasabah') return; // nasabah wajib pilih dari dropdown, tidak butuh nama manual
-  const sel = document.getElementById('um-anggota');
-  const namaRow = document.getElementById('um-nama-row');
-  if(!sel.value){
-    namaRow.style.display = 'flex';
-    document.getElementById('um-nama').value = '';
-  } else {
-    namaRow.style.display = 'none';
+    sel.innerHTML = anggotaRow.dataset.semuaOptions || '<option value="">- Belum ada data anggota -</option>';
+    hint.textContent = 'Nama diambil dari daftar anggota yang sudah terdaftar.';
   }
 }
 function submitUser(existingId){
@@ -2435,12 +2422,10 @@ function submitUser(existingId){
     ? document.getElementById('um-nama').value.trim()
     : (()=>{
         const selVal = document.getElementById('um-anggota').value;
-        if(selVal){
-          const agg = DB.users.find(u=>u.id===selVal);
-          return agg ? agg.nama : '';
-        }
-        return document.getElementById('um-nama').value.trim();
+        const agg = DB.users.find(u=>u.id===selVal);
+        return agg ? agg.nama : '';
       })();
+  if(!existingId && !nama){ toast('Pilih anggota terlebih dahulu'); return; }
   if(!nama || !username || !password){ toast('Lengkapi semua data'); return; }
   if(!existingId && DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
 
