@@ -927,6 +927,7 @@ async function syncAllToSupabase() {
   const usersTable = [];
   const anggotaTable = [];
   (DB.users||[]).forEach(u => {
+    if (u._noAkun) return; // entri sementara (anggota tanpa akun login), jangan disinkron ke tabel users
     const userRec = { id: u.id, username: u.username, password: u.password, role: u.role, nama: u.nama, created_at: u.createdAt };
     const aggId = u.anggotaId || (u.role === 'nasabah' ? uid('agg') : null);
     if (u.role === 'nasabah' && aggId) {
