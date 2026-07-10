@@ -3255,14 +3255,23 @@ function cetakSHU(){
    ADMIN: SAHAM
 ========================================================= */
 const WARNA_SAHAM = ['#f59e0b','#0ea5e9','#22c55e','#8b5cf6','#ef4444','#ec4899'];
+function ownerKelompokId(nama){
+  const manual = (DB.kepemilikanSaham||[]).find(k=>k.nama===nama && k.kelompokId);
+  if(manual) return manual.kelompokId;
+  const u = DB.users.find(u=>u.role==='nasabah' && u.nama===nama);
+  return u ? u.kelompokId : null;
+}
 function renderAdminSaham(user){
   const jns = DB.koperasi.saham.jenis||[];
   const ks = DB.kepemilikanSaham||[];
-  const daftarPemilik = [];
+  const daftarPemilikAll = [];
   const seen = {};
   ks.forEach(k=>{
-    if(!seen[k.nama]){ seen[k.nama]=true; daftarPemilik.push(k.nama); }
+    if(!seen[k.nama]){ seen[k.nama]=true; daftarPemilikAll.push(k.nama); }
   });
+  const kelFilter = currentSubState.sahamKelompok || '';
+  const daftarPemilik = kelFilter ? daftarPemilikAll.filter(nama=>ownerKelompokId(nama)===kelFilter) : daftarPemilikAll;
+  const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   return `
     <div class="page-title">Saham<span class="sub">Kepemilikan saham</span></div>
     <div class="stat-grid">
@@ -3271,23 +3280,30 @@ function renderAdminSaham(user){
         return `<div class="stat-box"><div class="n">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
       }).join('')}
     </div>
-    <button class="btn btn-primary btn-block" onclick="bukaPemilikSahamBaru()">${ICONS.plus} Tambah Pemilik Saham</button>
+    <div class="toolbar-row" style="margin-bottom:14px;">
+      <select onchange="currentSubState.sahamKelompok=this.value; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
+        <option value="">Semua kelompok</option>
+        ${kelompokOptions}
+      </select>
+      <button class="btn btn-primary btn-compact" onclick="bukaPemilikSahamBaru()">${ICONS.plus} Tambah</button>
+    </div>
     <div class="card" style="padding:6px 18px;">
       ${daftarPemilik.length ? daftarPemilik.map((nama,i)=>{
         const holdings = ks.filter(k=>k.nama===nama);
         const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
         return `<div class="list-row"${i>0?' style="border-top:1px dashed var(--border);"':''}>
           <div class="row-num">${i+1}</div>
-          <div class="info" style="cursor:pointer;" onclick="go('admin_saham_certificate',{namaSaham:'${nama}'})"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:10px;margin-top:4px;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div>
+          <div class="info" style="cursor:pointer;" onclick="go('admin_saham_certificate',{namaSaham:'${nama}'})"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;align-items:center;">${kelompokName(ownerKelompokId(nama))!=='-'?`<span style="font-size:10px;color:var(--muted);">${kelompokName(ownerKelompokId(nama))}</span>`:''}${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt mono">${rupiah(total)}</div><button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();editKepemilikanSaham('${nama}')">✎</button></div>
         </div>`;
-      }).join('') : emptyRow('Belum ada pemilik saham')}
+      }).join('') : emptyRow(kelFilter ? 'Tidak ada pemilik saham di kelompok ini' : 'Belum ada pemilik saham')}
     </div>
   `;
 }
 function bukaPemilikSahamBaru(){
   const jns = DB.koperasi.saham.jenis||[];
   const anggota = DB.users.filter(u=>u.role==='nasabah');
+  const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('');
   openModal(`
     <h3>Tambah Kepemilikan Saham</h3>
     <div class="form-row"><label>Nama pemilik</label>
@@ -3296,6 +3312,13 @@ function bukaPemilikSahamBaru(){
         <datalist id="ks-anggota-list">${anggota.map(u=>`<option value="${u.nama}">`).join('')}</datalist>
       </div>
       <span class="hint">Ketik nama manual atau pilih dari daftar anggota yang muncul</span>
+    </div>
+    <div class="form-row"><label>Kelompok</label>
+      <select id="ks-kelompok">
+        <option value="">- Otomatis dari akun anggota (jika ada) -</option>
+        ${kelompokOptions}
+      </select>
+      <span class="hint">Pilih manual kalau nama di atas bukan akun nasabah terdaftar</span>
     </div>
     <div class="form-row"><label>Jenis saham</label>
       <select id="ks-jenis">${jns.map(j=>`<option value="${j.id}">${j.nama} (${rupiah(nilaiSahamPerLembar(j))}/lbr)</option>`).join('')}</select>
@@ -3311,9 +3334,10 @@ function simpanKepemilikanSahamBaru(){
   const nama = document.getElementById('ks-nama').value.trim();
   const jenisId = document.getElementById('ks-jenis').value;
   const lembar = parseIdr(document.getElementById('ks-lembar').value)||0;
+  const kelompokId = document.getElementById('ks-kelompok').value || null;
   if(!nama || !lembar){ toast('Lengkapi nama dan jumlah lembar'); return; }
   const anggota = DB.users.find(u=>u.role==='nasabah'&&u.nama===nama);
-  DB.kepemilikanSaham.push({id:uid('ks'), nama, anggotaId: anggota?anggota.id:null, jenisId, lembar});
+  DB.kepemilikanSaham.push({id:uid('ks'), nama, anggotaId: anggota?anggota.id:null, jenisId, lembar, kelompokId});
   // also sync back to user.saham for backward compat
   if(anggota){
     if(!anggota.saham) anggota.saham={};
@@ -3338,6 +3362,17 @@ function cornerFlourish(color){
     <circle cx="12" cy="2" r="1.1" fill="${color}" opacity=".6"/>
     <circle cx="2" cy="12" r="1.1" fill="${color}" opacity=".6"/>
   </svg>`;
+}
+function serialRangeForHolding(jenisId, holdingId){
+  const all = (DB.kepemilikanSaham||[]).filter(k=>k.jenisId===jenisId).slice().sort((a,b)=> a.id<b.id?-1:(a.id>b.id?1:0));
+  let cum = 0;
+  for(const k of all){
+    const start = cum + 1;
+    const end = cum + (k.lembar||0);
+    if(k.id===holdingId) return { start, end };
+    cum = end;
+  }
+  return { start: 1, end: 1 };
 }
 function sertifikatNomor(nama, kode){
   let h = 0;
@@ -3366,7 +3401,7 @@ function buildSertifikatCert(nama){
   const namaKop = DB.koperasi.nama || 'Koperasi';
   const kodeKop = (namaKop.match(/[A-Za-z]+/g)||['KOP']).map(w=>w[0]).join('').toUpperCase().slice(0,4) || 'KOP';
   const nomorSertifikat = sertifikatNomor(nama, kodeKop);
-  const logoHtml = tampilLogo && DB.koperasi.iconImage ? '<div style="margin-bottom:12px;"><img src="'+DB.koperasi.iconImage+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid '+warnaBorder+';box-shadow:0 0 0 4px '+warnaBorder+'22;"></div>' : '';
+  const logoHtml = tampilLogo && DB.koperasi.iconImage ? '<div style="margin-bottom:14px;"><img src="'+DB.koperasi.iconImage+'" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid '+warnaBorder+';box-shadow:0 0 0 6px '+warnaBorder+'22;"></div>' : '';
   const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
   const totalLembar = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar:0); },0);
   const itemsHtml = holdings.map((k,i)=>{
@@ -3380,6 +3415,7 @@ function buildSertifikatCert(nama){
           <div style="font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:#2b271c;letter-spacing:.2px;">${j.nama}</div>
           ${j.sertifikatTeks?'<div style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:10px;color:#8a8272;font-style:italic;margin-top:2px;max-width:220px;">'+j.sertifikatTeks+'</div>':''}
           <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:10.5px;color:${nominalKosong?'#B3402A':'#8a8272'};margin-top:2px;">${nominalKosong?'Nominal per lembar belum diatur':rupiah(nilaiSahamPerLembar(j))+'/lembar'}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:${warnaBorder};margin-top:3px;letter-spacing:.3px;">No. Seri ${(()=>{ const r=serialRangeForHolding(k.jenisId,k.id); return r.start===r.end?String(r.start).padStart(5,'0'):String(r.start).padStart(5,'0')+'\u2013'+String(r.end).padStart(5,'0'); })()}</div>
         </div>
       </div>
       <div style="text-align:right;flex-shrink:0;">
@@ -3472,8 +3508,15 @@ function editKepemilikanSaham(nama){
   const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama);
   if(!holdings.length) return;
   const jns = DB.koperasi.saham.jenis||[];
+  const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${ownerKelompokId(nama)===k.id?'selected':''}>${k.nama}</option>`).join('');
   openModal(`
     <h3>Edit Saham: ${nama}</h3>
+    <div class="form-row"><label>Kelompok</label>
+      <select id="ks-edit-kelompok">
+        <option value="">- Otomatis dari akun anggota (jika ada) -</option>
+        ${kelompokOptions}
+      </select>
+    </div>
     <div class="form-row"><label>Jenis saham</label>
       <select id="ks-tambah-jenis">${jns.map(j=>`<option value="${j.id}">${j.nama} (${rupiah(nilaiSahamPerLembar(j))}/lbr)</option>`).join('')}</select>
     </div>
@@ -3501,6 +3544,8 @@ function tambahLembarSaham(nama){
   const jenisId = document.getElementById('ks-tambah-jenis').value;
   const lembar = parseIdr(document.getElementById('ks-tambah-lembar').value)||0;
   if(!lembar){ toast('Isi jumlah lembar'); return; }
+  const kelEl = document.getElementById('ks-edit-kelompok');
+  const kelompokId = (kelEl ? kelEl.value : '') || ownerKelompokId(nama) || null;
   let k = DB.kepemilikanSaham.find(x=>x.nama===nama&&x.jenisId===jenisId);
   let existingId;
   if(k){
@@ -3508,7 +3553,7 @@ function tambahLembarSaham(nama){
     existingId = k.id;
   } else {
     const id = uid('ks');
-    DB.kepemilikanSaham.push({id, nama, anggotaId:null, jenisId, lembar});
+    DB.kepemilikanSaham.push({id, nama, anggotaId:null, jenisId, lembar, kelompokId});
     existingId = id;
   }
   document.getElementById('ks-tambah-lembar').value = '0';
@@ -3519,6 +3564,7 @@ function tambahLembarSaham(nama){
 }
 function simpanEditKepemilikanSaham(nama){
   const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama);
+  const kelompokId = document.getElementById('ks-edit-kelompok').value || null;
   holdings.forEach(k=>{
     const v = Math.max(0, parseIdr(document.getElementById('ks-edit-'+k.id).value)||0);
     if(v===0){
@@ -3526,6 +3572,7 @@ function simpanEditKepemilikanSaham(nama){
       supabaseClient.from(TABLES.kepemilikan_saham).delete().eq('id', k.id).then();
     } else {
       k.lembar = v;
+      k.kelompokId = kelompokId;
     }
   });
   // sync back to user.saham
