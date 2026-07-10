@@ -2337,14 +2337,21 @@ function renderAdminUserMgmt(user){
 }
 function openUserModal(userId){
   const editing = userId ? userById(userId) : null;
+  const orphanAnggota = DB.users.filter(u=>u.role==='nasabah' && u._noAkun);
+  const anggotaOptions = orphanAnggota.map(a=>`<option value="${a.id}">${a.nama} &middot; ${kelompokName(a.kelompokId)}${a.noRekening?' &middot; '+a.noRekening:''}</option>`).join('');
   openModal(`
     <h3>${editing ? 'Ubah Pengguna' : 'Tambah Pengguna'}</h3>
-    <div class="form-row"><label>Nama lengkap</label><input type="text" id="um-nama" value="${editing?editing.nama:''}"></div>
+    <div class="form-row" id="um-nama-row" ${!editing?'style="display:none;"':''}><label>Nama lengkap</label><input type="text" id="um-nama" value="${editing?editing.nama:''}"></div>
+    <div class="form-row" id="um-anggota-row" ${editing?'style="display:none;"':''}>
+      <label>Pilih anggota</label>
+      <select id="um-anggota">${anggotaOptions || '<option value="">- Tidak ada anggota tanpa akun -</option>'}</select>
+      <span class="hint">${orphanAnggota.length ? 'Hanya anggota yang belum punya akun login yang muncul di sini. Anggota baru ditambahkan lewat menu Anggota.' : 'Semua anggota sudah punya akun. Tambahkan anggota baru lewat menu Anggota terlebih dahulu.'}</span>
+    </div>
     <div class="form-row"><label>Nama pengguna (username)</label><input type="text" id="um-username" value="${editing?editing.username:''}" ${editing && editing.id==='u_admin'?'disabled':''}></div>
     <div class="form-row"><label>Kata sandi</label><input type="text" id="um-password" value="${editing?editing.password:''}" placeholder="Kata sandi"></div>
     <div class="form-row"><label>Peran</label>
-      <select id="um-role" onchange="toggleKelompokField()" ${editing?'disabled':''}>
-        <option value="nasabah" ${editing&&editing.role==='nasabah'?'selected':''}>Nasabah</option>
+      <select id="um-role" onchange="toggleRoleFields()" ${editing?'disabled':''}>
+        <option value="nasabah" ${!editing || editing.role==='nasabah'?'selected':''}>Nasabah</option>
         <option value="koordinator" ${editing&&editing.role==='koordinator'?'selected':''}>Koordinator</option>
         <option value="admin" ${editing&&editing.role==='admin'?'selected':''}>Administrator</option>
       </select>
@@ -2357,19 +2364,54 @@ function openUserModal(userId){
       <button class="btn btn-primary" onclick="submitUser('${editing?editing.id:''}')">Simpan</button>
     </div>
   `);
-  setTimeout(toggleKelompokField, 0);
+  setTimeout(toggleRoleFields, 0);
 }
-function toggleKelompokField(){
-  const role = document.getElementById('um-role').value;
+function toggleRoleFields(){
+  const roleEl = document.getElementById('um-role');
+  const role = roleEl.value;
+  const editing = roleEl.disabled;
   document.getElementById('um-kelompok-row').style.display = (role==='admin') ? 'none' : 'flex';
+  const namaRow = document.getElementById('um-nama-row');
+  const anggotaRow = document.getElementById('um-anggota-row');
+  if(!editing && role==='nasabah'){
+    namaRow.style.display = 'none';
+    anggotaRow.style.display = 'flex';
+  } else {
+    namaRow.style.display = 'flex';
+    anggotaRow.style.display = 'none';
+  }
 }
 function submitUser(existingId){
-  const nama = document.getElementById('um-nama').value.trim();
+  const role = document.getElementById('um-role').value;
   const username = document.getElementById('um-username').value.trim();
   const password = document.getElementById('um-password').value;
-  const role = document.getElementById('um-role').value;
   const kelompokEl = document.getElementById('um-kelompok');
   const kelompokId = kelompokEl ? kelompokEl.value : null;
+
+  // Tambah akun nasabah baru: ambil datanya dari anggota yang dipilih di dropdown
+  if(!existingId && role==='nasabah'){
+    const anggotaId = document.getElementById('um-anggota').value;
+    if(!anggotaId){ toast('Pilih anggota terlebih dahulu'); return; }
+    if(!username || !password){ toast('Lengkapi semua data'); return; }
+    if(DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
+    const agg = DB.users.find(u=>u.id===anggotaId && u._noAkun);
+    if(!agg){ toast('Data anggota tidak ditemukan, coba muat ulang'); return; }
+    const newUser = {
+      id: uid('u'), username, password, role: 'nasabah', nama: agg.nama,
+      anggotaId: agg.id, kelompokId: agg.kelompokId, noRekening: agg.noRekening,
+      saham: agg.saham || {s_A:0,s_B:0,s_C:0}, status: agg.status || 'aktif', createdAt: nowISO()
+    };
+    DB.users = DB.users.filter(u=>u.id!==agg.id); // buang entri sementara (_noAkun)
+    DB.users.push(newUser);
+    addLog('Tambah pengguna', 'Membuat akun login untuk anggota: ' + agg.nama);
+    persist();
+    toast('Akun login berhasil dibuat');
+    closeModal();
+    renderContent();
+    return;
+  }
+
+  const nama = document.getElementById('um-nama').value.trim();
   if(!nama || !username || !password){ toast('Lengkapi semua data'); return; }
   if(!existingId && DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
 
@@ -2381,7 +2423,6 @@ function submitUser(existingId){
   } else {
     const newUser = {id:uid('u'), username, password, role, nama, createdAt: nowISO()};
     if(role!=='admin') newUser.kelompokId = kelompokId;
-    if(role==='nasabah'){ newUser.anggotaId = uid('agg'); newUser.noRekening = '2026'+String(1000+DB.users.length); newUser.saham = {s_A:0,s_B:0,s_C:0}; }
     if(role==='koordinator'){
       const k = DB.koperasi.kelompok.find(k=>k.id===kelompokId);
       if(k) k.koorId = newUser.id;
