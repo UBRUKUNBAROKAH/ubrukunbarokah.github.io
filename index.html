@@ -339,8 +339,8 @@ input,select{font-family:inherit;}
 #install-desc{font-size:13px;color:var(--muted);line-height:1.5;}
 /* passbook ledger */
 .ledger{border:2px solid var(--primary);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);}
-.ledger-head{background:var(--primary);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:10px 14px;}
-.ledger-row{display:grid;grid-template-columns:1fr 1.2fr 1fr;padding:11px 14px;border-top:1px solid var(--border);align-items:center;}
+.ledger-head{background:var(--primary);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:grid;grid-template-columns:.35fr 1fr 1.2fr 1fr;padding:10px 14px;}
+.ledger-row{display:grid;grid-template-columns:.35fr 1fr 1.2fr 1fr;padding:11px 14px;border-top:1px solid var(--border);align-items:center;}
 .ledger-row:nth-child(even){background:#fafafa;}
 .ledger-row .d{font-size:11px;color:var(--muted);}
 .ledger-row .k{font-size:12px;}
@@ -471,6 +471,7 @@ input,select{font-family:inherit;}
 .stat-box.stat-info .n{color:var(--text);}
 
 .avatar{width:38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.row-num{width:22px;flex-shrink:0;text-align:center;font-size:11.5px;font-weight:700;color:var(--muted);}
 .flex{display:flex;align-items:center;gap:10px;}
 .flex-between{display:flex;align-items:center;justify-content:space-between;}
 a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration:none;}
@@ -710,10 +711,11 @@ async function initSupabaseDB() {
     const lg = toCamel(logs.data || []);
 
     // Merge: untuk nasabah, gabung data anggota ke user
+    const matchedAggIds = new Set();
     const mergedUsers = u.map(user => {
       if (user.role === 'nasabah' && user.anggotaId) {
         const agg = a.find(x => x.id === user.anggotaId);
-        if (agg) return { ...user, ...agg, id: user.id, createdAt: user.createdAt };
+        if (agg) { matchedAggIds.add(agg.id); return { ...user, ...agg, id: user.id, createdAt: user.createdAt }; }
       }
       // Koordinator: cari kelompokId dari tabel kelompok
       if (user.role === 'koordinator') {
@@ -721,6 +723,20 @@ async function initSupabaseDB() {
         if (kel) user.kelompokId = kel.id;
       }
       return user;
+    });
+    // Anggota yang ada di tabel "anggota" tapi belum punya akun login di tabel "users"
+    // (mis. diinput langsung lewat Supabase, atau sinkronisasi user sempat gagal)
+    // tetap ditampilkan di daftar supaya tidak "hilang".
+    a.forEach(agg => {
+      if (!matchedAggIds.has(agg.id)) {
+        mergedUsers.push({
+          id: agg.id, role: 'nasabah', anggotaId: agg.id,
+          nama: agg.nama, nik: agg.nik, alamat: agg.alamat, noHp: agg.noHp,
+          kelompokId: agg.kelompokId, noRekening: agg.noRekening, saham: agg.saham || {},
+          status: agg.status || 'aktif', createdAt: agg.createdAt,
+          username: null, password: null, _noAkun: true
+        });
+      }
     });
 
     // Build DB object
@@ -1644,11 +1660,12 @@ function renderAdminAnggota(user){
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
     </div>
     <div class="card" style="padding:0;">
-      ${list.length ? list.map(u=>`
+      ${list.length ? list.map((u,i)=>`
         <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="go('admin_anggota_detail', {userId:'${u.id}'})">
+          <div class="row-num">${i+1}</div>
           <div class="avatar">${initials(u.nama)}</div>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${u.nama} <span class="badge ${(u.status||'aktif')==='aktif'?'badge-green':'badge-red'}" style="font-size:9.5px;">${u.status||'aktif'}</span></div>
+            <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${u.nama} <span class="badge ${(u.status||'aktif')==='aktif'?'badge-green':'badge-red'}" style="font-size:9.5px;">${u.status||'aktif'}</span>${u._noAkun?'<span class="badge badge-red" style="font-size:9.5px;" title="Belum ada akun login, data hanya dari tabel anggota">Belum ada akun</span>':''}</div>
             <div style="font-size:12px;color:var(--muted);margin-top:2px;">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0;">
@@ -1730,9 +1747,9 @@ function renderAdminTabungan(user){
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
     <div class="card" style="padding:6px 18px;">
-      ${nasabah.length ? nasabah.map(u=>`
+      ${nasabah.length ? nasabah.map((u,i)=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('admin_tabungan_detail',{userId:'${u.id}'})">
-          <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div></div></div>
+          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div></div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
       `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
@@ -1760,9 +1777,9 @@ function renderAdminTabunganDetail(user, userId){
     </div>
     <div class="section-label">Riwayat transaksi</div>
     <div class="ledger">
-      <div class="ledger-head"><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
-      ${tx.length ? tx.map(t=>
-        `<div class="ledger-row"><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>`
+      <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
+      ${tx.length ? tx.map((t,i)=>
+        `<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>`
       ).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada transaksi</div>`}
     </div>
   `;
@@ -1978,8 +1995,9 @@ function renderAdminPembiayaan(user){
       `).join('')}
     </div>` : ''}
     <div class="card" style="padding:6px 18px;">
-      ${list.length ? list.map(p=>`
+      ${list.length ? list.map((p,i)=>`
         <div class="list-row">
+          <div class="row-num">${i+1}</div>
           <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}${p.keterangan?' <span style="font-size:11px;color:var(--muted);font-weight:400;">&mdash; '+p.keterangan+'</span>':''}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
           <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
           <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
@@ -2094,9 +2112,9 @@ function renderPembiayaanDetailPage(pembId, backPage){
     </div>
     <div class="section-label">Riwayat Angsuran</div>
     <div class="ledger">
-      <div class="ledger-head"><div>Tanggal</div><div>Angsuran ke</div><div style="text-align:right;">Jumlah</div></div>
-      ${p.riwayatAngsuran.length ? p.riwayatAngsuran.slice().reverse().map(a=>`
-        <div class="ledger-row"><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div></div>
+      <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Angsuran ke</div><div style="text-align:right;">Jumlah</div></div>
+      ${p.riwayatAngsuran.length ? p.riwayatAngsuran.slice().reverse().map((a,i)=>`
+        <div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div></div>
       `).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada angsuran dibayar</div>`}
       ${sisaTagihan>0 && p.riwayatAngsuran.length>0 ? `<div class="ledger-row" style="grid-template-columns:1fr 1fr 1fr;font-weight:700;border-top:2px solid var(--border);"><div>Sisa</div><div></div><div style="text-align:right;" class="mono">${rupiah(sisaTagihan)}</div></div>` : ''}
     </div>` : `
@@ -2301,9 +2319,9 @@ function renderAdminUserMgmt(user){
       ${groups.map(g=>`<button class="${tabRole===g.role?'active':''}" onclick="currentSubState.roleTab='${g.role}'; renderContent()">${g.label}</button>`).join('')}
     </div>
     <div class="card" style="padding:6px 18px;">
-      ${filtered.length ? filtered.map(u=>`
+      ${filtered.length ? filtered.map((u,i)=>`
         <div class="list-row">
-          <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">@${u.username}${u.kelompokId? ' &middot; '+kelompokName(u.kelompokId):''}</div></div></div>
+          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">@${u.username}${u.kelompokId? ' &middot; '+kelompokName(u.kelompokId):''}</div></div></div>
           <div class="flex">
             <button class="btn btn-outline btn-sm" onclick="openUserModal('${u.id}')">Ubah</button>
             ${u.id!=='u_admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Hapus</button>` : ''}
@@ -2530,7 +2548,7 @@ function renderLapSaham(user,nasabah){
       ${unames.map((nama,i)=>{
         const holdings = ks.filter(k=>k.nama===nama);
         const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
-        return `<div class="list-row" style="${i>0?'border-top:1px dashed var(--border);':''}"><div class="info"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:10px;margin-top:4px;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div><div class="amt mono">${rupiah(total)}</div></div>`;
+        return `<div class="list-row" style="${i>0?'border-top:1px dashed var(--border);':''}"><div class="row-num">${i+1}</div><div class="info"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:10px;margin-top:4px;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div><div class="amt mono">${rupiah(total)}</div></div>`;
       }).join('') || emptyRow('Belum ada pemilik saham')}
     </div>
   `;
@@ -3199,6 +3217,7 @@ function renderAdminSaham(user){
         const holdings = ks.filter(k=>k.nama===nama);
         const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
         return `<div class="list-row"${i>0?' style="border-top:1px dashed var(--border);"':''}>
+          <div class="row-num">${i+1}</div>
           <div class="info" style="cursor:pointer;" onclick="go('admin_saham_certificate',{namaSaham:'${nama}'})"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:10px;margin-top:4px;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt mono">${rupiah(total)}</div><button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();editKepemilikanSaham('${nama}')">✎</button></div>
         </div>`;
@@ -3434,8 +3453,9 @@ function renderAdminLog(user){
   return `
     <div class="page-title">Log Transaksi<span class="sub">${logs.length} catatan aktivitas</span></div>
     <div class="card" style="padding:6px 18px;">
-      ${logs.slice(0,100).map(l=>`
+      ${logs.slice(0,100).map((l,i)=>`
         <div class="list-row">
+          <div class="row-num">${i+1}</div>
           <div class="info"><div class="title">${l.aksi} <span class="badge badge-green" style="margin-left:6px;">${l.peran}</span></div><div class="sub">${l.detail}</div></div>
           <div class="sub" style="font-size:10.5px;white-space:nowrap;text-align:right;">${fmtDate(l.waktu)}</div>
         </div>
@@ -3489,9 +3509,9 @@ function renderKoorAnggota(user){
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah</button>
     </div>
     <div class="card" style="padding:6px 18px;">
-      ${anggota.length ? anggota.map(u=>`
+      ${anggota.length ? anggota.map((u,i)=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_anggota_detail',{userId:'${u.id}'})">
-          <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">No. Rek ${u.noRekening}</div></div></div>
+          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">No. Rek ${u.noRekening}</div></div></div>
           <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
         </div>
       `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota aktif di kelompok ini'}</div></div>`}
@@ -3519,9 +3539,9 @@ function renderKoorTabungan(user){
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
     <div class="card" style="padding:6px 18px;">
-      ${anggota.length ? anggota.map(u=>`
+      ${anggota.length ? anggota.map((u,i)=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_tabungan_detail',{userId:'${u.id}'})">
-          <div class="flex"><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${u.noRekening}</div></div></div>
+          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${u.noRekening}</div></div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
       `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
@@ -3550,9 +3570,9 @@ function renderKoorTabunganDetail(user, userId){
     </div>
     <div class="section-label">Riwayat transaksi</div>
     <div class="ledger">
-      <div class="ledger-head"><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
-      ${tx.length ? tx.map(t=>
-        `<div class="ledger-row"><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>`
+      <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
+      ${tx.length ? tx.map((t,i)=>
+        `<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>`
       ).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada transaksi</div>`}
     </div>
   `;
@@ -3574,8 +3594,9 @@ function renderKoorPembiayaan(user){
       <button class="btn btn-primary btn-compact" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan</button>
     </div>
     <div class="card" style="padding:6px 18px;">
-      ${list.length ? list.map(p=>`
+      ${list.length ? list.map((p,i)=>`
         <div class="list-row">
+          <div class="row-num">${i+1}</div>
           <div class="info" style="cursor:pointer;" onclick="go('koor_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}${p.keterangan?' <span style="font-size:11px;color:var(--muted);font-weight:400;">&mdash; '+p.keterangan+'</span>':''}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; angsuran ${rupiah(p.angsuranPerBulan)}/bln &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
           ${p.status==='lunas'
             ? `<span class="badge badge-green">Lunas</span>`
@@ -3854,9 +3875,9 @@ function renderNasTabungan(user){
     </div>
     <div class="section-label">Riwayat transaksi</div>
     <div class="ledger">
-      <div class="ledger-head"><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
-      ${tx.length ? tx.map(t=>`
-        <div class="ledger-row"><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>
+      <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
+      ${tx.length ? tx.map((t,i)=>`
+        <div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>
       `).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada transaksi</div>`}
     </div>
     <div class="hint" style="text-align:center;margin-top:14px;">Setoran dan penarikan dilakukan melalui koordinator kelompok Anda.</div>
@@ -3887,8 +3908,8 @@ function renderNasPembiayaan(user){
         ${p.riwayatAngsuran.length ? `
           <div class="section-label" style="margin-top:14px;">Riwayat angsuran</div>
           <div class="ledger">
-            <div class="ledger-head"><div>Tanggal</div><div>Angsuran</div><div style="text-align:right;">Jumlah</div></div>
-            ${p.riwayatAngsuran.map(a=>`<div class="ledger-row"><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div></div>`).join('')}
+            <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Angsuran</div><div style="text-align:right;">Jumlah</div></div>
+            ${p.riwayatAngsuran.map((a,i)=>`<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div></div>`).join('')}
           </div>
         ` : ''}
       </div>
