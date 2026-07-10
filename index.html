@@ -2717,7 +2717,7 @@ function simpanAturKeuangan(){
   DB.koperasi.aturKeuangan.marginMaxNominal = marginMaxNominal;
   DB.koperasi.aturKeuangan.pools = pools;
   if(!DB.koperasi.aturKeuangan.dana) DB.koperasi.aturKeuangan.dana = {};
-  persist();
+  persistNow();
   addLog('Atur keuangan', 'Memperbarui keuntungan (min-maks) dan alokasi pool');
   toast('Aturan keuangan disimpan');
   renderContent();
