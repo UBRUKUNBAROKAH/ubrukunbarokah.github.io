@@ -11,6 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#F1F6F0;
@@ -611,6 +614,10 @@ const ICONS = {
   search:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
   group:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>',
   chevron:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  chevronLeft:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  download:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5"/><path d="M4 18v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+  pdf:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6"/></svg>',
+  xls:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6"/></svg>',
   coin:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 15.2c0 1 .9 1.8 2.4 1.8 1.6 0 2.6-.8 2.6-1.9 0-2.8-5-1.4-5-4.1 0-1.1 1-1.9 2.5-1.9 1.4 0 2.4.7 2.4 1.7M12 6.4v11.2"/></svg>'
 };
 
@@ -1691,7 +1698,7 @@ function renderMemberDetail(nas, backPage){
   const pembs = pembiayaanForUser(nas.id);
   const isAktif = nas.status !== 'nonaktif';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevron.replace('m9 6','M15 6').replace('9 6l6','15 18l-6')}</button>${nas.nama}</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>${nas.nama}</span></div>
     <div class="card">
       <div class="flex-between">
         <div class="flex"><div class="avatar">${initials(nas.nama)}</div><div><div style="font-weight:700;">${nas.nama}</div><div class="hint">${kelompokName(nas.kelompokId)} &middot; No. Rek ${nas.noRekening||'-'}</div></div></div>
@@ -1723,6 +1730,135 @@ function renderMemberDetail(nas, backPage){
 }
 
 /* =========================================================
+   EXPORT: PDF & EXCEL (Tabungan / Pembiayaan / Saham)
+========================================================= */
+const EXPORT_META = {
+  tabungan: {
+    label: 'Tabungan',
+    headers: ['No','Nama','No. Rekening','Kelompok','Total Saldo'],
+    rows: function(kelompokId){
+      const nasabah = DB.users.filter(u=>u.role==='nasabah' && u.kelompokId===kelompokId && DB.tabunganAccounts.some(a=>a.userId===u.id));
+      return nasabah.map((u,i)=>[i+1, u.nama, u.noRekening||'-', kelompokName(u.kelompokId), rupiah(totalSaldoUser(u.id))]);
+    }
+  },
+  pembiayaan: {
+    label: 'Pembiayaan',
+    headers: ['No','Nama','Jumlah Pinjaman','Tenor','Sisa Angsuran','Status Pengajuan','Status'],
+    rows: function(kelompokId){
+      const list = DB.pembiayaan.filter(p=>userById(p.userId).kelompokId===kelompokId);
+      return list.map((p,i)=>[i+1, userById(p.userId).nama, rupiah(p.jumlahPinjaman), p.tenor+' bln', p.sisaAngsuran+'/'+p.tenor,
+        p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak'),
+        p.status==='lunas'?'Lunas':'Berjalan']);
+    }
+  },
+  saham: {
+    label: 'Saham',
+    headers: ['No','Nama Pemilik','Kepemilikan','Total Nilai'],
+    rows: function(kelompokId){
+      const jns = DB.koperasi.saham.jenis||[];
+      const ks = DB.kepemilikanSaham||[];
+      const seen = {}; const names = [];
+      ks.forEach(k=>{ if(!seen[k.nama]){ seen[k.nama]=true; names.push(k.nama); } });
+      const filtered = names.filter(nama=>ownerKelompokId(nama)===kelompokId);
+      return filtered.map((nama,i)=>{
+        const holdings = ks.filter(k=>k.nama===nama);
+        const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+        const breakdown = holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return (j?j.nama:'-')+': '+k.lembar+' lbr'; }).join(', ');
+        return [i+1, nama, breakdown||'-', rupiah(total)];
+      });
+    }
+  }
+};
+function sanitizeFileName(s){ return String(s||'').replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,'_'); }
+function exportKelompokGroups(kelompokId){
+  const all = DB.koperasi.kelompok || [];
+  return kelompokId ? all.filter(k=>k.id===kelompokId) : all;
+}
+function openExportModal(type){
+  const meta = EXPORT_META[type];
+  const kelompokOptions = (DB.koperasi.kelompok||[]).map(k=>`<option value="${k.id}">${k.nama}</option>`).join('');
+  openModal(`
+    <h3>Export ${meta.label}</h3>
+    <div class="form-row">
+      <label>Kelompok</label>
+      <select id="export-kelompok" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
+        <option value="">Semua kelompok (pisah per kelompok)</option>
+        ${kelompokOptions}
+      </select>
+      <span class="hint">Pilih kelompok tertentu untuk 1 file, atau biarkan "Semua kelompok" untuk 1 klik membuat data terpisah per kelompok sekaligus.</span>
+    </div>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-outline" onclick="runExport('${type}','xls')">${ICONS.xls} Excel</button>
+      <button class="btn btn-primary" onclick="runExport('${type}','pdf')">${ICONS.pdf} PDF</button>
+    </div>
+  `);
+}
+function runExport(type, format){
+  const sel = document.getElementById('export-kelompok');
+  const kelompokId = sel ? sel.value : '';
+  closeModal();
+  try{
+    if(format==='pdf') exportToPDF(type, kelompokId);
+    else exportToXLS(type, kelompokId);
+    toast('File berhasil diunduh');
+  }catch(e){
+    console.error(e);
+    toast('Gagal membuat file export');
+  }
+}
+function exportToPDF(type, kelompokId){
+  const meta = EXPORT_META[type];
+  const groups = exportKelompokGroups(kelompokId);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'UB Rukun Barokah';
+  const tgl = new Date().toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  let first = true;
+  const list = groups.length ? groups : [];
+  if(!list.length){ toast('Belum ada data kelompok'); return; }
+  list.forEach(k=>{
+    const rows = meta.rows(k.id);
+    if(!first) doc.addPage();
+    first = false;
+    doc.setFontSize(13);
+    doc.text(orgName, 14, 16);
+    doc.setFontSize(10.5);
+    doc.text('Laporan ' + meta.label + ' \u2014 ' + k.nama, 14, 23);
+    doc.setFontSize(8.5);
+    doc.setTextColor(120);
+    doc.text('Dicetak: ' + tgl, 14, 28.5);
+    doc.setTextColor(0);
+    doc.autoTable({
+      head: [meta.headers],
+      body: rows.length ? rows : [meta.headers.map((h,i)=> i===1 ? 'Tidak ada data' : '')],
+      startY: 33,
+      styles:{ fontSize:8, cellPadding:3 },
+      headStyles:{ fillColor:[11,61,46], textColor:255 },
+      alternateRowStyles:{ fillColor:[244,248,244] }
+    });
+  });
+  doc.save(sanitizeFileName(type + '_' + (kelompokId ? kelompokName(kelompokId) : 'semua_kelompok') + '_' + Date.now()) + '.pdf');
+}
+function exportToXLS(type, kelompokId){
+  const meta = EXPORT_META[type];
+  const groups = exportKelompokGroups(kelompokId);
+  if(!groups.length){ toast('Belum ada data kelompok'); return; }
+  const wb = XLSX.utils.book_new();
+  const usedNames = {};
+  groups.forEach(k=>{
+    const rows = meta.rows(k.id);
+    const body = rows.length ? rows : [meta.headers.map((h,i)=> i===1 ? 'Tidak ada data' : '')];
+    const ws = XLSX.utils.aoa_to_sheet([meta.headers, ...body]);
+    let sheetName = sanitizeFileName(k.nama).slice(0,28) || 'Kelompok';
+    if(usedNames[sheetName]){ usedNames[sheetName]++; sheetName = (sheetName+'_'+usedNames[sheetName]).slice(0,31); }
+    else usedNames[sheetName] = 1;
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+  XLSX.writeFile(wb, sanitizeFileName(type + '_' + (kelompokId ? kelompokName(kelompokId) : 'semua_kelompok') + '_' + Date.now()) + '.xlsx');
+}
+
+/* =========================================================
    ADMIN: TABUNGAN (overview semua)
 ========================================================= */
 function renderAdminTabungan(user){
@@ -1745,6 +1881,7 @@ function renderAdminTabungan(user){
     </div>` : ''}
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
     <div class="card" style="padding:6px 18px;">
@@ -1763,7 +1900,7 @@ function renderAdminTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevron.replace('m9 6','M15 6').replace('9 6l6','15 18l-6')}</button>Buku Tabungan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
@@ -1978,6 +2115,7 @@ function renderAdminPembiayaan(user){
     <div class="page-title">Pembiayaan<span class="sub">${DB.pembiayaan.length} pengajuan tercatat</span></div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download}</button>
       <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
     </div>
     ${pending.length ? `
@@ -2095,7 +2233,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
   const progres = totalKew>0 ? ((totalDibayar/totalKew)*100).toFixed(0) : 0;
   const isActive = p.statusPengajuan==='approved' && p.status!=='lunas';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevron.replace('m9 6','M15 6').replace('9 6l6','15 18l-6')}</button>Detail Pembiayaan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span></div>
     <div class="card balance-card">
       <div class="label">${nas.nama}</div>
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
@@ -3285,6 +3423,7 @@ function renderAdminSaham(user){
         <option value="">Semua kelompok</option>
         ${kelompokOptions}
       </select>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('saham')" title="Export">${ICONS.download}</button>
       <button class="btn btn-primary btn-compact" onclick="bukaPemilikSahamBaru()">${ICONS.plus} Tambah</button>
     </div>
     <div class="card" style="padding:6px 18px;">
@@ -3487,7 +3626,7 @@ function renderSahamCertificate(nama){
   const cert = buildSertifikatCert(nama);
   if(!cert) return '<div class="empty-state">Data saham tidak ditemukan</div>';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevron.replace('m9 6','M15 6').replace('9 6l6','15 18l-6')}</button>Sertifikat Saham</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevronLeft}</button>Sertifikat Saham</span></div>
     <div class="sertifikat-wrapper" style="display:flex;justify-content:center;padding:10px 0;">
       <div id="sertifikat-saham" style="width:210mm;min-height:297mm;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
         ${cert.inner}
@@ -3710,7 +3849,7 @@ function renderKoorTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('koor_tabungan')">${ICONS.chevron.replace('m9 6','M15 6').replace('9 6l6','15 18l-6')}</button>Buku Tabungan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('koor_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
