@@ -2187,7 +2187,8 @@ function submitTambahAnggota(){
    TAMBAH REKENING (buka jenis tabungan baru untuk anggota)
 ========================================================= */
 function openTambahRekeningModal(prefUserId){
-  const nasabah = DB.users.filter(u=>u.role==='nasabah');
+  const cu = currentUser();
+  const nasabah = cu && cu.role==='koordinator' ? nasabahOfKelompok(cu.kelompokId) : DB.users.filter(u=>u.role==='nasabah');
   const initialUser = prefUserId || (nasabah[0] && nasabah[0].id);
   const belum = initialUser ? jenisBelumDibuka(initialUser) : [];
   openModal(`
