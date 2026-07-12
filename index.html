@@ -669,6 +669,7 @@ const ICONS = {
   chevron:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
   chevronLeft:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
   download:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5"/><path d="M4 18v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+  upload:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3m0 0l-4.5 4.5M12 3l4.5 4.5"/><path d="M4 18v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
   pdf:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6"/></svg>',
   xls:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6"/></svg>',
   coin:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 15.2c0 1 .9 1.8 2.4 1.8 1.6 0 2.6-.8 2.6-1.9 0-2.8-5-1.4-5-4.1 0-1.1 1-1.9 2.5-1.9 1.4 0 2.4.7 2.4 1.7M12 6.4v11.2"/></svg>'
@@ -1799,6 +1800,254 @@ function confirmSetoranUI(setoranId){
 /* =========================================================
    ADMIN: DAFTAR ANGGOTA
 ========================================================= */
+/* =========================================================
+   IMPORT CSV (Anggota / Tabungan / Pembiayaan / Saham)
+========================================================= */
+const IMPORT_SPECS = {
+  anggota: {
+    label: 'Anggota',
+    headers: ['nama','nik','alamat','no_hp','kelompok'],
+    example: ['Siti Aminah','3273011234567890','Jl. Melati No. 5','081234567890','Karanggede'],
+    note: 'Kolom "kelompok" harus sama persis dengan nama kelompok yang sudah ada di aplikasi.'
+  },
+  tabungan: {
+    label: 'Tabungan',
+    headers: ['no_rekening','nama_anggota','jenis_simpanan','setoran_awal'],
+    example: ['2026-10001','Siti Aminah','Simpanan Pokok','25000'],
+    note: 'Isi no_rekening jika tahu (lebih akurat) atau nama_anggota. jenis_simpanan harus sama persis dengan nama jenis tabungan yang sudah ada. setoran_awal boleh dikosongkan/0.'
+  },
+  pembiayaan: {
+    label: 'Pembiayaan',
+    headers: ['no_rekening','nama_anggota','jumlah_pinjaman','tenor_bulan','keuntungan','keterangan','tanggal_mulai'],
+    example: ['2026-10001','Siti Aminah','1000000','12','100000','Modal usaha','2026-07-01'],
+    note: 'Isi no_rekening jika tahu (lebih akurat) atau nama_anggota. tanggal_mulai opsional (format YYYY-MM-DD), jika kosong pakai tanggal hari ini.'
+  },
+  saham: {
+    label: 'Saham',
+    headers: ['nama_pemilik','kelompok','jenis_saham','jumlah_lembar'],
+    example: ['Siti Aminah','Karanggede','SAHAM A','2'],
+    note: 'kelompok boleh dikosongkan jika nama_pemilik adalah anggota terdaftar (otomatis pakai kelompok anggota). jenis_saham harus sama persis dengan jenis saham yang sudah ada.'
+  }
+};
+let _importState = null;
+function csvGet(row, keys){
+  for(const k of keys){
+    for(const rk in row){
+      if(rk.toLowerCase().replace(/[\s_]/g,'') === k.toLowerCase().replace(/[\s_]/g,'')) return String(row[rk]??'').trim();
+    }
+  }
+  return '';
+}
+function findAnggotaByRekOrNama(noRek, nama){
+  if(noRek){
+    const u = DB.users.find(u=>u.role==='nasabah' && u.noRekening===noRek);
+    if(u) return {user:u};
+  }
+  if(nama){
+    const matches = DB.users.filter(u=>u.role==='nasabah' && u.nama.toLowerCase().trim()===nama.toLowerCase().trim());
+    if(matches.length>1) return {error:'Nama "'+nama+'" ganda, gunakan kolom no_rekening'};
+    if(matches.length===1) return {user:matches[0]};
+  }
+  return {error:'Anggota tidak ditemukan (no_rekening/nama_anggota tidak cocok)'};
+}
+function validateAnggotaRow(row){
+  const nama = csvGet(row,['nama']);
+  const nik = csvGet(row,['nik']);
+  const alamat = csvGet(row,['alamat']);
+  const noHp = csvGet(row,['no_hp','nohp','no hp','telepon','hp']);
+  const kelompokNama = csvGet(row,['kelompok']);
+  if(!nama) return {ok:false, reason:'Kolom nama kosong'};
+  if(!nik) return {ok:false, reason:'Kolom nik kosong'};
+  if(!alamat) return {ok:false, reason:'Kolom alamat kosong'};
+  if(!noHp) return {ok:false, reason:'Kolom no_hp kosong'};
+  if(!kelompokNama) return {ok:false, reason:'Kolom kelompok kosong'};
+  const kel = DB.koperasi.kelompok.find(k=>k.nama.toLowerCase().trim()===kelompokNama.toLowerCase().trim());
+  if(!kel) return {ok:false, reason:'Kelompok "'+kelompokNama+'" tidak ditemukan'};
+  if(DB.users.some(u=>u.role==='nasabah' && u.nik===nik)) return {ok:false, reason:'NIK '+nik+' sudah terdaftar'};
+  return {ok:true, obj:{nama, nik, alamat, noHp, kelompokId:kel.id}};
+}
+function validateTabunganRow(row){
+  const noRek = csvGet(row,['no_rekening','norekening']);
+  const nama = csvGet(row,['nama_anggota','nama']);
+  const jenisNama = csvGet(row,['jenis_simpanan','jenis']);
+  const setoranAwal = parseIdr(csvGet(row,['setoran_awal','saldo_awal'])) || 0;
+  if(!noRek && !nama) return {ok:false, reason:'Kolom no_rekening / nama_anggota wajib diisi'};
+  const found = findAnggotaByRekOrNama(noRek, nama);
+  if(found.error) return {ok:false, reason:found.error};
+  const user = found.user;
+  if(!jenisNama) return {ok:false, reason:'Kolom jenis_simpanan kosong'};
+  const jenis = DB.koperasi.jenisTabungan.find(j=>j.nama.toLowerCase().trim()===jenisNama.toLowerCase().trim());
+  if(!jenis) return {ok:false, reason:'Jenis simpanan "'+jenisNama+'" tidak ditemukan'};
+  if(DB.tabunganAccounts.some(a=>a.userId===user.id && a.jenisId===jenis.id)) return {ok:false, reason:'Rekening '+jenis.nama+' sudah dibuka untuk '+user.nama};
+  return {ok:true, obj:{userId:user.id, namaTampil:user.nama, jenisId:jenis.id, setoranAwal}};
+}
+function validatePembiayaanRow(row){
+  const noRek = csvGet(row,['no_rekening','norekening']);
+  const nama = csvGet(row,['nama_anggota','nama']);
+  const jumlah = parseIdr(csvGet(row,['jumlah_pinjaman','pinjaman']));
+  const tenor = parseIdr(csvGet(row,['tenor_bulan','tenor','jangka_waktu']));
+  const margin = parseIdr(csvGet(row,['keuntungan','margin']));
+  const ket = csvGet(row,['keterangan']);
+  const tglRaw = csvGet(row,['tanggal_mulai','mulai']);
+  if(!noRek && !nama) return {ok:false, reason:'Kolom no_rekening / nama_anggota wajib diisi'};
+  const found = findAnggotaByRekOrNama(noRek, nama);
+  if(found.error) return {ok:false, reason:found.error};
+  const user = found.user;
+  if(!jumlah) return {ok:false, reason:'Kolom jumlah_pinjaman kosong/tidak valid'};
+  if(!tenor) return {ok:false, reason:'Kolom tenor_bulan kosong/tidak valid'};
+  if(!margin) return {ok:false, reason:'Kolom keuntungan kosong/tidak valid'};
+  let mulai = nowISO();
+  if(tglRaw){ const d = new Date(tglRaw); if(!isNaN(d)) mulai = d.toISOString(); }
+  return {ok:true, obj:{userId:user.id, namaTampil:user.nama, jumlah, tenor, margin, ket, mulai}};
+}
+function validateSahamRow(row){
+  const nama = csvGet(row,['nama_pemilik','nama']);
+  const kelompokNama = csvGet(row,['kelompok']);
+  const jenisNama = csvGet(row,['jenis_saham','jenis']);
+  const lembar = parseIdr(csvGet(row,['jumlah_lembar','lembar']));
+  if(!nama) return {ok:false, reason:'Kolom nama_pemilik kosong'};
+  if(!jenisNama) return {ok:false, reason:'Kolom jenis_saham kosong'};
+  const jenis = DB.koperasi.saham.jenis.find(j=>j.nama.toLowerCase().trim()===jenisNama.toLowerCase().trim());
+  if(!jenis) return {ok:false, reason:'Jenis saham "'+jenisNama+'" tidak ditemukan'};
+  if(!lembar) return {ok:false, reason:'Kolom jumlah_lembar kosong/tidak valid'};
+  let kelompokId = null;
+  if(kelompokNama){
+    const kel = DB.koperasi.kelompok.find(k=>k.nama.toLowerCase().trim()===kelompokNama.toLowerCase().trim());
+    if(!kel) return {ok:false, reason:'Kelompok "'+kelompokNama+'" tidak ditemukan'};
+    kelompokId = kel.id;
+  }
+  const anggota = DB.users.find(u=>u.role==='nasabah' && u.nama.toLowerCase().trim()===nama.toLowerCase().trim());
+  return {ok:true, obj:{nama, anggotaId: anggota?anggota.id:null, jenisId:jenis.id, lembar, kelompokId: kelompokId || (anggota?anggota.kelompokId:null)}};
+}
+const IMPORT_VALIDATORS = {anggota:validateAnggotaRow, tabungan:validateTabunganRow, pembiayaan:validatePembiayaanRow, saham:validateSahamRow};
+function openImportModal(type){
+  const spec = IMPORT_SPECS[type];
+  _importState = null;
+  openModal(`
+    <h3>Import CSV — ${spec.label}</h3>
+    <div class="hint" style="margin-bottom:10px;">Kolom yang dibutuhkan: <b>${spec.headers.join(', ')}</b>. ${spec.note}</div>
+    <button class="btn btn-outline" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="downloadImportTemplate('${type}')">${ICONS.download} Unduh Template CSV</button>
+    <div class="form-row"><label>Pilih file CSV</label><input type="file" id="import-file-input" accept=".csv" onchange="onImportFileSelected('${type}', this)"></div>
+    <div id="import-preview-area"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+    </div>
+  `);
+}
+function downloadImportTemplate(type){
+  const spec = IMPORT_SPECS[type];
+  const csv = spec.headers.join(',') + '\n' + spec.example.join(',');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'template_import_'+type+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function onImportFileSelected(type, inputEl){
+  const file = inputEl.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if(!rows.length){ toast('File kosong atau format tidak dikenali'); return; }
+      const validator = IMPORT_VALIDATORS[type];
+      const results = rows.map((row,idx)=>{
+        const r = validator(row);
+        return {idx:idx+1, ok:r.ok, reason:r.reason||'', obj:r.obj||null};
+      });
+      _importState = {type, rows: results};
+      renderImportPreview();
+    }catch(err){
+      console.error(err);
+      toast('Gagal membaca file CSV. Pastikan format file benar.');
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+function renderImportPreview(){
+  const state = _importState;
+  if(!state) return;
+  const area = document.getElementById('import-preview-area');
+  if(!area) return;
+  const okCount = state.rows.filter(r=>r.ok).length;
+  const errCount = state.rows.length - okCount;
+  area.innerHTML = `
+    <div class="hint" style="margin:10px 0;"><b style="color:var(--primary);">${okCount} data valid</b>${errCount?` &middot; <b style="color:var(--danger);">${errCount} bermasalah</b>`:''} dari ${state.rows.length} baris.</div>
+    <div class="card" style="padding:2px 14px;max-height:220px;overflow-y:auto;margin-bottom:12px;">
+      ${state.rows.map(r=>`
+        <div class="list-row" style="padding:8px 0;">
+          <div class="info">
+            <div class="title" style="font-size:13px;display:flex;align-items:center;gap:6px;">Baris ${r.idx} ${r.ok?'<span class="badge badge-green" style="font-size:9px;">OK</span>':'<span class="badge badge-red" style="font-size:9px;">Error</span>'}</div>
+            ${!r.ok?`<div class="sub" style="color:var(--danger);">${r.reason}</div>`:''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn btn-primary" style="width:100%;" ${okCount?'':'disabled'} onclick="commitImportRows()">Import ${okCount} Data</button>
+  `;
+}
+function commitImportRows(){
+  const state = _importState;
+  if(!state) return;
+  const validRows = state.rows.filter(r=>r.ok);
+  if(!validRows.length){ toast('Tidak ada data valid untuk diimport'); return; }
+  let count = 0;
+  if(state.type==='anggota'){
+    validRows.forEach(r=>{
+      const o = r.obj;
+      const baseUsername = o.nama.toLowerCase().replace(/[^a-z]/g,'');
+      let username = baseUsername, counter = 1;
+      while(DB.users.some(u=>u.username===username)){ username = baseUsername+counter; counter++; }
+      const newUser = {
+        id:uid('u'), username, password:'anggota123', role:'nasabah', nama:o.nama, nik:o.nik, alamat:o.alamat, noHp:o.noHp, kelompokId:o.kelompokId,
+        noRekening: '2026'+String(1000+DB.users.length), saham:{s_A:0,s_B:0,s_C:0}, status:'aktif', anggotaId:uid('agg'), createdAt: nowISO()
+      };
+      DB.users.push(newUser);
+      count++;
+    });
+  } else if(state.type==='tabungan'){
+    const s = getSession();
+    validRows.forEach(r=>{
+      const o = r.obj;
+      const acc = {id:uid('acc'), userId:o.userId, jenisId:o.jenisId, saldo:0, noRekening:nextAccNo()};
+      DB.tabunganAccounts.push(acc);
+      if(o.setoranAwal>0){
+        acc.saldo = o.setoranAwal;
+        DB.tabunganTx.push({id:uid('tx'), userId:o.userId, jenisId:o.jenisId, tipe:'setor', jumlah:o.setoranAwal, saldoSetelah:acc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan:'Setoran awal (import CSV)'});
+      }
+      count++;
+    });
+  } else if(state.type==='pembiayaan'){
+    validRows.forEach(r=>{
+      const o = r.obj;
+      const total = o.jumlah + o.margin;
+      const p = {id:uid('pemb'), userId:o.userId, jumlahPinjaman:o.jumlah, tenor:o.tenor, marginPersen:0, marginNominal:o.margin, angsuranPerBulan:Math.ceil(total/o.tenor/1000)*1000, mulai:o.mulai, sisaAngsuran:o.tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved', keterangan:o.ket};
+      DB.pembiayaan.push(p);
+      count++;
+    });
+  } else if(state.type==='saham'){
+    validRows.forEach(r=>{
+      const o = r.obj;
+      DB.kepemilikanSaham.push({id:uid('ks'), nama:o.nama, anggotaId:o.anggotaId, jenisId:o.jenisId, lembar:o.lembar, kelompokId:o.kelompokId});
+      if(o.anggotaId){
+        const anggota = userById(o.anggotaId);
+        if(!anggota.saham) anggota.saham = {};
+        anggota.saham[o.jenisId] = (anggota.saham[o.jenisId]||0) + o.lembar;
+      }
+      count++;
+    });
+  }
+  persist();
+  addLog('Import CSV', 'Import '+count+' data '+IMPORT_SPECS[state.type].label.toLowerCase());
+  bigSuccess(count+' data berhasil diimport');
+  _importState = null;
+  closeModal();
+  renderContent();
+}
 function renderAdminAnggota(user){
   const q = (currentSubState.q||'').toLowerCase();
   let list = DB.users.filter(u=>u.role==='nasabah');
@@ -1809,6 +2058,7 @@ function renderAdminAnggota(user){
     <div class="page-title">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('anggota')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
     </div>
     ${list.length ? groups.map(g=>`
@@ -2030,6 +2280,7 @@ function renderAdminTabungan(user){
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download}</button>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
     ${nasabah.length ? groups.map(g=>`
@@ -2270,6 +2521,7 @@ function renderAdminPembiayaan(user){
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download}</button>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
     </div>
     ${pending.length ? `
@@ -3780,6 +4032,7 @@ function renderAdminSaham(user){
         ${kelompokOptions}
       </select>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('saham')" title="Export">${ICONS.download}</button>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('saham')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="bukaPemilikSahamBaru()">${ICONS.plus} Tambah</button>
     </div>
     <div class="card" style="padding:6px 18px;">
