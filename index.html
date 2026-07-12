@@ -1562,6 +1562,16 @@ function kelompokName(kelompokId){
   const k = DB.koperasi.kelompok.find(k=>k.id===kelompokId);
   return k ? k.nama : '-';
 }
+function groupByKelompok(items, getUserIdFn){
+  const groups = {};
+  items.forEach(item=>{
+    const u = userById(getUserIdFn(item));
+    const nama = kelompokName(u ? u.kelompokId : null);
+    if(!groups[nama]) groups[nama] = [];
+    groups[nama].push(item);
+  });
+  return Object.keys(groups).sort((a,b)=>a.localeCompare(b,'id')).map(nama=>({nama, items:groups[nama]}));
+}
 function userById(id){ return DB.users?.find(u=>u.id===id) || { nama:'-', kelompokId:null, role:'-', noRekening:'-' }; }
 function nasabahOfKelompok(kelompokId){ return DB.users.filter(u=>u.role==='nasabah' && u.kelompokId===kelompokId); }
 function pembiayaanForUser(userId){ return DB.pembiayaan.filter(p=>p.userId===userId).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai)); }
@@ -1793,16 +1803,20 @@ function renderAdminAnggota(user){
   const q = (currentSubState.q||'').toLowerCase();
   let list = DB.users.filter(u=>u.role==='nasabah');
   if(q) list = list.filter(u=>u.nama.toLowerCase().includes(q) || u.noRekening.includes(q));
+  const groups = groupByKelompok(list, u=>u.id);
+  let i = 0;
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
     </div>
-    <div class="card" style="padding:0;">
-      ${list.length ? list.map((u,i)=>`
+    ${list.length ? groups.map(g=>`
+      <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
+      <div class="card" style="padding:0;margin-bottom:14px;">
+        ${g.items.map(u=>{ i++; return `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="go('admin_anggota_detail', {userId:'${u.id}'})">
-          <div class="row-num">${i+1}</div>
+          <div class="row-num">${i}</div>
           <div class="avatar">${initials(u.nama)}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${u.nama} <span class="badge ${(u.status||'aktif')==='aktif'?'badge-green':'badge-red'}" style="font-size:9.5px;">${u.status||'aktif'}</span>${u._noAkun?'<span class="badge badge-red" style="font-size:9.5px;" title="Belum ada akun login, data hanya dari tabel anggota">Belum ada akun</span>':''}</div>
@@ -1813,8 +1827,9 @@ function renderAdminAnggota(user){
             <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusAnggota('${u.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
           </div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">Coba kata kunci lain</div></div>`}
-    </div>
+      `; }).join('')}
+      </div>
+    `).join('') : `<div class="card" style="padding:0;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">Coba kata kunci lain</div></div></div>`}
   `;
 }
 // re-route detail through content() since router map is fixed; handle here:
@@ -1997,6 +2012,8 @@ function renderAdminTabungan(user){
   const q = (currentSubState.q||'').toLowerCase();
   let nasabah = allNasabah.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
   if(q) nasabah = nasabah.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const groups = groupByKelompok(nasabah, u=>u.id);
+  let i = 0;
   const pending = DB.setoran.filter(s=>s.status==='di_koordinator');
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
@@ -2015,14 +2032,17 @@ function renderAdminTabungan(user){
       <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
-    <div class="card" style="padding:6px 18px;">
-      ${nasabah.length ? nasabah.map((u,i)=>`
+    ${nasabah.length ? groups.map(g=>`
+      <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
+      <div class="card" style="padding:6px 18px;margin-bottom:14px;">
+        ${g.items.map(u=>{ i++; return `
         <div class="list-row" style="cursor:pointer;" onclick="go('admin_tabungan_detail',{userId:'${u.id}'})">
-          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div></div></div>
+          <div class="flex"><div class="row-num">${i}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div></div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
-    </div>
+      `; }).join('')}
+      </div>
+    `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div></div>`}
   `;
 }
 function renderAdminTabunganDetail(user, userId){
@@ -2243,6 +2263,8 @@ function renderAdminPembiayaan(user){
   let list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
   if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q) || (p.keterangan||'').toLowerCase().includes(q));
   const pending = list.filter(p=>p.statusPengajuan==='pending');
+  const groups = groupByKelompok(list, p=>p.userId);
+  let i = 0;
   return `
     <div class="page-title">Pembiayaan<span class="sub">${DB.pembiayaan.length} pengajuan tercatat</span></div>
     <div class="toolbar-row" style="margin-bottom:14px;">
@@ -2265,17 +2287,20 @@ function renderAdminPembiayaan(user){
         </div>
       `).join('')}
     </div>` : ''}
-    <div class="card" style="padding:6px 18px;">
-      ${list.length ? list.map((p,i)=>`
+    ${list.length ? groups.map(g=>`
+      <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
+      <div class="card" style="padding:6px 18px;margin-bottom:14px;">
+        ${g.items.map(p=>{ i++; return `
         <div class="list-row">
-          <div class="row-num">${i+1}</div>
+          <div class="row-num">${i}</div>
           <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}${p.keterangan?' <span style="font-size:11px;color:var(--muted);font-weight:400;">&mdash; '+p.keterangan+'</span>':''}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
           <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
           <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
           <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div>`}
-    </div>
+      `; }).join('')}
+      </div>
+    `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div></div>`}
   `;
 }
 function accPengajuan(pembId){
