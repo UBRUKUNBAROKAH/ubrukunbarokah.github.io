@@ -2659,7 +2659,21 @@ function toggleRoleFields(){
     hint.textContent = 'Nama diambil dari daftar anggota yang sudah terdaftar.';
   }
 }
-function submitUser(existingId){
+async function syncKoorKelompok(userId, newKelompokId){
+  // Lepaskan koordinator dari kelompok lama (jika ada) yang masih menunjuk ke dia
+  const oldKel = DB.koperasi.kelompok.find(k=>(k.koorId||k.koor_id)===userId && k.id!==newKelompokId);
+  const newKel = DB.koperasi.kelompok.find(k=>k.id===newKelompokId);
+  const toSave = [];
+  if(oldKel){ oldKel.koorId = null; oldKel.koor_id = null; toSave.push(oldKel); }
+  if(newKel){ newKel.koorId = userId; toSave.push(newKel); }
+  if(SUPABASE_ENABLED){
+    for(const kel of toSave){
+      const { error } = await upsertToSupabase(TABLES.kelompok, toSnake(kel));
+      if(error) console.error('Supabase upsert kelompok error:', error);
+    }
+  }
+}
+async function submitUser(existingId){
   const role = document.getElementById('um-role').value;
   const username = document.getElementById('um-username').value.trim();
   const password = document.getElementById('um-password').value;
@@ -2704,15 +2718,13 @@ function submitUser(existingId){
     const u = userById(existingId);
     u.nama = nama; u.password = password;
     if(u.role!=='admin') u.kelompokId = kelompokId;
+    if(u.role==='koordinator') await syncKoorKelompok(u.id, kelompokId);
     addLog('Ubah pengguna', 'Memperbarui data ' + nama);
   } else {
     const newUser = {id:uid('u'), username, password, role, nama, createdAt: nowISO()};
     if(role!=='admin') newUser.kelompokId = kelompokId;
-    if(role==='koordinator'){
-      const k = DB.koperasi.kelompok.find(k=>k.id===kelompokId);
-      if(k) k.koorId = newUser.id;
-    }
     DB.users.push(newUser);
+    if(role==='koordinator') await syncKoorKelompok(newUser.id, kelompokId);
     addLog('Tambah pengguna', 'Menambahkan ' + roleLabel(role).toLowerCase() + ': ' + nama);
   }
   persist();
