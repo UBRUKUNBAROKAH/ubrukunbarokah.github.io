@@ -13,6 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -479,6 +480,58 @@ input,select{font-family:inherit;}
 .flex-between{display:flex;align-items:center;justify-content:space-between;}
 a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration:none;}
 .hint{font-size:11.5px;color:var(--muted);margin-top:4px;}
+
+/* ============ CUSTOM SEARCHABLE SELECT ============ */
+.csel{position:relative;width:100%;}
+.csel-native{position:absolute!important;width:0!important;height:0!important;padding:0!important;margin:0!important;border:0!important;opacity:0;pointer-events:none;overflow:hidden;}
+.csel-trigger{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border:1.5px solid var(--border);border-radius:12px;padding:11px 12px;
+  font-size:13.5px;font-family:inherit;background:#FBFCFA;color:var(--text);
+  min-height:44px;text-align:left;transition:border-color .12s, background .12s;
+}
+.csel-trigger:active{background:var(--primary-soft);}
+.csel-trigger.csel-open{border-color:var(--primary);}
+.csel-trigger.csel-disabled{opacity:.55;pointer-events:none;background:var(--bg);}
+.csel-trigger-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.csel-trigger.csel-placeholder .csel-trigger-text{color:var(--muted);}
+.csel-chevron{flex-shrink:0;width:16px;height:16px;color:var(--muted);transition:transform .15s;}
+.csel-trigger.csel-open .csel-chevron{transform:rotate(180deg);color:var(--primary);}
+
+.csel-overlay{position:fixed;inset:0;background:rgba(11,20,16,.45);z-index:300;display:flex;align-items:flex-end;justify-content:center;animation:cselFade .15s ease-out;}
+@keyframes cselFade{from{opacity:0;}to{opacity:1;}}
+.csel-sheet{
+  width:100%;max-width:520px;background:var(--surface);border-radius:20px 20px 0 0;
+  max-height:80vh;display:flex;flex-direction:column;box-shadow:0 -10px 30px -8px rgba(11,61,46,.35);
+  animation:cselUp .18s cubic-bezier(.22,.9,.32,1);
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+@keyframes cselUp{from{transform:translateY(16px);opacity:.6;}to{transform:translateY(0);opacity:1;}}
+.csel-sheet-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.csel-sheet-title{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--primary);}
+.csel-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--primary-soft);color:var(--primary);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.csel-search-wrap{position:relative;padding:12px 16px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.csel-search-wrap svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none;}
+.csel-search{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:11px 12px 11px 36px;font-size:13.5px;font-family:inherit;background:#FBFCFA;outline:none;}
+.csel-search:focus{border-color:var(--primary);}
+.csel-list{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px;flex:1;}
+.csel-item{padding:13px 12px;border-radius:12px;font-size:13.5px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.csel-item:active{background:var(--primary-soft);}
+.csel-item-active{background:var(--primary-soft);color:var(--primary);font-weight:700;}
+.csel-item-disabled{color:var(--muted);opacity:.6;cursor:default;}
+.csel-empty{padding:24px 12px;text-align:center;color:var(--muted);font-size:13px;}
+.csel-check{width:15px;height:15px;flex-shrink:0;color:var(--primary);}
+
+/* ============ NOTIFIKASI SUKSES BESAR (di tengah layar) ============ */
+.success-overlay{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(11,20,16,.45);padding:24px;}
+.success-overlay.show{display:flex;}
+.success-card{background:var(--surface);border-radius:22px;padding:34px 30px 30px;max-width:300px;width:100%;text-align:center;box-shadow:0 24px 60px -14px rgba(0,0,0,.45);animation:successPop .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes successPop{from{transform:scale(.72);opacity:0;}to{transform:scale(1);opacity:1;}}
+.success-icon{width:68px;height:68px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.success-icon svg{width:36px;height:36px;}
+.success-icon svg path{stroke-dasharray:32;stroke-dashoffset:32;animation:successCheck .4s .12s ease forwards;}
+@keyframes successCheck{to{stroke-dashoffset:0;}}
+.success-text{font-family:'Sora',sans-serif;font-weight:700;font-size:15.5px;color:var(--text);line-height:1.45;}
 </style>
 </head>
 <body>
@@ -1111,6 +1164,7 @@ async function boot() {
   if(!user){
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app-screen').style.display='none';
+    try{ history.replaceState(null, ''); }catch(e){}
     return;
   }
   document.getElementById('login-screen').style.display='none';
@@ -1120,6 +1174,7 @@ async function boot() {
   currentSubState = {};
   renderNav();
   renderContent();
+  pushNavHistory(true);
 }
 
 
@@ -1217,8 +1272,11 @@ let currentSubState = {}; // scratch state for detail views
 function go(page, sub){
   currentPage = page;
   currentSubState = sub || {};
+  const modalOverlay = document.getElementById('modal-overlay');
+  if(modalOverlay) modalOverlay.classList.remove('show');
   renderContent();
   renderNav();
+  pushNavHistory(false);
 }
 
 /* =========================================================
@@ -1341,13 +1399,87 @@ function toast(msg){
 }
 
 /* =========================================================
+   NOTIFIKASI SUKSES BESAR — muncul di tengah layar tiap kali
+   input/simpan data berhasil.
+========================================================= */
+let successTimer = null;
+function bigSuccess(msg){
+  let el = document.getElementById('success-overlay');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'success-overlay';
+    el.className = 'success-overlay';
+    el.innerHTML = '<div class="success-card"><div class="success-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></div><div class="success-text" id="success-text"></div></div>';
+    document.body.appendChild(el);
+    el.addEventListener('click', hideBigSuccess);
+  }
+  document.getElementById('success-text').textContent = msg;
+  const path = el.querySelector('.success-icon path');
+  if(path){ path.style.animation = 'none'; void path.offsetWidth; path.style.animation = ''; }
+  el.classList.add('show');
+  if(navigator.vibrate) navigator.vibrate(30);
+  clearTimeout(successTimer);
+  successTimer = setTimeout(hideBigSuccess, 1800);
+}
+function hideBigSuccess(){
+  const el = document.getElementById('success-overlay');
+  if(el) el.classList.remove('show');
+  clearTimeout(successTimer);
+}
+
+/* =========================================================
    MODAL HELPERS
 ========================================================= */
 function openModal(html){
   document.getElementById('modal-body').innerHTML = html;
   document.getElementById('modal-overlay').classList.add('show');
+  pushNavHistory(false);
 }
-function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); }
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('show');
+  pushNavHistory(true);
+}
+
+/* =========================================================
+   TOMBOL KEMBALI (Android back button) — pakai riwayat browser
+   supaya tekan "kembali" di HP menutup modal / kembali ke
+   halaman sebelumnya, bukan langsung keluar dari aplikasi.
+========================================================= */
+let isSyncingFromHistory = false;
+
+function pushNavHistory(replace){
+  if(isSyncingFromHistory) return;
+  const modalOverlay = document.getElementById('modal-overlay');
+  const state = {
+    page: currentPage,
+    sub: currentSubState,
+    modal: !!(modalOverlay && modalOverlay.classList.contains('show'))
+  };
+  try{
+    if(replace) history.replaceState(state, '');
+    else history.pushState(state, '');
+  }catch(e){ /* abaikan kalau browser membatasi history API */ }
+}
+
+window.addEventListener('popstate', function(e){
+  const user = (typeof currentUser==='function') ? currentUser() : null;
+  if(!user) return; // di layar login, biarkan perilaku bawaan
+  isSyncingFromHistory = true;
+  const modalOverlay = document.getElementById('modal-overlay');
+  const state = e.state;
+  if(state && state.page){
+    currentPage = state.page;
+    currentSubState = state.sub || {};
+    if(modalOverlay) modalOverlay.classList.toggle('show', !!state.modal);
+  } else {
+    if(modalOverlay) modalOverlay.classList.remove('show');
+    currentPage = defaultPageFor(user.role);
+    currentSubState = {};
+  }
+  renderContent();
+  renderNav();
+  isSyncingFromHistory = false;
+});
 document.getElementById('modal-overlay').addEventListener('click', (e)=>{
   if(e.target.id==='modal-overlay') closeModal();
 });
@@ -1412,7 +1544,7 @@ function hapusSemuaRekening(userId){
     ids.forEach(id => supabaseClient.from(TABLES.tabungan_accounts).delete().eq('id', id).then());
     supabaseClient.from(TABLES.tabungan_tx).delete().eq('user_id', userId).then();
     addLog('Hapus semua rekening', user.nama);
-    toast('Semua rekening berhasil dihapus');
+    bigSuccess('Semua rekening berhasil dihapus');
     renderContent();
   });
 }
@@ -1649,7 +1781,7 @@ function confirmSetoranUI(setoranId){
     toast('Menyimpan...');
     const r = await confirmSetoran(setoranId);
     if(!r.ok){ toast(r.msg); renderContent(); return; }
-    toast('Setoran diterima dari koordinator');
+    bigSuccess('Setoran diterima dari koordinator');
     renderContent();
   }, 'Ya, terima');
 }
@@ -1982,10 +2114,10 @@ function submitTx(tipe){
     try {
       if(s.role==='koordinator'){
         doSetorKoordinator(userId, jenisId, jumlah, ket);
-        toast('Setoran dicatat, menunggu konfirmasi admin');
+        bigSuccess('Setoran dicatat, menunggu konfirmasi admin');
       } else {
         doSetor(userId, jenisId, jumlah, ket);
-        toast('Setoran berhasil dicatat');
+        bigSuccess('Setoran berhasil dicatat');
       }
     } catch(e) {
       toast(e.message);
@@ -1994,7 +2126,7 @@ function submitTx(tipe){
   } else {
     const r = doTarik(userId, jenisId, jumlah, ket);
     if(!r.ok){ toast(r.msg); return; }
-    toast('Penarikan berhasil dicatat');
+    bigSuccess('Penarikan berhasil dicatat');
   }
   closeModal();
   renderContent();
@@ -2046,7 +2178,7 @@ function submitTambahAnggota(){
   persist();
 
   addLog('Tambah anggota', 'Menambahkan anggota baru: ' + nama + ' (' + kelompokName(kelompokId) + ')');
-  toast('Anggota baru berhasil ditambahkan');
+  bigSuccess('Anggota baru berhasil ditambahkan');
   closeModal();
   renderContent();
 }
@@ -2097,7 +2229,7 @@ function submitTambahRekening(){
   }
   persist();
   addLog('Tambah rekening', userById(userId).nama + ' membuka rekening ' + jenisName(jenisId));
-  toast('Rekening baru berhasil dibuka');
+  bigSuccess('Rekening baru berhasil dibuka');
   closeModal();
   renderContent();
 }
@@ -2156,7 +2288,7 @@ function accPengajuan(pembId){
   p.waktuAcc = nowISO();
   persist();
   addLog('ACC pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' disetujui');
-  toast('Pengajuan disetujui');
+  bigSuccess('Pengajuan disetujui');
   renderContent();
 }
 function tolakPengajuan(pembId){
@@ -2170,7 +2302,7 @@ function tolakPengajuan(pembId){
     p.waktuTolak = nowISO();
     persist();
     addLog('Tolak pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' ditolak');
-    toast('Pengajuan ditolak');
+    bigSuccess('Pengajuan ditolak');
     renderContent();
   });
 }
@@ -2187,7 +2319,7 @@ function hapusPembiayaan(pembId){
       supabaseClient.from(TABLES.setoran).delete().eq('pembiayaan_id', pembId).then();
       supabaseClient.from(TABLES.angsuran).delete().eq('pembiayaan_id', pembId).then();
       addLog('Hapus pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman));
-      toast('Pembiayaan berhasil dihapus');
+      bigSuccess('Pembiayaan berhasil dihapus');
       if(currentPage.includes('detail')) go('admin_pembiayaan');
       else renderContent();
     });
@@ -2318,7 +2450,7 @@ function submitPengajuan(){
   DB.pembiayaan.push(p);
   persist();
   addLog('Buat pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
-  toast('Pengajuan berhasil dibuat');
+  bigSuccess('Pengajuan berhasil dibuat');
   closeModal();
   renderContent();
 }
@@ -2400,7 +2532,7 @@ function submitEditPengajuan(pembId){
   p.keterangan = ket;
   persist();
   addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
-  toast('Pengajuan berhasil diperbarui');
+  bigSuccess('Pengajuan berhasil diperbarui');
   closeModal();
   renderContent();
 }
@@ -2435,7 +2567,7 @@ function simpanProfilSaya(){
   persist();
   addLog('Ubah profil', 'Memperbarui profil sendiri');
   applyKoperasiBranding();
-  toast('Profil disimpan');
+  bigSuccess('Profil disimpan');
   renderContent();
 }
 
@@ -2550,7 +2682,7 @@ function submitUser(existingId){
     DB.users.push(newUser);
     addLog('Tambah pengguna', 'Membuat akun login untuk anggota: ' + agg.nama);
     persist();
-    toast('Akun login berhasil dibuat');
+    bigSuccess('Akun login berhasil dibuat');
     closeModal();
     renderContent();
     return;
@@ -2583,7 +2715,7 @@ function submitUser(existingId){
     addLog('Tambah pengguna', 'Menambahkan ' + roleLabel(role).toLowerCase() + ': ' + nama);
   }
   persist();
-  toast('Data pengguna disimpan');
+  bigSuccess('Data pengguna disimpan');
   closeModal();
   renderContent();
 }
@@ -2598,7 +2730,7 @@ function deleteUser(userId){
       if (aggId) supabaseClient.from(TABLES.anggota).delete().eq('id', aggId).then();
     }
     addLog('Hapus pengguna', 'Menghapus akun ' + u.nama);
-    toast('Pengguna dihapus');
+    bigSuccess('Pengguna dihapus');
     closeModal();
     renderContent();
   });
@@ -2613,7 +2745,7 @@ function nonaktifkanAnggota(userId){
       u.status = 'nonaktif';
       persist();
       addLog('Nonaktifkan anggota', 'Menonaktifkan akun ' + u.nama);
-      toast('Anggota dinonaktifkan');
+      bigSuccess('Anggota dinonaktifkan');
       renderContent();
     }
   );
@@ -2628,7 +2760,7 @@ function aktifkanAnggota(userId){
       u.status = 'aktif';
       persist();
       addLog('Aktifkan anggota', 'Mengaktifkan kembali akun ' + u.nama);
-      toast('Anggota diaktifkan kembali');
+      bigSuccess('Anggota diaktifkan kembali');
       renderContent();
     }
   );
@@ -2657,7 +2789,7 @@ function hapusAnggota(userId){
             if (aggId) supabaseClient.from(TABLES.anggota).delete().eq('id', aggId).then();
           }
           addLog('Hapus anggota', 'Menghapus anggota ' + u.nama + ' beserta seluruh data');
-          toast('Anggota dan semua data berhasil dihapus');
+          bigSuccess('Anggota dan semua data berhasil dihapus');
           go( currentPage.startsWith('admin') ? 'admin_anggota' : 'koor_anggota' );
         }
       );
@@ -2668,6 +2800,72 @@ function hapusAnggota(userId){
 /* =========================================================
    ADMIN: LAPORAN
 ========================================================= */
+function computeLapModalData(){
+  const pemb = DB.pembiayaan || [];
+  const setoran = DB.setoran || [];
+  const tx = DB.tabunganTx || [];
+  function marginPerAngsuran(p){
+    if(!p || !p.tenor) return 0;
+    return Math.round(marginNominalOf(p) / p.tenor);
+  }
+  const now = new Date();
+  let minDate = now;
+  [].concat(pemb.map(p=>p.mulai), setoran.map(s=>s.tanggal), tx.map(t=>t.tanggal)).forEach(d=>{
+    if(!d) return;
+    const dt = new Date(d);
+    if(!isNaN(dt) && dt < minDate) minDate = dt;
+  });
+  const startY = minDate.getFullYear(), startM = minDate.getMonth();
+  const endY = now.getFullYear(), endM = now.getMonth();
+  const months = [];
+  let y = startY, m = startM;
+  while(y < endY || (y===endY && m<=endM)){
+    months.push({y,m});
+    m++; if(m>11){ m=0; y++; }
+  }
+  if(!months.length) return [];
+  let cumPokokRealisasi = 0, cumPokokTerbayar = 0, cumTabMasuk = 0, cumTabKeluar = 0, cumKas = 0;
+  const totalSahamSaatIni = (DB.users||[]).filter(u=>u.role==='nasabah').reduce((s,u)=>s+totalNilaiSaham(u),0);
+  const byYear = {};
+  months.forEach(({y,m})=>{
+    const pembBulanIni = pemb.filter(p=>{ const d=new Date(p.mulai); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
+    const pokokRealisasi = pembBulanIni.reduce((s,p)=>s+(p.jumlahPinjaman||0),0);
+    const marginRealisasi = pembBulanIni.reduce((s,p)=>s+marginNominalOf(p),0);
+    const angsuranBulanIni = setoran.filter(s=>{ if(s.jenis!=='angsuran') return false; const d=new Date(s.tanggal); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
+    const totalAngsuran = angsuranBulanIni.reduce((s,a)=>s+(a.jumlah||0),0);
+    let keuntungan = 0, pokokTerbayarBulanIni = 0;
+    angsuranBulanIni.forEach(a=>{
+      const p = pemb.find(pp=>pp.id===a.pembiayaanId);
+      const marginBagian = p ? Math.min(marginPerAngsuran(p), a.jumlah||0) : 0;
+      keuntungan += marginBagian;
+      pokokTerbayarBulanIni += Math.max(0, (a.jumlah||0) - marginBagian);
+    });
+    const txBulanIni = tx.filter(t=>{ const d=new Date(t.tanggal); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
+    const tabMasuk = txBulanIni.filter(t=>t.tipe==='setor').reduce((s,t)=>s+(t.jumlah||0),0);
+    const tabKeluar = txBulanIni.filter(t=>t.tipe==='tarik').reduce((s,t)=>s+(t.jumlah||0),0);
+    cumPokokRealisasi += pokokRealisasi;
+    cumPokokTerbayar += pokokTerbayarBulanIni;
+    cumTabMasuk += tabMasuk;
+    cumTabKeluar += tabKeluar;
+    cumKas += (tabMasuk + totalAngsuran) - (tabKeluar + pokokRealisasi);
+    const piutang = Math.max(0, cumPokokRealisasi - cumPokokTerbayar);
+    const tabSaldo = cumTabMasuk - cumTabKeluar;
+    if(!byYear[y]) byYear[y] = { tahun:String(y), rows:[], total:{pokok:0,margin:0,totalAngsuran:0,keuntungan:0,tabMasuk:0,tabPenarikan:0} };
+    byYear[y].rows.push({
+      bulan: m+1, piutang, pokok: pokokRealisasi, margin: marginRealisasi,
+      totalAngsuran, keuntungan, tabMasuk, tabPenarikan: tabKeluar, tabSaldo,
+      saham: totalSahamSaatIni, kas: cumKas
+    });
+    byYear[y].total.pokok += pokokRealisasi;
+    byYear[y].total.margin += marginRealisasi;
+    byYear[y].total.totalAngsuran += totalAngsuran;
+    byYear[y].total.keuntungan += keuntungan;
+    byYear[y].total.tabMasuk += tabMasuk;
+    byYear[y].total.tabPenarikan += tabKeluar;
+  });
+  return Object.keys(byYear).sort().map(k=>byYear[k]);
+}
+const LAP_MODAL_BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 function totalNilaiSaham(u){
   const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===u.nama);
   const jns = DB.koperasi.saham.jenis||[];
@@ -2688,9 +2886,130 @@ function renderAdminLaporan(user){
     <div class="page-title">Laporan<span class="sub">Keuangan & Saham koperasi</span></div>
     <div class="tabs">
       <button class="${tab==='ikhtisar'?'active':''}" onclick="go('admin_laporan',{lapTab:'ikhtisar'})">Ikhtisar</button>
+      <button class="${tab==='modal'?'active':''}" onclick="go('admin_laporan',{lapTab:'modal'})">Posisi Modal</button>
     </div>
     ${tab==='ikhtisar'?renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham):''}
+    ${tab==='modal'?renderLapModal():''}
   `;
+}
+const LAP_MODAL_COLS = [
+  {k:'piutang', l:'Piutang Berjalan'},
+  {k:'pokok', l:'Pokok'},
+  {k:'margin', l:'Margin'},
+  {k:'totalAngsuran', l:'Total Angsuran/Bln'},
+  {k:'keuntungan', l:'Keuntungan Disisihkan'},
+  {k:'tabMasuk', l:'Tabungan Masuk'},
+  {k:'tabPenarikan', l:'Tabungan Penarikan'},
+  {k:'tabSaldo', l:'Tabungan Saldo'},
+  {k:'saham', l:'Saham'},
+  {k:'kas', l:'Kas'},
+];
+const LAP_MODAL_TOTAL_KEYS = ['pokok','margin','totalAngsuran','keuntungan','tabMasuk','tabPenarikan'];
+const LAP_MODAL_CATATAN = 'Piutang Berjalan = sisa pokok pembiayaan aktif (realisasi pokok dikurangi pokok yang sudah terbayar lewat angsuran). Kas = akumulasi (Tabungan Masuk + Total Angsuran) &minus; (Tabungan Penarikan + Realisasi Pokok); belum memperhitungkan beban/pengeluaran operasional lain karena belum ada pencatatan khusus untuk itu di aplikasi. Saham menampilkan nilai total saat ini (aplikasi belum menyimpan riwayat perubahan saham per tanggal).';
+function renderLapModal(){
+  const data = computeLapModalData();
+  if(!data.length) return '<div class="hint" style="padding:10px;text-align:center;">Belum ada data transaksi untuk dilaporkan</div>';
+  const tahun = currentSubState.modalTahun || data[data.length-1].tahun;
+  const yd = data.find(y=>y.tahun===tahun) || data[data.length-1];
+  const fmt = v => (v===null || v===undefined) ? '&ndash;' : rupiah(v);
+  const cols = LAP_MODAL_COLS, totalKeys = LAP_MODAL_TOTAL_KEYS;
+  let html = '';
+  html += '<div class="flex-between" style="margin-bottom:10px;flex-wrap:wrap;gap:6px;">';
+  html += `<div style="width:140px;flex-shrink:0;"><select onchange="setLapModalTahun(this.value)">` + data.slice().reverse().map(y=>`<option value="${y.tahun}" ${y.tahun===yd.tahun?'selected':''}>Tahun ${y.tahun}</option>`).join('') + `</select></div>`;
+  html += '<div style="display:flex;gap:6px;">';
+  html += `<button class="btn btn-outline btn-sm" onclick="cetakLapModal('${yd.tahun}')">${ICONS.pdf||'📄'} Unduh PDF</button>`;
+  html += `<button class="btn btn-outline btn-sm" onclick="exportLapModalXLS('${yd.tahun}')">${ICONS.xls||''} Excel</button>`;
+  html += '</div></div>';
+  html += `<div class="page-title" style="font-size:15px;margin-bottom:8px;">Posisi Modal Berjalan — Tahun ${yd.tahun}</div>`;
+  html += '<div class="card" style="padding:0;overflow-x:auto;">';
+  html += '<table style="border-collapse:collapse;font-size:12px;white-space:nowrap;">';
+  html += '<thead><tr style="background:var(--primary-soft);">';
+  html += '<th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);position:sticky;left:0;background:var(--primary-soft);">Bln</th>';
+  cols.forEach(c=>{ html += `<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">${c.l}</th>`; });
+  html += '</tr></thead><tbody>';
+  yd.rows.forEach((r,i)=>{
+    html += `<tr${i%2===0?' style="background:#f9f9f9;"':''}>`;
+    html += `<td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border);font-weight:600;position:sticky;left:0;background:${i%2===0?'#f9f9f9':'#fff'};">${LAP_MODAL_BULAN[r.bulan-1]}</td>`;
+    cols.forEach(c=>{ html += `<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">${fmt(r[c.k])}</td>`; });
+    html += '</tr>';
+  });
+  if(yd.total){
+    html += '<tr style="background:var(--primary-soft);font-weight:700;">';
+    html += '<td style="padding:7px 10px;text-align:center;border-top:2px solid var(--border);position:sticky;left:0;background:var(--primary-soft);">Total</td>';
+    cols.forEach(c=>{
+      const v = totalKeys.includes(c.k) ? yd.total[c.k] : (yd.rows[yd.rows.length-1]||{})[c.k];
+      html += `<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">${fmt(v)}</td>`;
+    });
+    html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+  html += `<div class="hint" style="margin-top:8px;font-size:11px;line-height:1.6;">${LAP_MODAL_CATATAN}</div>`;
+  return html;
+}
+function setLapModalTahun(t){ currentSubState.modalTahun = t; renderContent(); }
+function cetakLapModal(tahun){
+  const data = computeLapModalData();
+  const yd = data.find(y=>y.tahun===tahun);
+  if(!yd){ toast('Data tidak ditemukan'); return; }
+  const { jsPDF } = window.jspdf;
+  const fmt = v => (v===null || v===undefined) ? '-' : rupiah(v);
+  const cols = LAP_MODAL_COLS, totalKeys = LAP_MODAL_TOTAL_KEYS;
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const doc = new jsPDF({ orientation:'landscape' });
+  doc.setFontSize(13);
+  doc.text(orgName.toUpperCase(), 14, 14);
+  doc.setFontSize(10.5);
+  doc.text('POSISI MODAL BERJALAN \u2014 TAHUN ' + yd.tahun, 14, 20.5);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Dicetak: ' + tgl, 14, 26);
+  doc.setTextColor(0);
+  const body = yd.rows.map(r=>[LAP_MODAL_BULAN[r.bulan-1], ...cols.map(c=>fmt(r[c.k]))]);
+  if(yd.total){
+    body.push(['Total', ...cols.map(c=>{
+      const v = totalKeys.includes(c.k) ? yd.total[c.k] : (yd.rows[yd.rows.length-1]||{})[c.k];
+      return fmt(v);
+    })]);
+  }
+  doc.autoTable({
+    head: [['Bln', ...cols.map(c=>c.l)]],
+    body,
+    startY: 31,
+    styles:{ fontSize:7.5, cellPadding:2.5, halign:'right' },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'center' },
+    columnStyles:{ 0:{ halign:'center', fontStyle:'bold' } },
+    alternateRowStyles:{ fillColor:[244,248,244] },
+    didParseCell: function(d){
+      if(yd.total && d.row.index===body.length-1 && d.section==='body'){ d.cell.styles.fillColor=[218,232,222]; d.cell.styles.fontStyle='bold'; }
+    }
+  });
+  const finalY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 40;
+  doc.setFontSize(7.5);
+  doc.setTextColor(100);
+  const catatan = LAP_MODAL_CATATAN.replace(/&minus;/g, '-');
+  doc.text(doc.splitTextToSize(catatan, 270), 14, finalY + 8);
+  doc.save(sanitizeFileName('Posisi Modal Berjalan ' + yd.tahun) + '.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function exportLapModalXLS(tahun){
+  const data = computeLapModalData();
+  const yd = data.find(y=>y.tahun===tahun);
+  if(!yd){ toast('Data tidak ditemukan'); return; }
+  const cols = LAP_MODAL_COLS, totalKeys = LAP_MODAL_TOTAL_KEYS;
+  const header = ['Bulan', ...cols.map(c=>c.l)];
+  const body = yd.rows.map(r=>[LAP_MODAL_BULAN[r.bulan-1], ...cols.map(c=> r[c.k]===null||r[c.k]===undefined ? '' : r[c.k])]);
+  if(yd.total){
+    body.push(['Total', ...cols.map(c=>{
+      const v = totalKeys.includes(c.k) ? yd.total[c.k] : (yd.rows[yd.rows.length-1]||{})[c.k];
+      return v===null||v===undefined ? '' : v;
+    })]);
+  }
+  const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Posisi Modal ' + yd.tahun);
+  XLSX.writeFile(wb, sanitizeFileName('Posisi Modal Berjalan ' + yd.tahun) + '.xlsx');
+  toast('File Excel berhasil diunduh');
 }
 function renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham){
   const atur = DB.koperasi.aturKeuangan || {};
@@ -2935,7 +3254,7 @@ function saveProfilKoperasi(){
   persist();
   applyKoperasiBranding();
   addLog('Ubah pengaturan', 'Memperbarui profil koperasi');
-  toast('Profil koperasi disimpan');
+  bigSuccess('Profil koperasi disimpan');
   renderContent();
 }
 async function simpanAturKeuangan(){
@@ -2963,7 +3282,7 @@ async function simpanAturKeuangan(){
     return;
   }
   addLog('Atur keuangan', 'Memperbarui keuntungan (min-maks) dan alokasi pool');
-  toast('Aturan keuangan disimpan');
+  bigSuccess('Aturan keuangan disimpan');
   renderContent();
 }
 function openJenisTabunganModal(){
@@ -2981,7 +3300,7 @@ function submitJenisTabungan(){
   DB.koperasi.jenisTabungan.push({id:uid('jt'), nama, wajibMinimal:min});
   persist();
   addLog('Ubah pengaturan', 'Menambahkan jenis tabungan: ' + nama);
-  toast('Jenis tabungan ditambahkan');
+  bigSuccess('Jenis tabungan ditambahkan');
   closeModal(); renderContent();
 }
 function deleteJenisTabungan(id){
@@ -2989,7 +3308,7 @@ function deleteJenisTabungan(id){
     DB.koperasi.jenisTabungan = DB.koperasi.jenisTabungan.filter(j=>j.id!==id);
     persist();
     supabaseClient.from(TABLES.jenis_tabungan).delete().eq('id', id).then();
-    toast('Jenis tabungan dihapus'); renderContent();
+    bigSuccess('Jenis tabungan dihapus'); renderContent();
   });
 }
 function openKelompokModal(){
@@ -3014,7 +3333,7 @@ async function submitKelompok(){
     if(error) console.error('Supabase upsert kelompok error:', error);
   }
   persist();
-  toast('Kelompok ditambahkan');
+  bigSuccess('Kelompok ditambahkan');
   closeModal(); renderContent();
 }
 function deleteKelompok(id){
@@ -3028,7 +3347,7 @@ function deleteKelompok(id){
       if(error) console.error('Supabase delete kelompok error:', error);
     }
     persist();
-    toast('Kelompok dihapus');
+    bigSuccess('Kelompok dihapus');
     renderContent();
   });
 }
@@ -3106,7 +3425,7 @@ async function simpanPemupukanPersen(){
     return;
   }
   addLog('Pemupukan saham', 'Mengubah persentase pemupukan saham menjadi '+DB.koperasi.saham.pemupukanPersen+'%');
-  toast('Persentase pemupukan saham disimpan');
+  bigSuccess('Persentase pemupukan saham disimpan');
   renderContent();
 }
 function simpanPengaturanSertifikat(){
@@ -3122,7 +3441,7 @@ function simpanPengaturanSertifikat(){
   DB.koperasi.sertifikat.jabatanPenandatangan = document.getElementById('sert-jabatan-ttd').value.trim();
   persist();
   addLog('Sertifikat', 'Memperbarui pengaturan sertifikat saham');
-  toast('Pengaturan sertifikat disimpan');
+  bigSuccess('Pengaturan sertifikat disimpan');
   renderContent();
 }
 function toggleTtdFields(){
@@ -3134,7 +3453,7 @@ function simpanSertifikatTeks(id){
   if(!j) return;
   j.sertifikatTeks = document.getElementById('sert-teks-'+id).value.trim()||'';
   persist();
-  toast('Teks sertifikat untuk '+j.nama+' disimpan');
+  bigSuccess('Teks sertifikat untuk '+j.nama+' disimpan');
   renderContent();
 }
 function uploadBgSertifikat(){
@@ -3145,7 +3464,7 @@ function uploadBgSertifikat(){
   reader.onload = function(e){
     DB.koperasi.saham.sertifikatBackground = e.target.result;
     persist();
-    toast('Background sertifikat disimpan');
+    bigSuccess('Background sertifikat disimpan');
     renderContent();
   };
   reader.readAsDataURL(f);
@@ -3153,7 +3472,7 @@ function uploadBgSertifikat(){
 function hapusBgSertifikat(){
   DB.koperasi.saham.sertifikatBackground = '';
   persist();
-  toast('Background sertifikat dihapus');
+  bigSuccess('Background sertifikat dihapus');
   renderContent();
 }
 function openTambahSahamModal(){
@@ -3181,7 +3500,7 @@ async function submitSahamBaru(){
     return;
   }
   addLog('Tambah saham', 'Menambahkan jenis saham: '+nama);
-  toast('Jenis saham ditambahkan');
+  bigSuccess('Jenis saham ditambahkan');
   closeModal(); renderContent();
 }
 function editSahamJenis(id){
@@ -3210,7 +3529,7 @@ async function simpanEditSahamJenis(id){
     return;
   }
   addLog('Ubah saham', 'Memperbarui jenis saham: '+j.nama);
-  toast('Jenis saham diperbarui');
+  bigSuccess('Jenis saham diperbarui');
   closeModal(); renderContent();
 }
 function deleteSahamJenis(id){
@@ -3218,7 +3537,7 @@ function deleteSahamJenis(id){
     DB.koperasi.saham.jenis = DB.koperasi.saham.jenis.filter(j=>j.id!==id);
     persist();
     supabaseClient.from(TABLES.jenis_saham).delete().eq('id', id).then();
-    toast('Jenis saham dihapus'); renderContent();
+    bigSuccess('Jenis saham dihapus'); renderContent();
   });
 }
 /* =========================================================
@@ -3322,7 +3641,7 @@ function simpanShuPersenSHU(){
   if(total>100){ toast('Total % SHU melebihi 100%'); return; }
   persist();
   addLog('Atur % SHU saham', 'Memperbarui persentase SHU saham');
-  toast('Persentase SHU saham disimpan');
+  bigSuccess('Persentase SHU saham disimpan');
   renderContent();
 }
 function simpanBagiHasilPersen(){
@@ -3331,7 +3650,7 @@ function simpanBagiHasilPersen(){
   DB.koperasi.aturKeuangan.bagiHasilPersen = Math.min(100, v);
   persist();
   addLog('Atur % bagi hasil', 'Memperbarui persentase bagi hasil tabungan');
-  toast('Persentase bagi hasil disimpan');
+  bigSuccess('Persentase bagi hasil disimpan');
   renderContent();
 }
 function cetakSHU(){
@@ -3483,7 +3802,7 @@ function simpanKepemilikanSahamBaru(){
   }
   persist();
   addLog('Tambah kepemilikan saham', nama+' - '+jnsName(jenisId)+' '+lembar+' lembar');
-  toast('Kepemilikan saham ditambahkan');
+  bigSuccess('Kepemilikan saham ditambahkan');
   closeModal();
   renderContent();
 }
@@ -3626,21 +3945,34 @@ function renderSahamCertificate(nama){
   if(!cert) return '<div class="empty-state">Data saham tidak ditemukan</div>';
   return `
     <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevronLeft}</button>Sertifikat Saham</span></div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:12px;" onclick="cetakSertifikatSaham('${nama}')">${ICONS.pdf||'📄'} Unduh PDF Sertifikat</button>
     <div class="sertifikat-wrapper" style="display:flex;justify-content:center;padding:10px 0;">
       <div id="sertifikat-saham" style="width:210mm;min-height:297mm;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
         ${cert.inner}
       </div>
     </div>
-    <button class="btn btn-primary btn-block" onclick="cetakSertifikatSaham('${nama}')">🖨 Cetak Sertifikat</button>
   `;
 }
 function cetakSertifikatSaham(nama){
-  const cert = buildSertifikatCert(nama);
-  if(!cert) return;
-  const w = window.open('', '_blank');
-  if(!w){ toast('Izinkan pop-up untuk mencetak'); return; }
-  w.document.write('<!DOCTYPE html><html><head><title>Sertifikat Saham - '+nama+'</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet"><style>body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;background:#f5f5f5;}@media print{body{background:#fff;}}@page{size:A4;margin:15mm;}</style></head><body><div style="width:210mm;min-height:297mm;margin:0 auto;padding:16px;'+cert.bgStyle+'text-align:center;box-sizing:border-box;">'+cert.inner+'</div><script>window.onload=function(){window.print();window.close()}<\\/script></body></html>');
-  w.document.close();
+  const el = document.getElementById('sertifikat-saham');
+  if(!el){ toast('Sertifikat tidak ditemukan'); return; }
+  toast('Menyiapkan file PDF...');
+  html2canvas(el, { scale:2.5, useCORS:true, backgroundColor:'#ffffff' }).then(function(canvas){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const imgW = pageW;
+    const imgH = canvas.height * imgW / canvas.width;
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const y = imgH < pageH ? (pageH - imgH) / 2 : 0;
+    doc.addImage(imgData, 'JPEG', 0, y, imgW, Math.min(imgH, pageH));
+    doc.save(sanitizeFileName('Sertifikat Saham ' + nama) + '.pdf');
+    bigSuccess('File PDF berhasil diunduh');
+  }).catch(function(err){
+    console.error(err);
+    toast('Gagal membuat file PDF');
+  });
 }
 function editKepemilikanSaham(nama){
   const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama);
@@ -3721,7 +4053,7 @@ function simpanEditKepemilikanSaham(nama){
   }
   persist();
   addLog('Edit kepemilikan saham', 'Memperbarui saham '+nama);
-  toast('Saham diperbarui');
+  bigSuccess('Saham diperbarui');
   closeModal();
   renderContent();
 }
@@ -3733,7 +4065,7 @@ function hapusKepemilikanSaham(nama){
     persist();
     supabaseClient.from(TABLES.kepemilikan_saham).delete().eq('nama', nama).then();
     addLog('Hapus kepemilikan saham', 'Menghapus saham '+nama);
-    toast('Kepemilikan saham dihapus');
+    bigSuccess('Kepemilikan saham dihapus');
     renderContent();
   });
 }
@@ -3955,7 +4287,7 @@ function submitPengajuanKoor(){
   DB.pembiayaan.push(p);
   persist();
   addLog('Ajukan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
-  toast('Pengajuan pembiayaan dikirim, menunggu ACC admin');
+  bigSuccess('Pengajuan pembiayaan dikirim, menunggu ACC admin');
   closeModal();
   renderContent();
 }
@@ -4026,7 +4358,7 @@ function submitEditPengajuanKoor(pembId){
   p.keterangan = ket;
   persist();
   addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
-  toast('Pengajuan berhasil diperbarui');
+  bigSuccess('Pengajuan berhasil diperbarui');
   closeModal();
   renderContent();
 }
@@ -4054,7 +4386,7 @@ function confirmBayarAngsuran(pembId){
   const s = getSession();
   const r = doBayarAngsuran(pembId, s.userId, jumlah);
   if(!r.ok){ toast(r.msg); return; }
-  toast('Angsuran berhasil dicatat');
+  bigSuccess('Angsuran berhasil dicatat');
   closeModal();
   renderContent();
 }
@@ -4273,6 +4605,149 @@ if (installSkip) installSkip.addEventListener('click', () => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
+
+/* =========================================================
+   CUSTOM SEARCHABLE SELECT (auto-enhances every <select>)
+========================================================= */
+(function(){
+  const SEARCH_THRESHOLD = 7; // tampilkan kotak cari kalau opsi lebih dari ini
+  const CHEVRON = '<svg class="csel-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+  const SEARCH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+  const CHECK_ICON = '<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+  let activeOverlay = null;
+
+  function closeActive(){
+    if(activeOverlay){ activeOverlay.remove(); activeOverlay=null; document.body.style.overflow=''; }
+    document.querySelectorAll('.csel-trigger.csel-open').forEach(t=>t.classList.remove('csel-open'));
+  }
+
+  function titleFor(sel){
+    const row = sel.closest('.form-row');
+    if(row){
+      const lbl = row.querySelector('label');
+      if(lbl && lbl.textContent.trim()) return lbl.textContent.trim();
+    }
+    return 'Pilih';
+  }
+
+  function syncTrigger(sel, trigger){
+    const opt = sel.options[sel.selectedIndex];
+    const txt = trigger.querySelector('.csel-trigger-text');
+    const label = opt ? opt.textContent.trim() : '';
+    txt.textContent = label || 'Pilih...';
+    trigger.classList.toggle('csel-placeholder', !label);
+    const isDisabled = sel.disabled || sel.options.length===0;
+    trigger.classList.toggle('csel-disabled', isDisabled);
+    trigger.disabled = isDisabled;
+  }
+
+  function openPanel(sel, trigger){
+    closeActive();
+    trigger.classList.add('csel-open');
+    const showSearch = sel.options.length > SEARCH_THRESHOLD;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'csel-overlay';
+    const sheet = document.createElement('div');
+    sheet.className = 'csel-sheet';
+    sheet.innerHTML =
+      '<div class="csel-sheet-head"><div class="csel-sheet-title"></div><button type="button" class="csel-close" aria-label="Tutup">&times;</button></div>' +
+      (showSearch ? '<div class="csel-search-wrap">'+SEARCH_ICON+'<input type="text" class="csel-search" placeholder="Cari..." autocomplete="off"></div>' : '') +
+      '<div class="csel-list"></div>';
+    sheet.querySelector('.csel-sheet-title').textContent = titleFor(sel);
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    activeOverlay = overlay;
+
+    const listEl = sheet.querySelector('.csel-list');
+
+    function renderList(filter){
+      const f = (filter||'').trim().toLowerCase();
+      listEl.innerHTML = '';
+      let any = false;
+      Array.from(sel.options).forEach(o=>{
+        const label = o.textContent.trim();
+        if(f && !label.toLowerCase().includes(f)) return;
+        any = true;
+        const item = document.createElement('div');
+        item.className = 'csel-item' + (o.disabled ? ' csel-item-disabled' : '') + (o.index===sel.selectedIndex ? ' csel-item-active' : '');
+        const span = document.createElement('span');
+        span.textContent = label || '(kosong)';
+        item.appendChild(span);
+        if(o.index===sel.selectedIndex) item.insertAdjacentHTML('beforeend', CHECK_ICON);
+        if(!o.disabled){
+          item.addEventListener('click', ()=>{
+            if(sel.selectedIndex !== o.index){
+              sel.selectedIndex = o.index;
+              sel.dispatchEvent(new Event('change', {bubbles:true}));
+            }
+            syncTrigger(sel, trigger);
+            closeActive();
+          });
+        }
+        listEl.appendChild(item);
+      });
+      if(!any) listEl.innerHTML = '<div class="csel-empty">Tidak ditemukan</div>';
+    }
+    renderList('');
+
+    overlay.addEventListener('click', e=>{ if(e.target===overlay) closeActive(); });
+    sheet.querySelector('.csel-close').addEventListener('click', closeActive);
+    if(showSearch){
+      const search = sheet.querySelector('.csel-search');
+      search.addEventListener('input', ()=>renderList(search.value));
+      setTimeout(()=>search.focus(), 60);
+    }
+  }
+
+  function enhance(sel){
+    if(!sel || sel.tagName!=='SELECT' || sel.dataset.cselDone || sel.multiple) return;
+    sel.dataset.cselDone = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'csel';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+    sel.classList.add('csel-native');
+    sel.tabIndex = -1;
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'csel-trigger';
+    trigger.innerHTML = '<span class="csel-trigger-text"></span>' + CHEVRON;
+    wrap.appendChild(trigger);
+
+    syncTrigger(sel, trigger);
+    trigger.addEventListener('click', ()=>{
+      if(sel.disabled || sel.options.length===0) return;
+      openPanel(sel, trigger);
+    });
+
+    sel.addEventListener('change', ()=>syncTrigger(sel, trigger));
+    // opsi select bisa diganti ulang lewat kode lain (innerHTML) -> pantau perubahan
+    new MutationObserver(()=>syncTrigger(sel, trigger)).observe(sel, {childList:true, attributes:true, attributeFilter:['disabled']});
+  }
+
+  function scan(root){
+    if(!root || !root.querySelectorAll) return;
+    root.querySelectorAll('select').forEach(enhance);
+  }
+
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeActive(); });
+
+  scan(document);
+  new MutationObserver(muts=>{
+    muts.forEach(m=>{
+      m.addedNodes.forEach(n=>{
+        if(n.nodeType!==1) return;
+        if(n.tagName==='SELECT') enhance(n);
+        else scan(n);
+      });
+    });
+  }).observe(document.body, {childList:true, subtree:true});
+})();
 
 /* =========================================================
    INIT
