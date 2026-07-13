@@ -645,7 +645,9 @@ const TABLES = {
   kepemilikan_saham: 'kepemilikan_saham',
   setoran: 'setoran',
   pengaturan_koperasi: 'pengaturan_koperasi',
-  logs: 'logs'
+  logs: 'logs',
+  kas_penarikan_koor: 'kas_penarikan_koor',
+  hutang_koordinator: 'hutang_koordinator'
 };
 
 /* =========================================================
@@ -739,7 +741,7 @@ async function initSupabaseDB() {
     const [
       users, anggota, kelompok, jenisTabungan, tabunganAccounts, tabunganTx,
       pembiayaan, angsuran, jenisSaham, kepemilikanSaham,
-      pengaturan, setoran, logs
+      pengaturan, setoran, logs, kasPenarikanKoor, hutangKoordinator
     ] = await Promise.all([
       supabaseClient.from(TABLES.users).select('*'),
       supabaseClient.from(TABLES.anggota).select('*'),
@@ -753,7 +755,9 @@ async function initSupabaseDB() {
       supabaseClient.from(TABLES.kepemilikan_saham).select('*'),
       supabaseClient.from(TABLES.pengaturan_koperasi).select('*').eq('id', 'koperasi').single(),
       supabaseClient.from(TABLES.setoran).select('*'),
-      supabaseClient.from(TABLES.logs).select('*').order('created_at', {ascending: false}).limit(100)
+      supabaseClient.from(TABLES.logs).select('*').order('created_at', {ascending: false}).limit(100),
+      supabaseClient.from(TABLES.kas_penarikan_koor).select('*'),
+      supabaseClient.from(TABLES.hutang_koordinator).select('*')
     ]);
 
     // Transform to camelCase
@@ -770,6 +774,8 @@ async function initSupabaseDB() {
     const pg = toCamel(pengaturan.data);
     const st = toCamel(setoran.data || []);
     const lg = toCamel(logs.data || []);
+    const kpk = toCamel(kasPenarikanKoor.data || []);
+    const hk = toCamel(hutangKoordinator.data || []);
 
     // Merge: untuk nasabah, gabung data anggota ke user
     const matchedAggIds = new Set();
@@ -833,7 +839,9 @@ async function initSupabaseDB() {
       angsuran: an,
       kepemilikanSaham: ks,
       setoran: st,
-      logs: lg
+      logs: lg,
+      kasPenarikan: kpk,
+      hutangKoor: hk
     };
 
     // Merge pengaturan koperasi (deep merge biar nested object gak ketimpa kosong)
@@ -910,6 +918,8 @@ function ensureDefaults() {
   if(!DB.tabunganTx) DB.tabunganTx = [];
   if(!DB.kepemilikanSaham) DB.kepemilikanSaham = [];
   if(!DB.setoran) DB.setoran = [];
+  if(!DB.kasPenarikan) DB.kasPenarikan = [];
+  if(!DB.hutangKoor) DB.hutangKoor = [];
   if(!DB.logs) DB.logs = [];
   if(!DB.angsuran) DB.angsuran = [];
 }
@@ -1036,6 +1046,10 @@ async function syncAllToSupabase() {
   await safeUpsert(TABLES.kepemilikan_saham, toSnake(DB.kepemilikanSaham));
   // Sync setoran
   await safeUpsert(TABLES.setoran, toSnake(DB.setoran), 'setoran');
+  // Sync kas penarikan koordinator (penarikan yang mengurangi dana yang dipegang koordinator)
+  await safeUpsert(TABLES.kas_penarikan_koor, toSnake(DB.kasPenarikan), 'kas_penarikan_koor');
+  // Sync hutang admin ke koordinator (kekurangan kas saat penarikan melebihi dana yang dipegang koordinator)
+  await safeUpsert(TABLES.hutang_koordinator, toSnake(DB.hutangKoor), 'hutang_koordinator');
   // Sync logs + cleanup (keep max 500 row)
   await safeUpsert(TABLES.logs, toSnake(DB.logs));
   try {
@@ -1627,6 +1641,62 @@ function doTarik(userId, jenisId, jumlah, keterangan){
   addLog('Tarik tabungan', userById(userId).nama + ' - ' + jenisName(jenisId) + ' - ' + rupiah(jumlah));
   return {ok:true};
 }
+/* =========================================================
+   KAS KOORDINATOR & HUTANG ADMIN KE KOORDINATOR
+   Dana yang dipegang koordinator (dari setoran yg belum disetor
+   ke admin) berkurang duluan saat ada penarikan lewat koordinator.
+   Jika penarikan > dana yang dipegang, selisihnya jadi hutang
+   admin ke koordinator.
+========================================================= */
+function totalSetoranPendingKoor(koorId){
+  return DB.setoran.filter(s=>s.dibuatOleh===koorId && s.status==='di_koordinator').reduce((s,x)=>s+x.jumlah,0);
+}
+function totalPenarikanDariKasKoor(koorId){
+  return (DB.kasPenarikan||[]).filter(p=>p.koorId===koorId).reduce((s,x)=>s+x.jumlah,0);
+}
+function kasKoordinator(koorId){
+  return Math.max(0, totalSetoranPendingKoor(koorId) - totalPenarikanDariKasKoor(koorId));
+}
+function totalHutangKoor(koorId){
+  return (DB.hutangKoor||[]).filter(h=>h.koorId===koorId && h.status==='belum_lunas').reduce((s,x)=>s+(x.jumlah-(x.dibayar||0)),0);
+}
+function doTarikKoordinator(userId, jenisId, jumlah, keterangan){
+  const r = doTarik(userId, jenisId, jumlah, keterangan);
+  if(!r.ok) return r;
+  const s = getSession();
+  const koorId = s.userId;
+  const kasTersedia = kasKoordinator(koorId);
+  const dariKas = Math.min(kasTersedia, jumlah);
+  const kurang = jumlah - dariKas;
+  if(dariKas > 0){
+    DB.kasPenarikan.push({id:uid('kp'), koorId, userId, jumlah:dariKas, tanggal:nowISO(), keterangan:'Penarikan tunai '+userById(userId).nama});
+  }
+  if(kurang > 0){
+    DB.hutangKoor.push({id:uid('hu'), koorId, userId, jumlah:kurang, dibayar:0, status:'belum_lunas', tanggal:nowISO(), keterangan:'Kekurangan kas penarikan '+userById(userId).nama});
+    addLog('Hutang admin ke koordinator', rupiah(kurang)+' - '+userById(koorId).nama+' (kekurangan kas penarikan '+userById(userId).nama+')');
+  }
+  persist();
+  return {ok:true, dariKas, kurang};
+}
+async function bayarHutangKoorUI(hutangId){
+  const h = (DB.hutangKoor||[]).find(x=>x.id===hutangId);
+  if(!h || h.status==='lunas') return;
+  const sisa = h.jumlah - (h.dibayar||0);
+  confirmDialog('Bayar hutang ke koordinator?', rupiah(sisa)+' ke '+userById(h.koorId).nama, 'warning', async ()=>{
+    toast('Menyimpan...');
+    h.dibayar = h.jumlah;
+    h.status = 'lunas';
+    h.waktuLunas = nowISO();
+    if(SUPABASE_ENABLED){
+      const { error } = await upsertToSupabase(TABLES.hutang_koordinator, toSnake(h));
+      if(error) console.error('Gagal update hutang koordinator di Supabase:', error);
+    }
+    persist();
+    addLog('Bayar hutang koordinator', rupiah(sisa)+' ke '+userById(h.koorId).nama);
+    bigSuccess('Hutang telah dibayar ke koordinator');
+    renderContent();
+  }, 'Ya, sudah dibayar');
+}
 function doBayarAngsuran(pembId, oleh, jumlah){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.status==='lunas') return {ok:false, msg:'Pembiayaan tidak ditemukan atau sudah lunas.'};
@@ -1732,6 +1802,23 @@ function renderAdminBeranda(user){
           <div class="row-ic">${ICONS.down}</div>
           <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(s.dibuatOleh).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.jumlah)} &middot; oleh ${userById(s.dibuatOleh).nama}</div></div>
           <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
+        </div>
+      `).join('')}
+    </div>`;
+      }
+      const hutangAktif = (DB.hutangKoor||[]).filter(h=>h.status==='belum_lunas');
+      if(hutangAktif.length){
+        html += `
+    <div class="section-label" style="color:var(--danger);">Hutang admin ke koordinator (${hutangAktif.length})</div>
+    <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);">
+      ${hutangAktif.map(h=>`
+        <div class="list-row">
+          <div class="row-ic" style="background:var(--danger-soft);color:var(--danger);">${ICONS.up}</div>
+          <div class="info"><div class="title">${userById(h.koorId).nama}</div><div class="sub">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${fmtDateShort(h.tanggal)}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="amt minus">${rupiah(h.jumlah-(h.dibayar||0))}</div>
+            <button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button>
+          </div>
         </div>
       `).join('')}
     </div>`;
@@ -2395,9 +2482,19 @@ function submitTx(tipe){
       return;
     }
   } else {
-    const r = doTarik(userId, jenisId, jumlah, ket);
-    if(!r.ok){ toast(r.msg); return; }
-    bigSuccess('Penarikan berhasil dicatat');
+    if(s.role==='koordinator'){
+      const r = doTarikKoordinator(userId, jenisId, jumlah, ket);
+      if(!r.ok){ toast(r.msg); return; }
+      if(r.kurang > 0){
+        bigSuccess('Penarikan dicatat. '+rupiah(r.kurang)+' tercatat sebagai hutang admin ke Anda');
+      } else {
+        bigSuccess('Penarikan berhasil dicatat');
+      }
+    } else {
+      const r = doTarik(userId, jenisId, jumlah, ket);
+      if(!r.ok){ toast(r.msg); return; }
+      bigSuccess('Penarikan berhasil dicatat');
+    }
   }
   closeModal();
   renderContent();
@@ -4390,6 +4487,9 @@ function renderKoorBeranda(user){
   const pembAktif = DB.pembiayaan.filter(p=>anggota.some(u=>u.id===p.userId) && p.status==='berjalan').length;
   const pending = DB.setoran.filter(s=>s.dibuatOleh===user.id && s.status==='di_koordinator');
   const totalPending = pending.reduce((s,x)=>s+x.jumlah,0);
+  const totalDipakaiTarik = totalPenarikanDariKasKoor(user.id);
+  const kasBersih = kasKoordinator(user.id);
+  const hutangAdmin = totalHutangKoor(user.id);
   return `
     <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">${kelompok?kelompok.nama:'-'}</span></div>
     <div class="stat-grid">
@@ -4400,7 +4500,8 @@ function renderKoorBeranda(user){
     </div>
     <div class="card" style="margin:12px 0;padding:14px 18px;background:var(--gold-soft);border:1px solid var(--gold);">
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Uang di pegang koordinator (belum disetor ke admin)</div>
-      <div class="n mono" style="font-size:20px;">${rupiah(totalPending)}</div>
+      <div class="n mono" style="font-size:20px;">${rupiah(kasBersih)}</div>
+      ${totalDipakaiTarik>0 ? `<div class="hint" style="margin-top:2px;">Setoran terkumpul ${rupiah(totalPending)} &minus; dipakai untuk penarikan ${rupiah(totalDipakaiTarik)}</div>` : ''}
       ${pending.length ? pending.map(s=>`
         <div class="list-row" style="padding:6px 0;border-bottom:1px solid var(--border);">
           <div class="info"><div class="title">${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran':'Tabungan'} &middot; ${rupiah(s.jumlah)}</div></div>
@@ -4408,6 +4509,12 @@ function renderKoorBeranda(user){
         </div>
       `).join('') : ''}
     </div>
+    ${hutangAdmin>0 ? `
+    <div class="card" style="margin:12px 0;padding:14px 18px;background:var(--danger-soft);border:1px solid var(--danger);">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Hutang admin ke Anda (penarikan melebihi kas)</div>
+      <div class="n mono" style="font-size:20px;color:var(--danger);">${rupiah(hutangAdmin)}</div>
+      <div class="hint" style="margin-top:2px;">Akan diganti tunai oleh admin</div>
+    </div>` : ''}
   `;
 }
 
