@@ -1660,6 +1660,33 @@ function kasKoordinator(koorId){
 function totalHutangKoor(koorId){
   return (DB.hutangKoor||[]).filter(h=>h.koorId===koorId && h.status==='belum_lunas').reduce((s,x)=>s+(x.jumlah-(x.dibayar||0)),0);
 }
+// Setoran pending (belum disetor ke admin) dikurangi FIFO oleh penarikan yang sudah
+// memakai kas koordinator, supaya antrian/notifikasi konfirmasi admin ikut berkurang.
+function pendingSetoranNetForKoor(koorId){
+  const items = DB.setoran.filter(s=>s.dibuatOleh===koorId && s.status==='di_koordinator')
+    .slice().sort((a,b)=>new Date(a.tanggal)-new Date(b.tanggal));
+  let dipakai = totalPenarikanDariKasKoor(koorId);
+  const out = [];
+  for(const s of items){
+    if(dipakai <= 0){ out.push({...s, sisa:s.jumlah}); continue; }
+    if(dipakai >= s.jumlah){ dipakai -= s.jumlah; continue; } // sudah habis dipakai penarikan, hilang dari antrian
+    out.push({...s, sisa:s.jumlah - dipakai});
+    dipakai = 0;
+  }
+  return out;
+}
+function pendingSetoranNetAll(){
+  const koorIds = [...new Set(DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>s.dibuatOleh))];
+  let out = [];
+  koorIds.forEach(kid=>{ out = out.concat(pendingSetoranNetForKoor(kid)); });
+  return out;
+}
+function sisaSetoran(setoranId){
+  const st = DB.setoran.find(s=>s.id===setoranId);
+  if(!st) return 0;
+  const net = pendingSetoranNetForKoor(st.dibuatOleh).find(x=>x.id===setoranId);
+  return net ? net.sisa : 0;
+}
 function doTarikKoordinator(userId, jenisId, jumlah, keterangan){
   const r = doTarik(userId, jenisId, jumlah, keterangan);
   if(!r.ok) return r;
@@ -1790,7 +1817,7 @@ function renderAdminBeranda(user){
       <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalPembiayaanAktif)}</div><div class="l">Sisa pembiayaan aktif</div></div>
     </div>
     ${(()=>{
-      const pendingSetoran = DB.setoran.filter(s=>s.status==='di_koordinator');
+      const pendingSetoran = pendingSetoranNetAll();
       const pendingPemb = DB.pembiayaan.filter(p=>p.statusPengajuan==='pending');
       let html = '';
       if(pendingSetoran.length){
@@ -1800,7 +1827,7 @@ function renderAdminBeranda(user){
       ${pendingSetoran.map(s=>`
         <div class="list-row">
           <div class="row-ic">${ICONS.down}</div>
-          <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(s.dibuatOleh).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.jumlah)} &middot; oleh ${userById(s.dibuatOleh).nama}</div></div>
+          <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(s.dibuatOleh).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah?' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+', sdh dipakai penarikan)</span>':''} &middot; oleh ${userById(s.dibuatOleh).nama}</div></div>
           <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
         </div>
       `).join('')}
@@ -1872,9 +1899,11 @@ function emptyRow(msg){ return `<div class="hint" style="text-align:center;paddi
 function confirmSetoranUI(setoranId){
   const st = DB.setoran.find(s=>s.id===setoranId);
   if(!st) return;
+  const sisa = sisaSetoran(setoranId);
+  const jmlLabel = sisa < st.jumlah ? rupiah(sisa) + ' (dari ' + rupiah(st.jumlah) + ', sebagian sudah dipakai penarikan koordinator)' : rupiah(st.jumlah);
   const detail = st.jenis==='angsuran'
-    ? rupiah(st.jumlah) + ' angsuran dari ' + userById(st.userId).nama
-    : rupiah(st.jumlah) + ' dari ' + userById(st.userId).nama + ' (' + jenisName(st.jenisId) + ')';
+    ? jmlLabel + ' angsuran dari ' + userById(st.userId).nama
+    : jmlLabel + ' dari ' + userById(st.userId).nama + ' (' + jenisName(st.jenisId) + ')';
   confirmDialog('Terima setoran?', detail, 'warning', async ()=>{
     toast('Menyimpan...');
     const r = await confirmSetoran(setoranId);
@@ -2351,7 +2380,7 @@ function renderAdminTabungan(user){
   if(q) nasabah = nasabah.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
   const groups = groupByKelompok(nasabah, u=>u.id);
   let i = 0;
-  const pending = DB.setoran.filter(s=>s.status==='di_koordinator');
+  const pending = pendingSetoranNetAll();
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
     ${pending.length ? `
@@ -2359,7 +2388,7 @@ function renderAdminTabungan(user){
     <div class="card" style="padding:6px 18px;">
       ${pending.map(s=>`
         <div class="list-row">
-          <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(s.dibuatOleh).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.jumlah)} &middot; oleh ${userById(s.dibuatOleh).nama}</div></div>
+          <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(s.dibuatOleh).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah?' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+', sdh dipakai penarikan)</span>':''} &middot; oleh ${userById(s.dibuatOleh).nama}</div></div>
           <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
         </div>
       `).join('')}
@@ -4485,8 +4514,9 @@ function renderKoorBeranda(user){
   const anggota = nasabahOfKelompok(user.kelompokId);
   const totalSimpanan = anggota.reduce((s,u)=>s+totalSaldoUser(u.id),0);
   const pembAktif = DB.pembiayaan.filter(p=>anggota.some(u=>u.id===p.userId) && p.status==='berjalan').length;
-  const pending = DB.setoran.filter(s=>s.dibuatOleh===user.id && s.status==='di_koordinator');
-  const totalPending = pending.reduce((s,x)=>s+x.jumlah,0);
+  const pendingRaw = DB.setoran.filter(s=>s.dibuatOleh===user.id && s.status==='di_koordinator');
+  const totalPending = pendingRaw.reduce((s,x)=>s+x.jumlah,0);
+  const pendingNet = pendingSetoranNetForKoor(user.id);
   const totalDipakaiTarik = totalPenarikanDariKasKoor(user.id);
   const kasBersih = kasKoordinator(user.id);
   const hutangAdmin = totalHutangKoor(user.id);
@@ -4502,9 +4532,9 @@ function renderKoorBeranda(user){
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Uang di pegang koordinator (belum disetor ke admin)</div>
       <div class="n mono" style="font-size:20px;">${rupiah(kasBersih)}</div>
       ${totalDipakaiTarik>0 ? `<div class="hint" style="margin-top:2px;">Setoran terkumpul ${rupiah(totalPending)} &minus; dipakai untuk penarikan ${rupiah(totalDipakaiTarik)}</div>` : ''}
-      ${pending.length ? pending.map(s=>`
+      ${pendingNet.length ? pendingNet.map(s=>`
         <div class="list-row" style="padding:6px 0;border-bottom:1px solid var(--border);">
-          <div class="info"><div class="title">${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran':'Tabungan'} &middot; ${rupiah(s.jumlah)}</div></div>
+          <div class="info"><div class="title">${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran':'Tabungan'} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah?' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+')</span>':''}</div></div>
           <div class="sub">${fmtDateShort(s.tanggal)}</div>
         </div>
       `).join('') : ''}
