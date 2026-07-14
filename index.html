@@ -4385,8 +4385,8 @@ function renderAdminSaham(user){
     if(!seen[k.nama]){ seen[k.nama]=true; daftarPemilikAll.push(k.nama); }
   });
   const kelFilter = currentSubState.sahamKelompok || '';
-  const daftarPemilik = kelFilter ? daftarPemilikAll.filter(nama=>ownerKelompokId(nama)===kelFilter) : daftarPemilikAll;
-  const ksForStats = kelFilter ? ks.filter(k=>ownerKelompokId(k.nama)===kelFilter) : ks;
+  const daftarPemilik = kelFilter ? daftarPemilikAll.filter(nama=>ks.some(k=>k.nama===nama && k.kelompokId===kelFilter)) : daftarPemilikAll;
+  const ksForStats = kelFilter ? ks.filter(k=>k.kelompokId===kelFilter) : ks;
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   const totalNilaiAwal = ksForStats.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*(j.nominalPerLembar||0):0); },0);
   const totalNilaiSesudah = ksForStats.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
