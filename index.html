@@ -916,7 +916,7 @@ function ensureDefaults() {
       {id:'penyusutan', label:'Penyusutan', persen:2}
     ];
   }
-  if(!DB.koperasi.aturKeuangan.dana) DB.koperasi.aturKeuangan.dana = {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0};
+  if(!DB.koperasi.aturKeuangan.dana || typeof DB.koperasi.aturKeuangan.dana !== 'object' || Object.keys(DB.koperasi.aturKeuangan.dana).length===0) DB.koperasi.aturKeuangan.dana = {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0};
   if(!DB.koperasi.info || typeof DB.koperasi.info !== 'object' || Object.keys(DB.koperasi.info).length===0) DB.koperasi.info = {};
   if(!DB.koperasi.sertifikat || typeof DB.koperasi.sertifikat !== 'object' || Object.keys(DB.koperasi.sertifikat).length===0) {
     DB.koperasi.sertifikat = { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' };
@@ -1165,7 +1165,15 @@ async function seedSupabase() {
     info: {},
     sertifikat: { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' },
     saham: { pemupukanPersen: 35, jenis: [] },
-    atur_keuangan: { marginNominal: 50000, marginMaxNominal: 200000, pools: [], dana: {} }
+    atur_keuangan: { marginNominal: 50000, marginMaxNominal: 200000, pools: [
+      {id:'operasional', label:'Operasional', persen:5},
+      {id:'cadangan_resiko', label:'Cadangan Resiko', persen:5},
+      {id:'bagi_hasil_tabungan', label:'Bagi Hasil Tabungan', persen:2},
+      {id:'shu_saham', label:'SHU Saham', persen:2},
+      {id:'cad_zakat', label:'Cad. Zakat', persen:2},
+      {id:'dana_sosial', label:'Dana Sosial', persen:2},
+      {id:'penyusutan', label:'Penyusutan', persen:2}
+    ], dana: {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0} }
   }], 'pengaturan koperasi');
 
   // Reload
