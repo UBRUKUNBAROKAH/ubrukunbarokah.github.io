@@ -4404,7 +4404,20 @@ function renderAdminSaham(user){
       <button class="btn btn-outline btn-compact" onclick="openImportModal('saham')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="bukaPemilikSahamBaru()">${ICONS.plus} Tambah</button>
     </div>
-    ${daftarPemilik.length ? groupByKelompokId(daftarPemilik, nama=>ownerKelompokId(nama)).map(g=>{
+    ${!daftarPemilik.length ? `<div class="card" style="padding:6px 18px;">${emptyRow(kelFilter ? 'Tidak ada pemilik saham di kelompok ini' : 'Belum ada pemilik saham')}</div>` :
+      kelFilter ? `
+      <div class="card" style="padding:6px 18px;">
+        ${daftarPemilik.map((nama,i)=>{
+          const holdings = ks.filter(k=>k.nama===nama);
+          const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+          return `<div class="list-row"${i>0?' style="border-top:1px dashed var(--border);"':''}>
+            <div class="row-num">${i+1}</div>
+            <div class="info" style="cursor:pointer;" onclick="go('admin_saham_certificate',{namaSaham:'${nama}'})"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;align-items:center;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div class="amt mono">${rupiah(total)}</div><button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();editKepemilikanSaham('${nama}')">✎</button></div>
+          </div>`;
+        }).join('')}
+      </div>
+    ` : groupByKelompokId(daftarPemilik, nama=>ownerKelompokId(nama)).map(g=>{
       let i = 0;
       return `
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
@@ -4420,7 +4433,7 @@ function renderAdminSaham(user){
           </div>`;
         }).join('')}
       </div>
-    `; }).join('') : `<div class="card" style="padding:6px 18px;">${emptyRow(kelFilter ? 'Tidak ada pemilik saham di kelompok ini' : 'Belum ada pemilik saham')}</div>`}
+    `; }).join('')}
   `;
 }
 function bukaPemilikSahamBaru(){
