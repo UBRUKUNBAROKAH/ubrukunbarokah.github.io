@@ -1917,20 +1917,40 @@ function renderNotifSaldoKoordinator(){
   if(!rows.length) return '';
   return `
     <div class="section-label">Saldo di Koordinator (${rows.length}, belum disetor)</div>
-    <div class="card" style="padding:6px 18px;">
-      ${rows.map(r=>`
-        <div class="list-row">
-          <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.wallet}</div>
-          <div class="info">
-            <div class="title">${r.koor ? r.koor.nama : '-'} <span class="badge badge-gold" style="font-size:9px;">${r.jumlahItem} setoran</span></div>
-            <div class="sub">${r.dipakaiTarik>0
-              ? 'Sisa dibawa setelah penarikan &middot; terkumpul '+rupiah(r.totalSetoran)+' &minus; dipakai '+rupiah(r.dipakaiTarik)
-              : 'Belum disetor ke admin'}</div>
+    ${rows.map(r=>`
+      <div class="card" style="padding:14px 16px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);flex-shrink:0;">${ICONS.wallet}</div>
+            <div style="min-width:0;">
+              <div class="title" style="font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.koor ? r.koor.nama : '-'}</div>
+              <div class="sub" style="font-size:11px;">${r.jumlahItem} setoran menunggu &middot; ${r.dipakaiTarik>0 ? 'sudah ada penarikan' : 'belum disetor ke admin'}</div>
+            </div>
           </div>
-          <div class="amt mono" style="font-weight:700;">${rupiah(r.sisaKas)}</div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;">Sisa dibawa</div>
+            <div class="mono" style="font-size:19px;font-weight:800;color:var(--primary);line-height:1.3;">${rupiah(r.sisaKas)}</div>
+          </div>
         </div>
-      `).join('')}
-    </div>`;
+        ${r.dipakaiTarik>0 ? `
+        <div style="display:flex;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">
+          <div style="flex:1;text-align:center;">
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Terkumpul</div>
+            <div class="mono" style="font-size:14px;font-weight:700;">${rupiah(r.totalSetoran)}</div>
+          </div>
+          <div style="color:var(--muted);font-size:17px;font-weight:600;padding:0 6px;">&minus;</div>
+          <div style="flex:1;text-align:center;">
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Dipakai tarik</div>
+            <div class="mono" style="font-size:14px;font-weight:700;color:var(--danger);">${rupiah(r.dipakaiTarik)}</div>
+          </div>
+          <div style="color:var(--muted);font-size:17px;font-weight:600;padding:0 6px;">=</div>
+          <div style="flex:1;text-align:center;">
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Sisa dibawa</div>
+            <div class="mono" style="font-size:14px;font-weight:800;color:var(--ok);">${rupiah(r.sisaKas)}</div>
+          </div>
+        </div>` : ''}
+      </div>
+    `).join('')}`;
 }
 function emptyRow(msg){ return `<div class="hint" style="text-align:center;padding:10px 0;">${msg}</div>`; }
 function confirmSetoranUI(setoranId){
