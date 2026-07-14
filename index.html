@@ -1688,18 +1688,24 @@ function sisaSetoran(setoranId){
   return net ? net.sisa : 0;
 }
 // Ringkasan per koordinator: total saldo yg dipegang (belum disetor ke admin)
-// + sisa saldo setelah dipakai penarikan (kalau ada). Untuk notifikasi simple & mudah dibaca.
+// + sisa saldo setelah dipakai penarikan (kalau ada) + daftar setoran yg
+// menunggu diterima + hutang admin ke koordinator ybs. Untuk notifikasi
+// simple & mudah dibaca (semua info soal 1 koordinator jadi 1 kartu).
 function ringkasanSaldoKoordinator(){
-  const koorIds = [...new Set(DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>s.dibuatOleh))];
+  const setoranKoorIds = DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>s.dibuatOleh);
+  const hutangKoorIds = (DB.hutangKoor||[]).filter(h=>h.status==='belum_lunas').map(h=>h.koorId);
+  const koorIds = [...new Set([...setoranKoorIds, ...hutangKoorIds])];
   return koorIds.map(kid=>{
     const koor = userById(kid);
     const totalSetoran = totalSetoranPendingKoor(kid);
     const dipakaiTarik = totalPenarikanDariKasKoor(kid);
     const sisaKas = kasKoordinator(kid);
-    const jumlahItem = DB.setoran.filter(s=>s.dibuatOleh===kid && s.status==='di_koordinator').length;
-    return {koorId:kid, koor, totalSetoran, dipakaiTarik, sisaKas, jumlahItem};
-  }).filter(r=>r.totalSetoran>0)
-    .sort((a,b)=>b.sisaKas-a.sisaKas);
+    const pendingItems = pendingSetoranNetForKoor(kid);
+    const hutangItems = (DB.hutangKoor||[]).filter(h=>h.koorId===kid && h.status==='belum_lunas');
+    const totalHutang = hutangItems.reduce((s,h)=>s+(h.jumlah-(h.dibayar||0)),0);
+    return {koorId:kid, koor, totalSetoran, dipakaiTarik, sisaKas, jumlahItem:pendingItems.length, pendingItems, hutangItems, totalHutang};
+  }).filter(r=>r.totalSetoran>0 || r.totalHutang>0)
+    .sort((a,b)=>(b.sisaKas+b.totalHutang)-(a.sisaKas+a.totalHutang));
 }
 function doTarikKoordinator(userId, jenisId, jumlah, keterangan){
   const r = doTarik(userId, jenisId, jumlah, keterangan);
@@ -1832,39 +1838,8 @@ function renderAdminBeranda(user){
     </div>
     ${renderNotifSaldoKoordinator()}
     ${(()=>{
-      const pendingSetoran = pendingSetoranNetAll();
       const pendingPemb = DB.pembiayaan.filter(p=>p.statusPengajuan==='pending');
       let html = '';
-      if(pendingSetoran.length){
-        html += `
-    <div class="section-label">Setoran dari koordinator (${pendingSetoran.length} pending)</div>
-    <div class="card" style="padding:6px 18px;">
-      ${pendingSetoran.map(s=>`
-        <div class="list-row">
-          <div class="row-ic">${ICONS.down}</div>
-          <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(s.dibuatOleh).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah?' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+', sdh dipakai penarikan)</span>':''} &middot; oleh ${userById(s.dibuatOleh).nama}</div></div>
-          <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
-        </div>
-      `).join('')}
-    </div>`;
-      }
-      const hutangAktif = (DB.hutangKoor||[]).filter(h=>h.status==='belum_lunas');
-      if(hutangAktif.length){
-        html += `
-    <div class="section-label" style="color:var(--danger);">Hutang admin ke koordinator (${hutangAktif.length})</div>
-    <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);">
-      ${hutangAktif.map(h=>`
-        <div class="list-row">
-          <div class="row-ic" style="background:var(--danger-soft);color:var(--danger);">${ICONS.up}</div>
-          <div class="info"><div class="title">${userById(h.koorId).nama}</div><div class="sub">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${fmtDateShort(h.tanggal)}</div></div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="amt minus">${rupiah(h.jumlah-(h.dibayar||0))}</div>
-            <button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button>
-          </div>
-        </div>
-      `).join('')}
-    </div>`;
-      }
       if(pendingPemb.length){
         html += `
     <div class="section-label">Pengajuan Pembiayaan (${pendingPemb.length} menunggu ACC)</div>
@@ -1911,12 +1886,13 @@ function renderAdminBeranda(user){
   `;
 }
 // Notifikasi ringkas: saldo di tiap koordinator yg belum disetor ke admin,
-// + sisa saldo kalau sebagian sudah dipakai untuk penarikan nasabah.
+// sisa saldo kalau sebagian sudah dipakai penarikan, daftar setoran yg
+// menunggu diterima, dan hutang admin ke koordinator ybs — semua jadi 1 kartu.
 function renderNotifSaldoKoordinator(){
   const rows = ringkasanSaldoKoordinator();
   if(!rows.length) return '';
   return `
-    <div class="section-label">Saldo di Koordinator (${rows.length}, belum disetor)</div>
+    <div class="section-label">Saldo &amp; Setoran Koordinator (${rows.length})</div>
     ${rows.map(r=>`
       <div class="card" style="padding:14px 16px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
@@ -1924,7 +1900,7 @@ function renderNotifSaldoKoordinator(){
             <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);flex-shrink:0;">${ICONS.wallet}</div>
             <div style="min-width:0;">
               <div class="title" style="font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.koor ? r.koor.nama : '-'}</div>
-              <div class="sub" style="font-size:11px;">${r.jumlahItem} setoran menunggu &middot; ${r.dipakaiTarik>0 ? 'sudah ada penarikan' : 'belum disetor ke admin'}</div>
+              <div class="sub" style="font-size:11px;">${r.jumlahItem} setoran menunggu ${r.dipakaiTarik>0 ? '&middot; sudah ada penarikan' : ''}</div>
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
@@ -1948,6 +1924,31 @@ function renderNotifSaldoKoordinator(){
             <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Sisa dibawa</div>
             <div class="mono" style="font-size:14px;font-weight:800;color:var(--ok);">${rupiah(r.sisaKas)}</div>
           </div>
+        </div>` : ''}
+        ${r.pendingItems.length ? `
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+          ${r.pendingItems.map(s=>`
+            <div class="list-row" style="padding:6px 0;">
+              <div class="info">
+                <div class="title" style="font-size:13px;">${userById(s.userId).nama}</div>
+                <div class="sub">${s.jenis==='angsuran' ? 'Angsuran '+(s.keterangan||'') : jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+')</span>' : ''}</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
+            </div>
+          `).join('')}
+        </div>` : ''}
+        ${r.hutangItems.length ? `
+        <div style="margin-top:12px;padding:10px 12px;background:var(--danger-soft);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;color:var(--danger);font-weight:700;margin-bottom:6px;">Hutang admin ke koordinator ini &middot; ${rupiah(r.totalHutang)}</div>
+          ${r.hutangItems.map(h=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;">
+              <div class="sub" style="font-size:11px;">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${fmtDateShort(h.tanggal)}</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <div class="amt minus mono">${rupiah(h.jumlah-(h.dibayar||0))}</div>
+                <button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button>
+              </div>
+            </div>
+          `).join('')}
         </div>` : ''}
       </div>
     `).join('')}`;
@@ -2895,7 +2896,7 @@ function updatePengajuanPreview(){
   const angsuran = Math.ceil(total/tenor/1000)*1000;
   el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Keuntungan <b>'+rupiah(margin)+'</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
 }
-function submitPengajuan(){
+async function submitPengajuan(){
   const forced = document.getElementById('pemb-user-forced');
   const userId = forced ? forced.value : document.getElementById('pemb-user').value;
   const jumlah = parseIdr(document.getElementById('pemb-jumlah').value);
@@ -2909,7 +2910,17 @@ function submitPengajuan(){
   const total = jumlah + mp;
   const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved', keterangan:ket};
   DB.pembiayaan.push(p);
-  persist();
+  const btn = document.querySelector('button[onclick="submitPengajuan()"]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  const result = await persistNow();
+  if(!result.ok){
+    // Gagal simpan ke server -> batalkan biar tidak "hilang" pas refresh & user tau ada masalah
+    DB.pembiayaan = DB.pembiayaan.filter(x=>x.id!==p.id);
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+    if(btn){ btn.disabled = false; btn.textContent = 'Ajukan'; }
+    renderContent();
+    return;
+  }
   addLog('Buat pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
   bigSuccess('Pengajuan berhasil dibuat');
   closeModal();
@@ -4757,7 +4768,7 @@ function updatePengajuanPreviewKoor(){
   const angsuran = Math.ceil(total/tenor/1000)*1000;
   el.innerHTML = '<div style="background:var(--primary-soft);padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;line-height:1.6;">Keuntungan <b>'+rupiah(margin)+'</b> &middot; Total kewajiban <b class="mono">'+rupiah(total)+'</b> &middot; Estimasi angsuran <b class="mono" style="font-size:16px;color:var(--primary);">'+rupiah(angsuran)+'</b>/bulan.</div>';
 }
-function submitPengajuanKoor(){
+async function submitPengajuanKoor(){
   const userId = document.getElementById('pemb-user').value;
   const jumlah = parseIdr(document.getElementById('pemb-jumlah').value);
   const tenor = parseIdr(document.getElementById('pemb-tenor').value);
@@ -4770,7 +4781,17 @@ function submitPengajuanKoor(){
   const total = jumlah + mp;
   const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'pending', riwayatAngsuran:[], statusPengajuan:'pending', keterangan:ket};
   DB.pembiayaan.push(p);
-  persist();
+  const btn = document.querySelector('button[onclick="submitPengajuanKoor()"]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  const result = await persistNow();
+  if(!result.ok){
+    // Gagal simpan ke server -> batalkan biar tidak "hilang" pas refresh & user tau ada masalah
+    DB.pembiayaan = DB.pembiayaan.filter(x=>x.id!==p.id);
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+    if(btn){ btn.disabled = false; btn.textContent = 'Ajukan'; }
+    renderContent();
+    return;
+  }
   addLog('Ajukan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
   bigSuccess('Pengajuan pembiayaan dikirim, menunggu ACC admin');
   closeModal();
