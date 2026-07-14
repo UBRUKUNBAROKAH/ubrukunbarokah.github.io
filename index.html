@@ -684,7 +684,7 @@ const SESSION_KEY = 'ub_rukun_barokah_session_v1';
 
 function uid(prefix){ return (prefix||'id') + '_' + Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
-function rupiah(n){ n = Number(n)||0; return 'Rp' + n.toLocaleString('id-ID'); }
+function rupiah(n){ n = Math.round(Number(n)||0); return 'Rp' + n.toLocaleString('id-ID'); }
 // Parse IDR: hapus titik (pemisah ribuan), ganti koma jadi titik (desimal)
 function parseIdr(v){ if(typeof v==='number') return v; if(!v) return 0; return parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0; }
 function marginNominalOf(p){
@@ -4229,7 +4229,10 @@ function renderAdminSHU(user){
     if(!m.length) html += '<div class="hint" style="padding:10px;text-align:center;">Belum ada saldo tabungan</div>';
   }
 
-  html += '<button class="btn btn-outline btn-block" style="margin-top:14px;" onclick="cetakSHU()">🖨 Cetak Daftar SHU</button>';
+  html += '<div style="display:flex;gap:8px;margin-top:14px;">';
+  html += '<button class="btn btn-outline" style="flex:1;" onclick="unduhPdfSHU()">'+(ICONS.pdf||'📄')+' Unduh PDF</button>';
+  html += '<button class="btn btn-outline" style="flex:1;" onclick="unduhExcelSHU()">'+(ICONS.download||'📊')+' Unduh Excel</button>';
+  html += '</div>';
   return html;
 }
 function pilihTabSHU(tab){
@@ -4258,30 +4261,21 @@ function simpanBagiHasilPersen(){
   bigSuccess('Persentase bagi hasil disimpan');
   renderContent();
 }
-function cetakSHU(){
+// Susun daftar penerima SHU (baik SHU Saham maupun Bagi Hasil Tabungan) menjadi
+// baris-baris [nama, jumlah] untuk dipakai bersama oleh unduh PDF & Excel.
+function dataDaftarSHU(){
   const tab = currentSubState.shuTab||'saham';
   const atur = DB.koperasi.aturKeuangan || {};
   const dana = atur.dana || {};
   const jns = DB.koperasi.saham.jenis||[];
-  const w = window.open('', '_blank');
-  if(!w){ toast('Izinkan pop-up untuk mencetak'); return; }
-  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
-  let baris = '';
   const label = tab==='saham' ? 'SHU SAHAM' : 'BAGI HASIL TABUNGAN';
+  const kolomNama = tab==='saham' ? 'Nama Pemilik Saham' : 'Nama';
+  let rows = [];
   if(tab==='saham'){
     const ks = DB.kepemilikanSaham||[];
     const poolSHUSaham = dana.shu_saham||0;
     const owners = hitungShuSahamOwners(poolSHUSaham, jns, ks);
-    const ownerList = Object.keys(owners);
-    let no=0;
-    baris = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#eee;"><th style="border:1px solid #999;padding:6px 10px;text-align:center;">No</th><th style="border:1px solid #999;padding:6px 10px;text-align:left;">Nama Pemilik Saham</th><th style="border:1px solid #999;padding:6px 10px;text-align:right;">SHU</th></tr></thead><tbody>';
-    ownerList.forEach(function(n){
-      no++;
-      const shu = owners[n];
-      baris += '<tr><td style="border:1px solid #999;padding:4px 10px;text-align:center;">'+no+'</td><td style="border:1px solid #999;padding:4px 10px;">'+n+'</td><td style="border:1px solid #999;padding:4px 10px;text-align:right;">'+rupiah(shu)+'</td></tr>';
-    });
-    baris += '</tbody></table>';
-    if(!ownerList.length) baris = '<p>Tidak ada pemilik saham</p>';
+    rows = Object.keys(owners).map(n=>[n, Math.round(owners[n]||0)]);
   } else {
     const nasabah = DB.users.filter(u=>u.role==='nasabah');
     const totalMudharabah = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
@@ -4289,19 +4283,50 @@ function cetakSHU(){
     function ctkSaldoUser(u){ return DB.tabunganAccounts.filter(function(a){ return a.userId===u.id; }).reduce(function(s,a){ return s+a.saldo; },0); }
     var m = nasabah.filter(function(u){ return ctkSaldoUser(u)>0; });
     if(m.length===0) m = nasabah.filter(function(u){ return DB.tabunganAccounts.some(function(a){ return a.userId===u.id; }); });
-    baris = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#eee;"><th style="border:1px solid #999;padding:6px 10px;text-align:center;">No</th><th style="border:1px solid #999;padding:6px 10px;text-align:left;">Nama</th><th style="border:1px solid #999;padding:6px 10px;text-align:right;">SHU</th></tr></thead><tbody>';
-    for(var i=0;i<m.length;i++){
-      var u=m[i], saldo = ctkSaldoUser(u);
+    rows = m.map(function(u){
+      var saldo = ctkSaldoUser(u);
       var porsi = totalMudharabah>0 ? saldo/totalMudharabah*100 : 0;
       var shu = poolBHT * porsi/100;
-      baris += '<tr><td style="border:1px solid #999;padding:4px 10px;text-align:center;">'+(i+1)+'</td><td style="border:1px solid #999;padding:4px 10px;">'+u.nama+'</td><td style="border:1px solid #999;padding:4px 10px;text-align:right;">'+rupiah(shu)+'</td></tr>';
-    }
-    baris += '</tbody></table>';
-    if(!m.length) baris = '<p>Belum ada saldo tabungan</p>';
+      return [u.nama, Math.round(shu)];
+    });
   }
-  w.document.write('<!DOCTYPE html><html><head><title>'+label+' - '+DB.koperasi.nama+'</title><style>body{font-family:sans-serif;padding:20px;}@media print{body{padding:10px;}}@page{margin:12mm;}</style></head><body><h2 style="text-align:center;margin-bottom:4px;">'+DB.koperasi.nama.toUpperCase()+'</h2><h3 style="text-align:center;margin:0 0 4px;font-weight:400;">'+label+'</h3><div style="text-align:center;font-size:11px;color:#666;margin-bottom:14px;">'+tgl+'</div>'+baris+'</body></html>');
-  w.document.close();
-  setTimeout(()=>{ w.print(); w.close(); }, 500);
+  return { label, kolomNama, rows };
+}
+function unduhPdfSHU(){
+  const { label, kolomNama, rows } = dataDaftarSHU();
+  if(!rows.length){ toast('Tidak ada data untuk diunduh'); return; }
+  const { jsPDF } = window.jspdf;
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const doc = new jsPDF({ orientation:'portrait' });
+  doc.setFontSize(13);
+  doc.text((DB.koperasi.nama||'Koperasi').toUpperCase(), 14, 14);
+  doc.setFontSize(10.5);
+  doc.text(label, 14, 20.5);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Diunduh: ' + tgl, 14, 26);
+  doc.setTextColor(0);
+  doc.autoTable({
+    head: [['No', kolomNama, 'SHU']],
+    body: rows.map((r,i)=>[i+1, r[0], rupiah(r[1])]),
+    startY: 31,
+    styles:{ fontSize:9, cellPadding:3 },
+    headStyles:{ fillColor:[11,61,46], textColor:255 },
+    columnStyles:{ 0:{ halign:'center', cellWidth:12 }, 2:{ halign:'right' } }
+  });
+  doc.save(sanitizeFileName('Daftar ' + label) + '.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function unduhExcelSHU(){
+  const { label, kolomNama, rows } = dataDaftarSHU();
+  if(!rows.length){ toast('Tidak ada data untuk diunduh'); return; }
+  const header = ['No', kolomNama, 'SHU'];
+  const body = rows.map((r,i)=>[i+1, r[0], r[1]]);
+  const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, label.slice(0,31));
+  XLSX.writeFile(wb, sanitizeFileName('Daftar ' + label) + '.xlsx');
+  toast('File Excel berhasil diunduh');
 }
 
 /* =========================================================
