@@ -1687,6 +1687,20 @@ function sisaSetoran(setoranId){
   const net = pendingSetoranNetForKoor(st.dibuatOleh).find(x=>x.id===setoranId);
   return net ? net.sisa : 0;
 }
+// Ringkasan per koordinator: total saldo yg dipegang (belum disetor ke admin)
+// + sisa saldo setelah dipakai penarikan (kalau ada). Untuk notifikasi simple & mudah dibaca.
+function ringkasanSaldoKoordinator(){
+  const koorIds = [...new Set(DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>s.dibuatOleh))];
+  return koorIds.map(kid=>{
+    const koor = userById(kid);
+    const totalSetoran = totalSetoranPendingKoor(kid);
+    const dipakaiTarik = totalPenarikanDariKasKoor(kid);
+    const sisaKas = kasKoordinator(kid);
+    const jumlahItem = DB.setoran.filter(s=>s.dibuatOleh===kid && s.status==='di_koordinator').length;
+    return {koorId:kid, koor, totalSetoran, dipakaiTarik, sisaKas, jumlahItem};
+  }).filter(r=>r.totalSetoran>0)
+    .sort((a,b)=>b.sisaKas-a.sisaKas);
+}
 function doTarikKoordinator(userId, jenisId, jumlah, keterangan){
   const r = doTarik(userId, jenisId, jumlah, keterangan);
   if(!r.ok) return r;
@@ -1816,6 +1830,7 @@ function renderAdminBeranda(user){
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono">${rupiah(totalSimpanan)}</div><div class="l">Total simpanan</div></div>
       <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalPembiayaanAktif)}</div><div class="l">Sisa pembiayaan aktif</div></div>
     </div>
+    ${renderNotifSaldoKoordinator()}
     ${(()=>{
       const pendingSetoran = pendingSetoranNetAll();
       const pendingPemb = DB.pembiayaan.filter(p=>p.statusPengajuan==='pending');
@@ -1894,6 +1909,28 @@ function renderAdminBeranda(user){
     </div>`;
     })()}
   `;
+}
+// Notifikasi ringkas: saldo di tiap koordinator yg belum disetor ke admin,
+// + sisa saldo kalau sebagian sudah dipakai untuk penarikan nasabah.
+function renderNotifSaldoKoordinator(){
+  const rows = ringkasanSaldoKoordinator();
+  if(!rows.length) return '';
+  return `
+    <div class="section-label">Saldo di Koordinator (${rows.length}, belum disetor)</div>
+    <div class="card" style="padding:6px 18px;">
+      ${rows.map(r=>`
+        <div class="list-row">
+          <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.wallet}</div>
+          <div class="info">
+            <div class="title">${r.koor ? r.koor.nama : '-'} <span class="badge badge-gold" style="font-size:9px;">${r.jumlahItem} setoran</span></div>
+            <div class="sub">${r.dipakaiTarik>0
+              ? 'Sisa dibawa setelah penarikan &middot; terkumpul '+rupiah(r.totalSetoran)+' &minus; dipakai '+rupiah(r.dipakaiTarik)
+              : 'Belum disetor ke admin'}</div>
+          </div>
+          <div class="amt mono" style="font-weight:700;">${rupiah(r.sisaKas)}</div>
+        </div>
+      `).join('')}
+    </div>`;
 }
 function emptyRow(msg){ return `<div class="hint" style="text-align:center;padding:10px 0;">${msg}</div>`; }
 function confirmSetoranUI(setoranId){
