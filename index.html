@@ -1716,7 +1716,8 @@ function ringkasanSaldoKoordinator(){
     const pendingItems = pendingSetoranNetForKoor(kid);
     const hutangItems = (DB.hutangKoor||[]).filter(h=>h.koorId===kid && h.status==='belum_lunas');
     const totalHutang = hutangItems.reduce((s,h)=>s+(h.jumlah-(h.dibayar||0)),0);
-    return {koorId:kid, koor, totalSetoran, dipakaiTarik, sisaKas, jumlahItem:pendingItems.length, pendingItems, hutangItems, totalHutang};
+    const penarikanItems = (DB.kasPenarikan||[]).filter(p=>p.koorId===kid).slice().sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal));
+    return {koorId:kid, koor, totalSetoran, dipakaiTarik, sisaKas, jumlahItem:pendingItems.length, pendingItems, hutangItems, totalHutang, penarikanItems};
   }).filter(r=>r.totalSetoran>0 || r.totalHutang>0)
     .sort((a,b)=>(b.sisaKas+b.totalHutang)-(a.sisaKas+a.totalHutang));
 }
@@ -1970,13 +1971,27 @@ function renderNotifSaldoKoordinator(){
         </div>` : ''}
         ${r.pendingItems.length ? `
         <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="font-size:10.5px;color:var(--ok);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px;">&#8595; Uang masuk &middot; menunggu diterima</div>
           ${r.pendingItems.map(s=>`
             <div class="list-row" style="padding:6px 0;">
               <div class="info">
                 <div class="title" style="font-size:13px;">${userById(s.userId).nama}</div>
-                <div class="sub">${s.jenis==='angsuran' ? 'Angsuran '+(s.keterangan||'') : jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+')</span>' : ''}</div>
+                <div class="sub">${s.jenis==='angsuran' ? 'Angsuran '+(s.keterangan||'') : jenisName(s.jenisId)+(s.keterangan && s.keterangan!=='Setoran tunai' ? ' &middot; '+s.keterangan : '')} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+')</span>' : ''}</div>
               </div>
               <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
+            </div>
+          `).join('')}
+        </div>` : ''}
+        ${r.penarikanItems && r.penarikanItems.length ? `
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="font-size:10.5px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px;">&#8593; Uang keluar dari kas koordinator</div>
+          ${r.penarikanItems.map(p=>`
+            <div class="list-row" style="padding:6px 0;">
+              <div class="info">
+                <div class="title" style="font-size:13px;">${p.keterangan || (p.userId ? 'Penarikan tunai '+userById(p.userId).nama : 'Penarikan')}</div>
+                <div class="sub">${p.userId ? userById(p.userId).nama+' &middot; ' : ''}${fmtDateShort(p.tanggal)}</div>
+              </div>
+              <div class="amt minus mono">${rupiah(p.jumlah)}</div>
             </div>
           `).join('')}
         </div>` : ''}
