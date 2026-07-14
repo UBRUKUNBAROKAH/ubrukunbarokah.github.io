@@ -692,6 +692,13 @@ function marginNominalOf(p){
   if(p.marginPersen) return Math.round(p.jumlahPinjaman * p.marginPersen / 100);
   return 0;
 }
+// Label/warna status pembiayaan yg konsisten di semua tampilan (termasuk saat masih menunggu ACC admin)
+function pembBadge(p){
+  if(p.statusPengajuan==='pending') return {cls:'badge-gold', label:'Menunggu ACC'};
+  if(p.statusPengajuan==='rejected') return {cls:'badge-red', label:'Ditolak'};
+  if(p.status==='lunas') return {cls:'badge-green', label:'Lunas'};
+  return {cls:'badge-gold', label:'Berjalan'};
+}
 
 // ---- Wrapper for backward compat ----
 async function loadDB() {
@@ -1078,8 +1085,13 @@ async function syncAllToSupabase() {
   await safeUpsert(TABLES.pengaturan_koperasi, [pg], 'pengaturan_koperasi');
 
   if (errors.length) {
-    console.error('Auto-sync selesai dengan error pada tabel:', errors.map(e=>e.table).join(', '));
-    throw new Error('Sync gagal pada: ' + errors.map(e=>e.table).join(', '));
+    const detail = errors.map(e => {
+      const msg = e.error && (e.error.message || e.error.msg) || 'unknown error';
+      const extra = e.error && (e.error.details || e.error.hint) ? ' — ' + (e.error.details || e.error.hint) : '';
+      return e.table + ': ' + msg + extra;
+    }).join(' | ');
+    console.error('Auto-sync selesai dengan error pada tabel:', detail);
+    throw new Error(detail);
   }
   console.log('Auto-sync to Supabase berhasil');
 }
@@ -1827,7 +1839,7 @@ function renderAdminBeranda(user){
   const totalAnggota = DB.users.filter(u=>u.role==='nasabah').length;
   const totalKoor = DB.users.filter(u=>u.role==='koordinator').length;
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
-  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan').reduce((s,p)=>s+p.angsuranPerBulan*p.sisaAngsuran,0);
+  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>s+p.angsuranPerBulan*p.sisaAngsuran,0);
   return `
     <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
     <div class="stat-grid">
@@ -2290,7 +2302,7 @@ function renderMemberDetail(nas, backPage){
     <div class="flex-between"><div class="section-label" style="margin:0;">Pembiayaan</div><button class="btn btn-outline btn-sm" onclick="openPengajuanModal('${nas.id}')">${ICONS.plus} Ajukan</button></div>
     <div class="card" style="padding:6px 18px;">
       ${pembs.length ? pembs.map(p=>`
-        <div class="list-row"><div class="info"><div class="title">${rupiah(p.jumlahPinjaman)}</div><div class="sub">Sisa ${p.sisaAngsuran}/${p.tenor} angsuran</div></div><span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span></div>
+        <div class="list-row"><div class="info"><div class="title">${rupiah(p.jumlahPinjaman)}</div><div class="sub">Sisa ${p.sisaAngsuran}/${p.tenor} angsuran</div></div><span class="badge ${pembBadge(p).cls}">${pembBadge(p).label}</span></div>
       `).join('') : emptyRow('Tidak ada pembiayaan')}
     </div>
     <div style="display:flex;gap:10px;margin-top:4px;">
@@ -3364,7 +3376,7 @@ function renderAdminLaporan(user){
   const tab = currentSubState.lapTab || 'ikhtisar';
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
   const totalPembCair = DB.pembiayaan.reduce((s,p)=>s+p.jumlahPinjaman,0);
-  const totalPembSisa = DB.pembiayaan.filter(p=>p.status==='berjalan').reduce((s,p)=>s+p.angsuranPerBulan*p.sisaAngsuran,0);
+  const totalPembSisa = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>s+p.angsuranPerBulan*p.sisaAngsuran,0);
   const totalSaham = DB.users.filter(u=>u.role==='nasabah').reduce((s,u)=>s+totalNilaiSaham(u),0);
   return `
     <div class="page-title">Laporan<span class="sub">Keuangan & Saham koperasi</span></div>
@@ -3518,7 +3530,7 @@ function renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalS
     </div>
     <div class="section-label">Status pembiayaan</div>
     <div class="card" style="padding:6px 18px;">
-      <div class="list-row"><div class="info"><div class="title">Berjalan</div></div><div class="amt">${DB.pembiayaan.filter(p=>p.status==='berjalan').length}</div></div>
+      <div class="list-row"><div class="info"><div class="title">Berjalan</div></div><div class="amt">${DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').length}</div></div>
       <div class="list-row"><div class="info"><div class="title">Lunas</div></div><div class="amt">${DB.pembiayaan.filter(p=>p.status==='lunas').length}</div></div>
     </div>
     <div class="section-label" style="margin-top:18px;">Ringkasan Semua Pool Dana</div>
@@ -4581,7 +4593,7 @@ function renderKoorBeranda(user){
   const kelompok = DB.koperasi.kelompok.find(k=>k.id===user.kelompokId);
   const anggota = nasabahOfKelompok(user.kelompokId);
   const totalSimpanan = anggota.reduce((s,u)=>s+totalSaldoUser(u.id),0);
-  const pembAktif = DB.pembiayaan.filter(p=>anggota.some(u=>u.id===p.userId) && p.status==='berjalan').length;
+  const pembAktif = DB.pembiayaan.filter(p=>anggota.some(u=>u.id===p.userId) && p.status==='berjalan' && p.statusPengajuan==='approved').length;
   const pendingRaw = DB.setoran.filter(s=>s.dibuatOleh===user.id && s.status==='di_koordinator');
   const totalPending = pendingRaw.reduce((s,x)=>s+x.jumlah,0);
   const pendingNet = pendingSetoranNetForKoor(user.id);
@@ -4779,7 +4791,7 @@ async function submitPengajuanKoor(){
   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
   if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
   const total = jumlah + mp;
-  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'pending', riwayatAngsuran:[], statusPengajuan:'pending', keterangan:ket};
+  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'pending', keterangan:ket};
   DB.pembiayaan.push(p);
   const btn = document.querySelector('button[onclick="submitPengajuanKoor()"]');
   if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
@@ -5032,7 +5044,7 @@ function renderNasPembiayaan(user){
       <div class="card">
         <div class="flex-between" style="margin-bottom:10px;">
           <div><div style="font-weight:700;font-size:15px;">${rupiah(p.jumlahPinjaman)}</div><div class="hint">Mulai ${fmtDateShort(p.mulai)}</div></div>
-          <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
+          <span class="badge ${pembBadge(p).cls}">${pembBadge(p).label}</span>
         </div>
         <div class="bar-row"><div class="lbl"><span>Progres angsuran</span><span>${p.tenor-p.sisaAngsuran}/${p.tenor}</span></div><div class="bar-track"><div class="bar-fill" style="width:${((p.tenor-p.sisaAngsuran)/p.tenor*100).toFixed(0)}%"></div></div></div>
         <div class="hint">Angsuran per bulan: ${rupiah(p.angsuranPerBulan)}</div>
