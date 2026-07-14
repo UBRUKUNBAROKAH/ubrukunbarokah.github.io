@@ -1620,6 +1620,7 @@ function doSetorKoordinator(userId, jenisId, jumlah, keterangan){
   const s = getSession();
   doSetor(userId, jenisId, jumlah, keterangan);
   DB.setoran.push({id:uid('st'), userId, jenisId, jumlah, keterangan: keterangan||'Setoran tunai', tanggal:nowISO(), dibuatOleh:s.userId, status:'di_koordinator'});
+  autoLunasiHutangDariSetoran(s.userId);
   persist();
 }
 async function confirmSetoran(setoranId){
@@ -1719,6 +1720,35 @@ function ringkasanSaldoKoordinator(){
   }).filter(r=>r.totalSetoran>0 || r.totalHutang>0)
     .sort((a,b)=>(b.sisaKas+b.totalHutang)-(a.sisaKas+a.totalHutang));
 }
+// Kalau admin masih punya hutang ke koordinator, dan koordinator itu baru
+// menerima saldo (setoran baru), pakai dulu saldo yang tersedia utk melunasi
+// hutang (sebagian/semua) sebelum koordinator perlu menyetor ke admin.
+// Dicatat sebagai "penarikan" dari kas koordinator (memakai mekanisme yang
+// sama dgn penarikan nasabah) supaya jumlah yg dipakai tidak lagi dihitung
+// sbg kas yg masih harus disetor ke admin.
+function autoLunasiHutangDariSetoran(koorId){
+  let tersedia = kasKoordinator(koorId);
+  if(tersedia<=0) return 0;
+  const hutangAktif = (DB.hutangKoor||[]).filter(h=>h.koorId===koorId && h.status==='belum_lunas')
+    .slice().sort((a,b)=>new Date(a.tanggal)-new Date(b.tanggal));
+  if(!hutangAktif.length) return 0;
+  let totalDilunasi = 0;
+  for(const h of hutangAktif){
+    if(tersedia<=0) break;
+    const sisaHutang = h.jumlah - (h.dibayar||0);
+    if(sisaHutang<=0) continue;
+    const bayar = Math.min(tersedia, sisaHutang);
+    h.dibayar = (h.dibayar||0) + bayar;
+    if(h.dibayar >= h.jumlah){ h.status = 'lunas'; h.waktuLunas = nowISO(); }
+    DB.kasPenarikan.push({id:uid('kp'), koorId, userId:h.userId||null, jumlah:bayar, tanggal:nowISO(), keterangan:'Pelunasan hutang admin (otomatis dari setoran baru)'});
+    tersedia -= bayar;
+    totalDilunasi += bayar;
+  }
+  if(totalDilunasi>0){
+    addLog('Pelunasan hutang koordinator (otomatis)', rupiah(totalDilunasi)+' ke '+userById(koorId).nama+' dipakai dari setoran baru yang masuk');
+  }
+  return totalDilunasi;
+}
 function doTarikKoordinator(userId, jenisId, jumlah, keterangan){
   const r = doTarik(userId, jenisId, jumlah, keterangan);
   if(!r.ok) return r;
@@ -1772,6 +1802,7 @@ function doBayarAngsuran(pembId, oleh, jumlah){
   const st = {id:uid('st'), userId:p.userId, jenis:'angsuran', pembiayaanId:p.id, jumlah, keterangan:'Angsuran ke-'+angsuranKe, tanggal:nowISO(), dibuatOleh:oleh, status: isAdmin ? 'sudah_di_admin' : 'di_koordinator'};
   if(isAdmin){ st.dikonfirmasiOleh = oleh; st.waktuKonfirmasi = nowISO(); }
   DB.setoran.push(st);
+  if(!isAdmin) autoLunasiHutangDariSetoran(oleh);
   const atur = DB.koperasi.aturKeuangan;
   if(atur && atur.pools && atur.dana && marginNominalOf(p)){
     const marginPerAngsuran = Math.round(marginNominalOf(p) / p.tenor);
