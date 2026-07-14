@@ -4386,12 +4386,13 @@ function renderAdminSaham(user){
   });
   const kelFilter = currentSubState.sahamKelompok || '';
   const daftarPemilik = kelFilter ? daftarPemilikAll.filter(nama=>ownerKelompokId(nama)===kelFilter) : daftarPemilikAll;
+  const ksForStats = kelFilter ? ks.filter(k=>ownerKelompokId(k.nama)===kelFilter) : ks;
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   return `
     <div class="page-title">Saham<span class="sub">Kepemilikan saham</span></div>
     <div class="stat-grid">
       ${jns.map(j=>{
-        const total = ks.filter(k=>k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0);
+        const total = ksForStats.filter(k=>k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0);
         return `<div class="stat-box"><div class="n">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
       }).join('')}
     </div>
