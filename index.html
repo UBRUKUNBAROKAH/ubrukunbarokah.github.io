@@ -3438,6 +3438,27 @@ function nilaiSahamPerLembar(j){
   var pct = (DB.koperasi.saham.pemupukanPersen||0);
   return Math.round(j.nominalPerLembar * (1 + pct/100));
 }
+// Hitung SHU per pemilik saham, berbobot per JENIS saham (mis. SAHAM A 50%, SAHAM B 30%, SAHAM C 20%).
+// Pool SHU Saham dipecah dulu ke tiap jenis sesuai persennya (j.shuPersen), lalu di dalam
+// satu jenis dibagi lagi ke pemiliknya secara proporsional terhadap nilai kepemilikan (lembar x harga/lembar)
+// di jenis itu saja. Pemilik yang hanya punya jenis dgn 0% tidak dapat SHU dari jenis itu.
+function hitungShuSahamOwners(poolSHUSaham, jns, ks){
+  var owners = {}; // nama -> total shu
+  (ks||[]).forEach(function(k){ if(!(k.nama in owners)) owners[k.nama] = 0; });
+  (jns||[]).forEach(function(j){
+    var poolJenis = poolSHUSaham * (j.shuPersen||0) / 100;
+    if(poolJenis<=0) return;
+    var totalNilaiJenis = (ks||[]).filter(function(k){ return k.jenisId===j.id; })
+      .reduce(function(s,k){ return s+k.lembar*nilaiSahamPerLembar(j); },0);
+    if(totalNilaiJenis<=0) return;
+    (ks||[]).forEach(function(k){
+      if(k.jenisId!==j.id) return;
+      var nilaiOwner = k.lembar*nilaiSahamPerLembar(j);
+      owners[k.nama] = (owners[k.nama]||0) + poolJenis * nilaiOwner/totalNilaiJenis;
+    });
+  });
+  return owners;
+}
 function renderAdminLaporan(user){
   const tab = currentSubState.lapTab || 'ikhtisar';
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
@@ -4138,27 +4159,17 @@ function renderAdminSHU(user){
     html += '</div>';
 
     var ks = DB.kepemilikanSaham||[];
-    var owners = {};
-    ks.forEach(function(k){ if(!owners[k.nama]) owners[k.nama]={lembar:0,nilai:0}; });
     var totalPersen = jns.reduce(function(s,j){ return s+(j.shuPersen||0); },0);
-    jns.forEach(function(j){
-      ks.forEach(function(k){
-        if(k.jenisId!==j.id) return;
-        if(owners[k.nama]){
-          owners[k.nama].lembar += k.lembar;
-          owners[k.nama].nilai += k.lembar*nilaiSahamPerLembar(j);
-        }
-      });
-    });
+    var owners = hitungShuSahamOwners(poolSHUSaham, jns, ks);
     var ownerList = Object.keys(owners);
-    var totalNilaiAll = ownerList.reduce(function(s,n){ return s+owners[n].nilai; },0);
     var no=0;
     html += '<div class="section-label" style="margin-top:14px;">Penerima SHU Saham</div>';
+    if(totalPersen<100) html += '<div class="hint" style="margin:0 0 8px;">Total alokasi jenis saham baru '+totalPersen+'%, sisanya ('+(100-totalPersen)+'%) belum dibagikan.</div>';
     html += '<div class="card" style="padding:0;overflow:hidden;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
     html += '<thead><tr style="background:var(--primary-soft);"><th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">No</th><th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Nama Pemilik Saham</th><th style="padding:8px 12px;text-align:right;border-bottom:2px solid var(--border);">SHU</th></tr></thead><tbody>';
     ownerList.forEach(function(n){
       no++;
-      var shu = totalNilaiAll>0 ? poolSHUSaham * owners[n].nilai / totalNilaiAll : 0;
+      var shu = owners[n];
       html += '<tr'+(no%2===0?' style="background:#f9f9f9;"':'')+'><td style="padding:6px 12px;border-bottom:1px solid var(--border);">'+no+'</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);">'+n+'</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);text-align:right;" class="mono">'+rupiah(shu)+'</td></tr>';
     });
     html += '</tbody></table></div>';
@@ -4227,22 +4238,14 @@ function cetakSHU(){
   const label = tab==='saham' ? 'SHU SAHAM' : 'BAGI HASIL TABUNGAN';
   if(tab==='saham'){
     const ks = DB.kepemilikanSaham||[];
-    const owners = {};
-    ks.forEach(function(k){ if(!owners[k.nama]) owners[k.nama]={lembar:0,nilai:0}; });
-    jns.forEach(function(j){
-      ks.forEach(function(k){
-        if(k.jenisId!==j.id) return;
-        if(owners[k.nama]){ owners[k.nama].lembar+=k.lembar; owners[k.nama].nilai+=k.lembar*nilaiSahamPerLembar(j); }
-      });
-    });
     const poolSHUSaham = dana.shu_saham||0;
+    const owners = hitungShuSahamOwners(poolSHUSaham, jns, ks);
     const ownerList = Object.keys(owners);
-    const totalNilaiAll = ownerList.reduce(function(s,n){ return s+owners[n].nilai; },0);
     let no=0;
     baris = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#eee;"><th style="border:1px solid #999;padding:6px 10px;text-align:center;">No</th><th style="border:1px solid #999;padding:6px 10px;text-align:left;">Nama Pemilik Saham</th><th style="border:1px solid #999;padding:6px 10px;text-align:right;">SHU</th></tr></thead><tbody>';
     ownerList.forEach(function(n){
       no++;
-      const shu = totalNilaiAll>0 ? poolSHUSaham * owners[n].nilai / totalNilaiAll : 0;
+      const shu = owners[n];
       baris += '<tr><td style="border:1px solid #999;padding:4px 10px;text-align:center;">'+no+'</td><td style="border:1px solid #999;padding:4px 10px;">'+n+'</td><td style="border:1px solid #999;padding:4px 10px;text-align:right;">'+rupiah(shu)+'</td></tr>';
     });
     baris += '</tbody></table>';
