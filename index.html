@@ -917,6 +917,30 @@ function ensureDefaults() {
     ];
   }
   if(!DB.koperasi.aturKeuangan.dana || typeof DB.koperasi.aturKeuangan.dana !== 'object' || Object.keys(DB.koperasi.aturKeuangan.dana).length===0) DB.koperasi.aturKeuangan.dana = {operasional:0, cadangan_resiko:0, bagi_hasil_tabungan:0, shu_saham:0, cad_zakat:0, dana_sosial:0, penyusutan:0};
+  // Migrasi key lama (camelCase, dari versi kode sebelumnya) ke format snake_case
+  // yang dipakai kode saat ini. Tanpa ini, saldo pool Cadangan Resiko, Bagi Hasil
+  // Tabungan, SHU Saham, Cad. Zakat, dan Dana Sosial akan selalu tampil Rp0
+  // walaupun datanya ada, karena dana[pool.id] tidak menemukan key camelCase-nya.
+  (function migrasiDanaLegacyKeys(){
+    const d = DB.koperasi.aturKeuangan.dana;
+    const legacyMap = {
+      cadanganResiko: 'cadangan_resiko',
+      bagiHasilTabungan: 'bagi_hasil_tabungan',
+      shuSaham: 'shu_saham',
+      cadZakat: 'cad_zakat',
+      danaSosial: 'dana_sosial'
+    };
+    let berubah = false;
+    Object.keys(legacyMap).forEach(oldKey=>{
+      if(d.hasOwnProperty(oldKey)){
+        const newKey = legacyMap[oldKey];
+        d[newKey] = (d[newKey]||0) + (d[oldKey]||0);
+        delete d[oldKey];
+        berubah = true;
+      }
+    });
+    if(berubah && typeof syncAllToSupabase === 'function') syncAllToSupabase();
+  })();
   if(!DB.koperasi.info || typeof DB.koperasi.info !== 'object' || Object.keys(DB.koperasi.info).length===0) DB.koperasi.info = {};
   if(!DB.koperasi.sertifikat || typeof DB.koperasi.sertifikat !== 'object' || Object.keys(DB.koperasi.sertifikat).length===0) {
     DB.koperasi.sertifikat = { judul: 'SERTIFIKAT SAHAM', subjudul: '', teksPembuka: 'Diberikan kepada', teksPenutup: '', warnaBorder: '#6B4226', warnaJudul: '#6B4226', tampilLogo: true, tandaTangan: true, namaPenandatangan: '', jabatanPenandatangan: '' };
