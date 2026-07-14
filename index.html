@@ -1969,6 +1969,16 @@ function renderNotifSaldoKoordinator(){
             <div class="mono" style="font-size:14px;font-weight:800;color:var(--ok);">${rupiah(r.sisaKas)}</div>
           </div>
         </div>` : ''}
+        ${(()=>{
+          const hasHutang = r.hutangItems.length>0;
+          const totalItemDetail = r.pendingItems.length + (r.penarikanItems?r.penarikanItems.length:0) + r.hutangItems.length;
+          if(!totalItemDetail) return '';
+          return `
+        <button type="button" class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="toggleKoorDetail('${r.koorId}', this)">
+          <span class="koor-detail-label"><span class="koor-detail-verb">Lihat</span> rincian transaksi (${totalItemDetail})</span>
+          ${hasHutang ? `<span class="badge badge-red" style="font-size:9px;">Hutang ${rupiah(r.totalHutang)}</span>` : ''}
+        </button>
+        <div id="koor-detail-${r.koorId}" style="display:none;">
         ${r.pendingItems.length ? `
         <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
           <div style="font-size:10.5px;color:var(--ok);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px;">&#8595; Uang masuk &middot; menunggu diterima</div>
@@ -2008,8 +2018,18 @@ function renderNotifSaldoKoordinator(){
             </div>
           `).join('')}
         </div>` : ''}
+        </div>`;
+        })()}
       </div>
     `).join('')}`;
+}
+function toggleKoorDetail(koorId, btn){
+  const panel = document.getElementById('koor-detail-'+koorId);
+  if(!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  const verb = btn && btn.querySelector('.koor-detail-verb');
+  if(verb) verb.textContent = open ? 'Lihat' : 'Sembunyikan';
 }
 function emptyRow(msg){ return `<div class="hint" style="text-align:center;padding:10px 0;">${msg}</div>`; }
 function confirmSetoranUI(setoranId){
