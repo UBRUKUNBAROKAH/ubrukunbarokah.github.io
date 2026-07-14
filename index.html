@@ -4388,8 +4388,15 @@ function renderAdminSaham(user){
   const daftarPemilik = kelFilter ? daftarPemilikAll.filter(nama=>ownerKelompokId(nama)===kelFilter) : daftarPemilikAll;
   const ksForStats = kelFilter ? ks.filter(k=>ownerKelompokId(k.nama)===kelFilter) : ks;
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
+  const totalNilaiAwal = ksForStats.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*(j.nominalPerLembar||0):0); },0);
+  const totalNilaiSesudah = ksForStats.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+  const pctPemupukan = DB.koperasi.saham.pemupukanPersen||0;
   return `
     <div class="page-title">Saham<span class="sub">Kepemilikan saham</span></div>
+    <div class="stat-grid" style="margin-bottom:10px;">
+      <div class="stat-box stat-info"><div class="n mono">${rupiah(totalNilaiAwal)}</div><div class="l">Total nilai saham (awal)</div></div>
+      <div class="stat-box stat-gold"><div class="n mono">${rupiah(totalNilaiSesudah)}</div><div class="l">Total nilai saham (sesudah pemupukan${pctPemupukan?' '+pctPemupukan+'%':''})</div></div>
+    </div>
     <div class="stat-grid">
       ${jns.map(j=>{
         const total = ksForStats.filter(k=>k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0);
