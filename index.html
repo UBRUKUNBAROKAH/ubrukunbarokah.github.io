@@ -1912,7 +1912,7 @@ function renderAdminBeranda(user){
   const totalAnggota = DB.users.filter(u=>u.role==='nasabah').length;
   const totalKoor = DB.users.filter(u=>u.role==='koordinator').length;
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
-  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>s+p.angsuranPerBulan*p.sisaAngsuran,0);
+  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?p.jumlahPinjaman+marginNominalOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
   return `
     <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
     <div class="stat-grid">
