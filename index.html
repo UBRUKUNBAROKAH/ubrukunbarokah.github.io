@@ -3320,20 +3320,41 @@ async function submitUser(existingId){
   if(!nama || !username || !password){ toast('Lengkapi semua data'); return; }
   if(!existingId && DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
 
+  const btn = document.querySelector('button[onclick^="submitUser("]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+
   if(existingId){
     const u = userById(existingId);
+    // Simpan nilai lama untuk rollback kalau gagal simpan ke server
+    const prev = { nama: u.nama, password: u.password, kelompokId: u.kelompokId };
     u.nama = nama; u.password = password;
     if(u.role!=='admin') u.kelompokId = kelompokId;
     if(u.role==='koordinator') await syncKoorKelompok(u.id, kelompokId);
+    const result = await persistNow();
+    if(!result.ok){
+      // Gagal simpan ke server -> kembalikan nilai lama biar tidak bohong soal status "sukses"
+      u.nama = prev.nama; u.password = prev.password; u.kelompokId = prev.kelompokId;
+      toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+      if(btn){ btn.disabled = false; btn.textContent = 'Simpan'; }
+      renderContent();
+      return;
+    }
     addLog('Ubah pengguna', 'Memperbarui data ' + nama);
   } else {
     const newUser = {id:uid('u'), username, password, role, nama, createdAt: nowISO()};
     if(role!=='admin') newUser.kelompokId = kelompokId;
     DB.users.push(newUser);
     if(role==='koordinator') await syncKoorKelompok(newUser.id, kelompokId);
+    const result = await persistNow();
+    if(!result.ok){
+      DB.users = DB.users.filter(x=>x.id!==newUser.id);
+      toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+      if(btn){ btn.disabled = false; btn.textContent = 'Simpan'; }
+      renderContent();
+      return;
+    }
     addLog('Tambah pengguna', 'Menambahkan ' + roleLabel(role).toLowerCase() + ': ' + nama);
   }
-  persist();
   bigSuccess('Data pengguna disimpan');
   closeModal();
   renderContent();
