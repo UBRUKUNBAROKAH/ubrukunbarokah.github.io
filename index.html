@@ -3319,6 +3319,7 @@ async function submitUser(existingId){
   if(!existingId && !nama){ toast('Pilih anggota terlebih dahulu'); return; }
   if(!nama || !username || !password){ toast('Lengkapi semua data'); return; }
   if(!existingId && DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
+  if(existingId && DB.users.some(u=>u.username===username && u.id!==existingId)){ toast('Nama pengguna sudah dipakai'); return; }
 
   const btn = document.querySelector('button[onclick^="submitUser("]');
   if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
@@ -3326,14 +3327,15 @@ async function submitUser(existingId){
   if(existingId){
     const u = userById(existingId);
     // Simpan nilai lama untuk rollback kalau gagal simpan ke server
-    const prev = { nama: u.nama, password: u.password, kelompokId: u.kelompokId };
+    const prev = { nama: u.nama, username: u.username, password: u.password, kelompokId: u.kelompokId };
     u.nama = nama; u.password = password;
+    if(u.id!=='u_admin') u.username = username;
     if(u.role!=='admin') u.kelompokId = kelompokId;
     if(u.role==='koordinator') await syncKoorKelompok(u.id, kelompokId);
     const result = await persistNow();
     if(!result.ok){
       // Gagal simpan ke server -> kembalikan nilai lama biar tidak bohong soal status "sukses"
-      u.nama = prev.nama; u.password = prev.password; u.kelompokId = prev.kelompokId;
+      u.nama = prev.nama; u.username = prev.username; u.password = prev.password; u.kelompokId = prev.kelompokId;
       toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
       if(btn){ btn.disabled = false; btn.textContent = 'Simpan'; }
       renderContent();
