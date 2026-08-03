@@ -3483,7 +3483,7 @@ function computeLapModalData(){
   }
   if(!months.length) return [];
   let cumPokokRealisasi = 0, cumPokokTerbayar = 0, cumTabMasuk = 0, cumTabKeluar = 0, cumKas = 0;
-  const totalSahamSaatIni = (DB.users||[]).filter(u=>u.role==='nasabah').reduce((s,u)=>s+totalNilaiSaham(u),0);
+  const totalSahamSaatIni = totalNilaiSahamSemua();
   const byYear = {};
   months.forEach(({y,m})=>{
     const pembBulanIni = pemb.filter(p=>{ const d=new Date(p.mulai); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
@@ -3560,7 +3560,7 @@ function renderAdminLaporan(user){
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
   const totalPembCair = DB.pembiayaan.reduce((s,p)=>s+p.jumlahPinjaman,0);
   const totalPembSisa = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>s+p.angsuranPerBulan*p.sisaAngsuran,0);
-  const totalSaham = DB.users.filter(u=>u.role==='nasabah').reduce((s,u)=>s+totalNilaiSaham(u),0);
+  const totalSaham = totalNilaiSahamSemua();
   return `
     <div class="page-title">Laporan<span class="sub">Keuangan & Saham koperasi</span></div>
     <div class="tabs">
