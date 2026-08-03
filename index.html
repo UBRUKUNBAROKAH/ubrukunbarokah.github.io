@@ -3566,9 +3566,11 @@ function renderAdminLaporan(user){
     <div class="tabs">
       <button class="${tab==='ikhtisar'?'active':''}" onclick="go('admin_laporan',{lapTab:'ikhtisar'})">Ikhtisar</button>
       <button class="${tab==='modal'?'active':''}" onclick="go('admin_laporan',{lapTab:'modal'})">Posisi Modal</button>
+      <button class="${tab==='neraca'?'active':''}" onclick="go('admin_laporan',{lapTab:'neraca'})">Neraca</button>
     </div>
     ${tab==='ikhtisar'?renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham):''}
     ${tab==='modal'?renderLapModal():''}
+    ${tab==='neraca'?renderLapNeraca():''}
   `;
 }
 const LAP_MODAL_COLS = [
@@ -3688,6 +3690,133 @@ function exportLapModalXLS(tahun){
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Posisi Modal ' + yd.tahun);
   XLSX.writeFile(wb, sanitizeFileName('Posisi Modal Berjalan ' + yd.tahun) + '.xlsx');
+  toast('File Excel berhasil diunduh');
+}
+function totalNilaiSahamSemua(){
+  const jns = (DB.koperasi && DB.koperasi.saham && DB.koperasi.saham.jenis)||[];
+  return (DB.kepemilikanSaham||[]).reduce((s,k)=>{ const j=jns.find(jj=>jj.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+}
+function computeNeraca(){
+  const simpananByJenis = {};
+  (DB.tabunganAccounts||[]).forEach(a=>{ const id=a.jenisId||a.jenis_id; simpananByJenis[id]=(simpananByJenis[id]||0)+a.saldo; });
+  const jenisSimpanan = (DB.koperasi.jenisTabungan||[]).map(j=>({id:j.id, nama:j.nama, saldo: simpananByJenis[j.id]||0})).filter(x=>x.saldo>0);
+  const totalSimpanan = jenisSimpanan.reduce((s,x)=>s+x.saldo,0);
+  let pokok = 0, bayar = 0, piutang = 0;
+  (DB.pembiayaan||[]).forEach(p=>{
+    pokok += p.jumlahPinjaman||0;
+    const kew = (p.jumlahPinjaman||0)+marginNominalOf(p);
+    const tp = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
+    bayar += tp;
+    piutang += Math.max(kew-tp,0);
+  });
+  const kas = totalSimpanan - pokok + bayar;
+  const saham = totalNilaiSahamSemua();
+  const totalAset = kas + piutang;
+  const shu = totalAset - totalSimpanan - saham;
+  return { simpanan: jenisSimpanan, totalSimpanan, pokok, bayar, kas, piutang, saham, shu, totalAset };
+}
+const LAP_NERACA_CATATAN = 'Kas = Saldo Simpanan &minus; Pokok Pembiayaan Disalurkan + Angsuran Diterima (penarikan simpanan sudah tercermin dalam saldo simpanan; beban operasional belum dicatat). Piutang = sisa tagihan pembiayaan (pokok + margin yang belum dibayar). SHU &amp; Cadangan = selisih penyeimbang agar neraca seimbang. Nilai saham memakai pemupukan saat ini.';
+function renderLapNeraca(){
+  const n = computeNeraca();
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const fmt = v => rupiah(v);
+  const barisAset = [['Kas', n.kas], ['Piutang Pembiayaan', n.piutang]];
+  const barisKewajiban = n.simpanan.map(x=>[x.nama, x.saldo]);
+  const barisEkuitas = [['Modal Saham', n.saham], ['SHU & Cadangan', n.shu]];
+  const row = (label, val, bold) => `<div class="list-row" style="${bold?'font-weight:800;background:var(--primary-soft);':''}"><div class="info"><div class="title">${label}</div></div><div class="amt mono">${fmt(val)}</div></div>`;
+  const side = (title, rows, totalLabel, total) => `
+    <div class="card" style="padding:4px 18px 10px;">
+      <div class="section-label" style="margin:10px 0 4px;">${title}</div>
+      ${rows.map((r,i)=>row(r[0], r[1], false)).join('')}
+      <div class="list-row" style="font-weight:800;border-top:2px solid var(--primary);"><div class="info"><div class="title">${totalLabel}</div></div><div class="amt mono">${fmt(total)}</div></div>
+    </div>`;
+  return `
+    <div class="flex-between" style="margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+      <div class="hint" style="margin:0;">Posisi ${tgl} &middot; ${(DB.koperasi&&DB.koperasi.nama)||''}</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="cetakLapNeraca()">${ICONS.pdf||'📄'} Unduh PDF</button>
+        <button class="btn btn-outline btn-sm" onclick="exportLapNeracaXLS()">${ICONS.xls||''} Excel</button>
+      </div>
+    </div>
+    <div class="section-label" style="font-size:14px;">NERACA</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;">
+      ${side('ASET', barisAset, 'TOTAL ASET', n.totalAset)}
+      <div>
+        ${side('KEWAJIBAN', barisKewajiban, 'TOTAL KEWAJIBAN', n.totalSimpanan)}
+        ${side('EKUITAS', barisEkuitas, 'TOTAL KEWAJIBAN & EKUITAS', n.totalSimpanan + n.saham + n.shu)}
+      </div>
+    </div>
+    <div class="hint" style="margin-top:10px;font-size:11px;line-height:1.6;">${LAP_NERACA_CATATAN}</div>
+  `;
+}
+function cetakLapNeraca(){
+  const n = computeNeraca();
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const fmt = v => rupiah(v);
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const body = [];
+  body.push(['ASET','']);
+  body.push(['  Kas', fmt(n.kas)]);
+  body.push(['  Piutang Pembiayaan', fmt(n.piutang)]);
+  body.push(['TOTAL ASET', fmt(n.totalAset)]);
+  body.push(['','']);
+  body.push(['KEWAJIBAN','']);
+  n.simpanan.forEach(x=>body.push(['  '+x.nama, fmt(x.saldo)]));
+  body.push(['TOTAL KEWAJIBAN', fmt(n.totalSimpanan)]);
+  body.push(['','']);
+  body.push(['EKUITAS','']);
+  body.push(['  Modal Saham', fmt(n.saham)]);
+  body.push(['  SHU & Cadangan', fmt(n.shu)]);
+  body.push(['TOTAL KEWAJIBAN & EKUITAS', fmt(n.totalSimpanan + n.saham + n.shu)]);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(13);
+  doc.text(orgName.toUpperCase(), 14, 16);
+  doc.setFontSize(11);
+  doc.text('NERACA', 14, 23);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Posisi: ' + tgl, 14, 29);
+  doc.setTextColor(0);
+  doc.autoTable({
+    head: [['Uraian','Jumlah']],
+    body,
+    startY: 34,
+    styles:{ fontSize:9, cellPadding:2.5, halign:'left' },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'left' },
+    columnStyles:{ 1:{ halign:'right', fontStyle:'bold' } },
+    didParseCell: function(d){
+      const txt = String(d.cell.raw||'');
+      if(d.section==='body' && (txt.startsWith('TOTAL') || txt==='ASET' || txt==='KEWAJIBAN' || txt==='EKUITAS')){ d.cell.styles.fillColor=[218,232,222]; d.cell.styles.fontStyle='bold'; }
+    }
+  });
+  const finalY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 40;
+  doc.setFontSize(7.5);
+  doc.setTextColor(100);
+  doc.text(doc.splitTextToSize(LAP_NERACA_CATATAN.replace(/&minus;/g,'-').replace(/&amp;/g,'&'), 180), 14, finalY + 8);
+  doc.save(sanitizeFileName('Neraca ' + tgl) + '.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function exportLapNeracaXLS(){
+  const n = computeNeraca();
+  const rows = [];
+  rows.push(['ASET','']);
+  rows.push(['Kas', n.kas]);
+  rows.push(['Piutang Pembiayaan', n.piutang]);
+  rows.push(['TOTAL ASET', n.totalAset]);
+  rows.push(['','']);
+  rows.push(['KEWAJIBAN','']);
+  n.simpanan.forEach(x=>rows.push([x.nama, x.saldo]));
+  rows.push(['TOTAL KEWAJIBAN', n.totalSimpanan]);
+  rows.push(['','']);
+  rows.push(['EKUITAS','']);
+  rows.push(['Modal Saham', n.saham]);
+  rows.push(['SHU & Cadangan', n.shu]);
+  rows.push(['TOTAL KEWAJIBAN & EKUITAS', n.totalSimpanan + n.saham + n.shu]);
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Neraca');
+  XLSX.writeFile(wb, sanitizeFileName('Neraca') + '.xlsx');
   toast('File Excel berhasil diunduh');
 }
 function renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham){
