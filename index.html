@@ -2825,8 +2825,18 @@ function renderAdminPembiayaan(user){
   const pending = list.filter(p=>p.statusPengajuan==='pending');
   const groups = groupByKelompok(list, p=>p.userId);
   let i = 0;
+  const totalPembiayaan = DB.pembiayaan.length;
+  const totalNominal = DB.pembiayaan.reduce((s,p)=>s+(p.jumlahPinjaman||0),0);
+  const belumLunas = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
+  const totalBelumLunas = belumLunas.length;
+  const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
   return `
     <div class="page-title">Pembiayaan<span class="sub">${DB.pembiayaan.length} pengajuan tercatat</span></div>
+    <div class="stat-grid" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr);">
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan</div></div>
+      <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalNominal)}</div><div class="l">Total Nominal Pinjaman</div></div>
+      <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
+    </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download}</button>
@@ -4946,8 +4956,18 @@ function renderKoorPembiayaan(user){
   const q = (currentSubState.q||'').toLowerCase();
   let list = DB.pembiayaan.filter(p=>anggotaIds.includes(p.userId)).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
   if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q) || (p.keterangan||'').toLowerCase().includes(q));
+  const totalPembiayaan = list.length;
+  const totalNominal = list.reduce((s,p)=>s+(p.jumlahPinjaman||0),0);
+  const belumLunas = list.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
+  const totalBelumLunas = belumLunas.length;
+  const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
   return `
     <div class="page-title">Pembiayaan<span class="sub">Anggota ${kelompokName(user.kelompokId)}</span></div>
+    <div class="stat-grid" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr);">
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan</div></div>
+      <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalNominal)}</div><div class="l">Total Nominal Pinjaman</div></div>
+      <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
+    </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-koor-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-primary btn-compact" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan</button>
