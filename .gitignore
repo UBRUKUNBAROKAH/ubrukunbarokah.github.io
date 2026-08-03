@@ -11,6 +11,9 @@ index2.html
 gemini-code-*.html
 UB Rukun Barokah - Copy.html
 
+# Supabase local server (Docker)
+supabase-server/
+
 # Node / OS
 node_modules/
 .DS_Store
