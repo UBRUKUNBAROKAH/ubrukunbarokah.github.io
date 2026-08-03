@@ -2558,8 +2558,14 @@ function renderAdminTabungan(user){
   const groups = groupByKelompok(nasabah, u=>u.id);
   let i = 0;
   const pending = pendingSetoranNetAll();
+  const totalRekening = DB.tabunganAccounts.length;
+  const totalSaldo = DB.tabunganAccounts.reduce((s,a)=>s+(a.saldo||0),0);
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
+    <div class="stat-grid" style="margin-bottom:14px;">
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan</div></div>
+      <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
+    </div>
     ${pending.length ? `
     <div class="section-label">Setoran pending dari koordinator</div>
     <div class="card" style="padding:6px 18px;">
@@ -4878,8 +4884,15 @@ function renderKoorTabungan(user){
   const q = (currentSubState.q||'').toLowerCase();
   let anggota = allAnggota.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
   if(q) anggota = anggota.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
+  const anggotaIds = anggota.map(u=>u.id);
+  const totalRekening = DB.tabunganAccounts.filter(a=>anggotaIds.includes(a.userId)).length;
+  const totalSaldo = DB.tabunganAccounts.filter(a=>anggotaIds.includes(a.userId)).reduce((s,a)=>s+(a.saldo||0),0);
   return `
     <div class="page-title">Tabungan<span class="sub">${kelompokName(user.kelompokId)}</span></div>
+    <div class="stat-grid" style="margin-bottom:14px;">
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan</div></div>
+      <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
+    </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-koor-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
