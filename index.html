@@ -466,6 +466,8 @@ input,select{font-family:inherit;}
 .bar-track{background:var(--primary-soft);border-radius:20px;height:9px;overflow:hidden;}
 .bar-fill{background:var(--gold);height:100%;border-radius:20px;}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.stat-grid.cols-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width: 768px){.stat-grid.cols-4{grid-template-columns:repeat(2,1fr);}}
 .stat-box{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--radius-md);padding:10px 12px;}
 .stat-box .ic-badge{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
 .stat-box .ic-badge svg{width:13px;height:13px;}
@@ -2040,18 +2042,31 @@ function renderAdminBeranda(user){
   const totalAset = computeNeraca().totalAset;
   return `
     <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
-    <div class="stat-grid">
+    <div class="card balance-card" style="margin-bottom:18px;">
+      <div class="label">Total Aset (Neraca)</div>
+      <div class="amount mono">${rupiah(totalAset)}</div>
+    </div>
+
+    <div class="section-label">Anggota &amp; Simpanan</div>
+    <div class="stat-grid cols-4">
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.users}</div><div class="n">${totalAnggota}</div><div class="l">Anggota nasabah</div></div>
       <div class="stat-box stat-info"><div class="ic-badge">${ICONS.user_cog}</div><div class="n">${totalKoor}</div><div class="l">Koordinator</div></div>
+      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.group}</div><div class="n">${totalRekening}</div><div class="l">Rekening tabungan</div></div>
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono">${rupiah(totalSimpanan)}</div><div class="l">Total simpanan</div></div>
+    </div>
+
+    <div class="section-label">Pembiayaan</div>
+    <div class="stat-grid cols-4">
+      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono">${rupiah(totalPembDisalurkan)}</div><div class="l">Pembiayaan disalurkan</div></div>
       <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalPembiayaanAktif)}</div><div class="l">Sisa pembiayaan aktif</div></div>
       <div class="stat-box stat-info"><div class="ic-badge">${ICONS.report}</div><div class="n">${pembAktif.length}</div><div class="l">Pembiayaan berjalan</div></div>
-      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono">${rupiah(totalPembDisalurkan)}</div><div class="l">Pembiayaan disalurkan</div></div>
-      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.coin}</div><div class="n">${totalLembarSaham}</div><div class="l">Total lembar saham</div></div>
-      <div class="stat-box stat-info"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalNilaiSaham)}</div><div class="l">Nilai saham (termasuk pemupukan)</div></div>
-      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.group}</div><div class="n">${totalRekening}</div><div class="l">Rekening tabungan</div></div>
-      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.book}</div><div class="n mono">${rupiah(totalAset)}</div><div class="l">Total aset (neraca)</div></div>
       <div class="stat-box stat-info"><div class="ic-badge">${ICONS.up}</div><div class="n mono">${rupiah(totalAngsuranDiterima)}</div><div class="l">Total angsuran diterima</div></div>
+    </div>
+
+    <div class="section-label">Saham</div>
+    <div class="stat-grid cols-4">
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.coin}</div><div class="n">${totalLembarSaham}</div><div class="l">Total lembar saham</div></div>
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalNilaiSaham)}</div><div class="l">Nilai saham (termasuk pemupukan)</div></div>
     </div>
     ${renderNotifSaldoKoordinator()}
     ${(()=>{
