@@ -3305,6 +3305,7 @@ function openUserModal(userId, newRole){
     <div class="form-row" id="um-kelompok-row"><label>Kelompok</label>
       <select id="um-kelompok">${DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${editing&&editing.kelompokId===k.id?'selected':''}>${k.nama}</option>`).join('')}</select>
     </div>
+    <div class="form-row"><label>No. HP (WhatsApp)</label><input type="text" id="um-nohp" value="${editing?editing.noHp||'':''}" placeholder="081234567890"><span class="hint">Dipakai untuk notifikasi WhatsApp (mis. konfirmasi setoran, ACC/tolak pengajuan).</span></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitUser('${editing?editing.id:''}')">Simpan</button>
@@ -3368,6 +3369,7 @@ async function submitUser(existingId){
     const newUser = {
       id: uid('u'), username, password, role: 'nasabah', nama: agg.nama,
       anggotaId: agg.id, kelompokId: agg.kelompokId, noRekening: agg.noRekening,
+      noHp: document.getElementById('um-nohp') ? document.getElementById('um-nohp').value.trim() : (agg.noHp||''),
       saham: agg.saham || {s_A:0,s_B:0,s_C:0}, status: agg.status || 'aktif', createdAt: nowISO()
     };
     DB.users = DB.users.filter(u=>u.id!==agg.id); // buang entri sementara (_noAkun)
@@ -3397,16 +3399,17 @@ async function submitUser(existingId){
 
   if(existingId){
     const u = userById(existingId);
+    const noHp = document.getElementById('um-nohp') ? document.getElementById('um-nohp').value.trim() : u.noHp;
     // Simpan nilai lama untuk rollback kalau gagal simpan ke server
-    const prev = { nama: u.nama, username: u.username, password: u.password, kelompokId: u.kelompokId };
-    u.nama = nama; u.password = password;
+    const prev = { nama: u.nama, username: u.username, password: u.password, kelompokId: u.kelompokId, noHp: u.noHp };
+    u.nama = nama; u.password = password; u.noHp = noHp;
     if(u.id!=='u_admin') u.username = username;
     if(u.role!=='admin') u.kelompokId = kelompokId;
     if(u.role==='koordinator') await syncKoorKelompok(u.id, kelompokId);
     const result = await persistNow();
     if(!result.ok){
       // Gagal simpan ke server -> kembalikan nilai lama biar tidak bohong soal status "sukses"
-      u.nama = prev.nama; u.username = prev.username; u.password = prev.password; u.kelompokId = prev.kelompokId;
+      u.nama = prev.nama; u.username = prev.username; u.password = prev.password; u.kelompokId = prev.kelompokId; u.noHp = prev.noHp;
       toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
       if(btn){ btn.disabled = false; btn.textContent = 'Simpan'; }
       renderContent();
@@ -3414,7 +3417,7 @@ async function submitUser(existingId){
     }
     addLog('Ubah pengguna', 'Memperbarui data ' + nama);
   } else {
-    const newUser = {id:uid('u'), username, password, role, nama, createdAt: nowISO()};
+    const newUser = {id:uid('u'), username, password, role, nama, noHp: document.getElementById('um-nohp') ? document.getElementById('um-nohp').value.trim() : '', createdAt: nowISO()};
     if(role!=='admin') newUser.kelompokId = kelompokId;
     DB.users.push(newUser);
     if(role==='koordinator') await syncKoorKelompok(newUser.id, kelompokId);
