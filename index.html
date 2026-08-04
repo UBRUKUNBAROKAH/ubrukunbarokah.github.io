@@ -2758,6 +2758,8 @@ function submitTx(tipe){
         bigSuccess('Setoran dicatat, menunggu konfirmasi admin');
       } else {
         doSetor(userId, jenisId, jumlah, ket);
+        notifAdminWA('💰 Setoran baru: ' + userById(userId).nama + ' setor ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ')');
+        notifUserWA(userId, '✅ Setoran ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ') telah dicatat.');
         bigSuccess('Setoran berhasil dicatat');
       }
     } catch(e) {
@@ -2776,6 +2778,8 @@ function submitTx(tipe){
     } else {
       const r = doTarik(userId, jenisId, jumlah, ket);
       if(!r.ok){ toast(r.msg); return; }
+      notifAdminWA('💸 Penarikan baru: ' + userById(userId).nama + ' menarik ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ')');
+      notifUserWA(userId, '✅ Penarikan ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ') telah diproses.');
       bigSuccess('Penarikan berhasil dicatat');
     }
   }
