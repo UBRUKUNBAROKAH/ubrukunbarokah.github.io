@@ -3949,19 +3949,41 @@ function renderAdminPengaturan(user){
       <button class="${tab==='kelompok'?'active':''}" onclick="setPengaturanTab('kelompok')">Kelompok</button>
       <button class="${tab==='saham'?'active':''}" onclick="setPengaturanTab('saham')">Saham</button>
       <button class="${tab==='keuangan'?'active':''}" onclick="setPengaturanTab('keuangan')">Aturan Keuangan</button>
+      <button class="${tab==='wa'?'active':''}" onclick="setPengaturanTab('wa')">WhatsApp</button>
     </div>
     ${tab==='profil' ? renderPengaturanProfil() : ''}
     ${tab==='tabungan' ? renderPengaturanJenisTabungan() : ''}
     ${tab==='kelompok' ? renderPengaturanKelompok() : ''}
     ${tab==='saham' ? renderPengaturanSaham() : ''}
     ${tab==='keuangan' ? renderPengaturanKeuangan() : ''}
+    ${tab==='wa' ? renderPengaturanWA() : ''}
+  `;
+}
+function renderPengaturanWA(){
+  const cfg = waSettings();
+  const testDefault = (cfg.adminNumbers||[])[0] || '';
+  return `
+    <div class="card">
+      <div class="section-label" style="margin-top:0;">Pengaturan WhatsApp (Fonnte)</div>
+      <div class="hint" style="margin-bottom:10px;">Notifikasi otomatis dikirim ke admin & koordinator saat setoran, konfirmasi, pengajuan pinjaman, dan penarikan.</div>
+      <div class="form-row"><label>Token API Fonnte</label><input type="text" id="wa-token" value="${cfg.token||''}" placeholder="Token dari dashboard fonnte.com"></div>
+      <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${(cfg.adminNumbers||[]).join(', ')}" placeholder="081234567890, 082198765432"><span class="hint">Pisahkan dengan koma jika lebih dari satu.</span></div>
+      <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" ${cfg.enabled?'checked':''}> Notifikasi WhatsApp aktif</label></div>
+      <button class="btn btn-primary btn-block" onclick="savePengaturanWA()">Simpan pengaturan WhatsApp</button>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="section-label" style="margin-top:0;">Uji Kirim WA</div>
+      <div class="hint" style="margin-bottom:10px;">Kirim pesan tes untuk memastikan token & koneksi ke Fonnte berfungsi sebelum dipakai notifikasi asli.</div>
+      <div class="form-row"><label>Nomor tujuan tes</label><input type="text" id="wa-test-number" value="${testDefault}" placeholder="081234567890"></div>
+      <button class="btn btn-primary btn-block" onclick="testNotifWA()">Kirim WA Tes</button>
+      <div id="wa-test-result" style="margin-top:10px;font-size:13px;"></div>
+    </div>
   `;
 }
 function setPengaturanTab(t){ currentSubState.setTab = t; renderContent(); }
 function renderPengaturanProfil(){
   const preview = DB.koperasi.iconImage || null;
   const info = DB.koperasi.info || {};
-  const cfg = info.notifWA || {};
   return `
     <div class="card">
       <div class="form-row"><label>Nama koperasi</label><input type="text" id="set-nama" value="${DB.koperasi.nama}"></div>
@@ -3987,14 +4009,6 @@ function renderPengaturanProfil(){
       <div class="form-row"><div class="hint" style="margin:0;">Jenis & nominal saham diatur di tab <b>Saham</b></div></div>
       <button class="btn btn-primary btn-block" onclick="saveProfilKoperasi()">Simpan profil</button>
     </div>
-    <div class="card" style="margin-top:12px;">
-      <div class="section-label" style="margin-top:0;">Notifikasi WhatsApp (Fonnte)</div>
-      <div class="hint" style="margin-bottom:10px;">Notifikasi otomatis dikirim ke admin & koordinator saat setoran, konfirmasi, pengajuan pinjaman, dan penarikan.</div>
-      <div class="form-row"><label>Token API Fonnte</label><input type="text" id="wa-token" value="${cfg.token||''}" placeholder="Token dari dashboard fonnte.com"></div>
-      <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${(cfg.adminNumbers||[]).join(', ')}" placeholder="081234567890, 082198765432"></div>
-      <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" ${cfg.enabled?'checked':''}> Notifikasi WhatsApp aktif</label></div>
-      <button class="btn btn-primary btn-block" onclick="savePengaturanWA()">Simpan pengaturan WhatsApp</button>
-    </div>
   `;
 }
 function savePengaturanWA(){
@@ -4006,6 +4020,37 @@ function savePengaturanWA(){
   persist();
   toast('Pengaturan WhatsApp disimpan');
   renderContent();
+}
+async function testNotifWA(){
+  const resultEl = document.getElementById('wa-test-result');
+  if(resultEl) resultEl.innerHTML = '';
+  const cfg = DB.koperasi.info.notifWA || {};
+  const token = (document.getElementById('wa-token').value.trim()) || cfg.token || '';
+  if(!token){ toast('Isi token API Fonnte dulu, lalu simpan'); return; }
+  const no = (document.getElementById('wa-test-number').value.trim()) || (cfg.adminNumbers||[])[0] || '';
+  if(!no){ toast('Isi nomor tujuan tes'); return; }
+  const target = normalizeNoHp(no);
+  if(!target){ toast('Nomor tidak valid'); return; }
+  if(resultEl){ resultEl.innerHTML = '<span style="color:var(--muted);">Mengirim ke <b>'+no+'</b>...</span>'; }
+  try {
+    const res = await fetch('https://api.fonnte.com/send', {
+      method: 'POST',
+      headers: { 'Authorization': token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, message: '🔔 [Tes Notifikasi] Aplikasi Koperasi '+DB.koperasi.nama+' berhasil terhubung ke Fonnte. Pesan uji dari Pengaturan WhatsApp.' })
+    });
+    const data = await res.json();
+    if(data && data.status){
+      if(resultEl) resultEl.innerHTML = '<span style="color:#1B7F3B;">✔ Pesan tes terkirim ke '+no+'.</span>';
+      bigSuccess('WA tes terkirim');
+    } else {
+      const detail = data && (data.detail || data.msg || data.message) ? (data.detail || data.msg || data.message) : JSON.stringify(data);
+      if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+detail+'</span>';
+      toast('Gagal kirim WA tes');
+    }
+  } catch(e){
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+e.message+'</span>';
+    toast('Gagal kirim WA tes');
+  }
 }
 let _pendingIconImage = null;
 function handleIconFileChange(ev){
