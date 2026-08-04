@@ -1172,6 +1172,23 @@ function notifKoordinatorKelompokWA(kelompokId, pesan){
   if(!koor) return;
   notifUserWA(koor.id, pesan);
 }
+// ---------- Format pesan WA yang lengkap & formal ----------
+function waHeader(title){
+  return 'Assalamu\'alaikum warahmatullahi wabarakatuh,' + '\n\n' + (title ? ('*' + title + '*\n\n') : '');
+}
+function waFooter(){
+  return '\n\nDemikian informasi ini kami sampaikan.\nTerima kasih atas perhatian dan kerja samanya.\nSalam hormat,\n' + ((DB.koperasi && DB.koperasi.nama) || 'Koperasi');
+}
+function waTanggal(){
+  return new Date().toLocaleString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function waAnggotaInfo(u){
+  return 'No. Rekening : ' + (u.noRekening || '-') + '\nNama : ' + (u.nama || '-');
+}
+function waSaldoUser(userId, jenisId){
+  const acc = getAccount(userId, jenisId);
+  return acc ? acc.saldo : undefined;
+}
 
 // ---- Seed Functions ----
 async function seedSupabase() {
@@ -1716,7 +1733,13 @@ function doSetorKoordinator(userId, jenisId, jumlah, keterangan){
   DB.setoran.push({id:uid('st'), userId, jenisId, jumlah, keterangan: keterangan||'Setoran tunai', tanggal:nowISO(), dibuatOleh:s.userId, status:'di_koordinator'});
   autoLunasiHutangDariSetoran(s.userId);
   persist();
-  notifAdminWA('🔔 Setoran baru: ' + userById(userId).nama + ' setor ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ') via koordinator ' + userById(s.userId).nama);
+  notifAdminWA(waHeader('PEMBERITAHUAN SETORAN')
+    + waAnggotaInfo(userById(userId))
+    + '\nJenis Simpanan : ' + jenisName(jenisId)
+    + '\nNominal : ' + rupiah(jumlah)
+    + '\nDiterima oleh Koordinator : ' + userById(s.userId).nama
+    + '\nWaktu : ' + waTanggal()
+    + waFooter());
 }
 async function confirmSetoran(setoranId){
   const st = DB.setoran.find(s=>s.id===setoranId);
@@ -1736,7 +1759,14 @@ async function confirmSetoran(setoranId){
   } else {
     addLog('Terima setoran dari koordinator', rupiah(st.jumlah)+' - '+userById(st.userId).nama+' ('+jenisName(st.jenisId)+')');
   }
-  notifUserWA(st.userId, '✅ Setoran '+rupiah(st.jumlah)+' telah dikonfirmasi oleh admin.');
+  const jenisNama = st.jenis==='angsuran' ? 'Angsuran Pembiayaan' : jenisName(st.jenisId);
+  notifUserWA(st.userId, waHeader('SETORAN TELAH DIKONFIRMASI')
+    + waAnggotaInfo(userById(st.userId))
+    + '\nJenis : ' + jenisNama
+    + '\nNominal : ' + rupiah(st.jumlah)
+    + '\nSaldo : ' + rupiah(waSaldoUser(st.userId, st.jenisId) || 0)
+    + '\nWaktu Konfirmasi : ' + waTanggal()
+    + waFooter());
   return {ok:true};
 }
 function doTarik(userId, jenisId, jumlah, keterangan){
@@ -1862,7 +1892,14 @@ function doTarikKoordinator(userId, jenisId, jumlah, keterangan){
     addLog('Hutang admin ke koordinator', rupiah(kurang)+' - '+userById(koorId).nama+' (kekurangan kas penarikan '+userById(userId).nama+')');
   }
   persist();
-  notifAdminWA('⚠️ Penarikan baru: ' + userById(userId).nama + ' menarik ' + rupiah(jumlah) + (kurang>0 ? ' (kekurangan kas '+rupiah(kurang)+')' : ''));
+  notifAdminWA(waHeader('PEMBERITAHUAN PENARIKAN')
+    + waAnggotaInfo(userById(userId))
+    + '\nJenis Simpanan : ' + jenisName(jenisId)
+    + '\nNominal : ' + rupiah(jumlah)
+    + (kurang>0 ? '\nKekurangan Kas (Hutang ke Koordinator) : ' + rupiah(kurang) : '')
+    + '\nDilakukan oleh Koordinator : ' + userById(koorId).nama
+    + '\nWaktu : ' + waTanggal()
+    + waFooter());
   return {ok:true, dariKas, kurang};
 }
 async function bayarHutangKoorUI(hutangId){
@@ -1880,7 +1917,11 @@ async function bayarHutangKoorUI(hutangId){
     }
     persist();
     addLog('Bayar hutang koordinator', rupiah(sisa)+' ke '+userById(h.koorId).nama);
-    notifUserWA(h.koorId, '✅ Hutang '+rupiah(sisa)+' telah dibayar oleh admin.');
+    notifUserWA(h.koorId, waHeader('HUTANG ADMIN TELAH DIBAYAR')
+      + 'Nominal : ' + rupiah(sisa)
+      + '\nStatus : LUNAS'
+      + '\nWaktu Pembayaran : ' + waTanggal()
+      + waFooter());
     bigSuccess('Hutang telah dibayar ke koordinator');
     renderContent();
   }, 'Ya, sudah dibayar');
@@ -1912,6 +1953,26 @@ function doBayarAngsuran(pembId, oleh, jumlah){
   }
   persist();
   addLog('Bayar angsuran', userById(p.userId).nama + ' - Angsuran ke-'+angsuranKe+' - '+rupiah(jumlah));
+  const sisaPokok = Math.max(0, p.jumlahPinjaman - p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah,0));
+  if(isAdmin){
+    notifUserWA(p.userId, waHeader('PEMBAYARAN ANGSURAN DICATAT')
+      + waAnggotaInfo(userById(p.userId))
+      + '\nAngsuran ke-' + angsuranKe + ' dari ' + p.tenor + ' bulan'
+      + '\nNominal : ' + rupiah(jumlah)
+      + '\nSisa Angsuran : ' + p.sisaAngsuran + ' bulan'
+      + '\nSisa Pokok : ' + rupiah(sisaPokok)
+      + (p.status==='lunas' ? '\nStatus : LUNAS' : '')
+      + '\nWaktu : ' + waTanggal()
+      + waFooter());
+  } else {
+    notifAdminWA(waHeader('PEMBERITAHUAN ANGSURAN')
+      + waAnggotaInfo(userById(p.userId))
+      + '\nAngsuran ke-' + angsuranKe + ' dari ' + p.tenor + ' bulan'
+      + '\nNominal : ' + rupiah(jumlah)
+      + '\nDiterima oleh Koordinator : ' + olehUser.nama
+      + '\nWaktu : ' + waTanggal()
+      + waFooter());
+  }
   return {ok:true};
 }
 
@@ -2758,8 +2819,20 @@ function submitTx(tipe){
         bigSuccess('Setoran dicatat, menunggu konfirmasi admin');
       } else {
         doSetor(userId, jenisId, jumlah, ket);
-        notifAdminWA('💰 Setoran baru: ' + userById(userId).nama + ' setor ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ')');
-        notifUserWA(userId, '✅ Setoran ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ') telah dicatat.');
+        notifAdminWA(waHeader('PEMBERITAHUAN SETORAN')
+          + waAnggotaInfo(userById(userId))
+          + '\nJenis Simpanan : ' + jenisName(jenisId)
+          + '\nNominal : ' + rupiah(jumlah)
+          + '\nDilakukan oleh : ' + userById(s.userId).nama + ' (' + s.role + ')'
+          + '\nWaktu : ' + waTanggal()
+          + waFooter());
+        notifUserWA(userId, waHeader('SETORAN TELAH DICATAT')
+          + waAnggotaInfo(userById(userId))
+          + '\nJenis Simpanan : ' + jenisName(jenisId)
+          + '\nNominal : ' + rupiah(jumlah)
+          + '\nSaldo : ' + rupiah(waSaldoUser(userId, jenisId) || 0)
+          + '\nWaktu : ' + waTanggal()
+          + waFooter());
         bigSuccess('Setoran berhasil dicatat');
       }
     } catch(e) {
@@ -2778,8 +2851,20 @@ function submitTx(tipe){
     } else {
       const r = doTarik(userId, jenisId, jumlah, ket);
       if(!r.ok){ toast(r.msg); return; }
-      notifAdminWA('💸 Penarikan baru: ' + userById(userId).nama + ' menarik ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ')');
-      notifUserWA(userId, '✅ Penarikan ' + rupiah(jumlah) + ' (' + jenisName(jenisId) + ') telah diproses.');
+      notifAdminWA(waHeader('PEMBERITAHUAN PENARIKAN')
+        + waAnggotaInfo(userById(userId))
+        + '\nJenis Simpanan : ' + jenisName(jenisId)
+        + '\nNominal : ' + rupiah(jumlah)
+        + '\nDilakukan oleh : ' + userById(s.userId).nama + ' (' + s.role + ')'
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
+      notifUserWA(userId, waHeader('PENARIKAN TELAH DIPROSES')
+        + waAnggotaInfo(userById(userId))
+        + '\nJenis Simpanan : ' + jenisName(jenisId)
+        + '\nNominal : ' + rupiah(jumlah)
+        + '\nSaldo : ' + rupiah(waSaldoUser(userId, jenisId) || 0)
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
       bigSuccess('Penarikan berhasil dicatat');
     }
   }
@@ -2960,8 +3045,20 @@ function accPengajuan(pembId){
   p.waktuAcc = nowISO();
   persist();
   addLog('ACC pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' disetujui');
-  notifUserWA(p.userId, '✅ Pengajuan pinjaman Rp '+rupiah(p.jumlahPinjaman)+' telah disetujui.');
-  notifKoordinatorKelompokWA(userById(p.userId).kelompokId, '📄 Pinjaman '+userById(p.userId).nama+' Rp '+rupiah(p.jumlahPinjaman)+' disetujui.');
+  notifUserWA(p.userId, waHeader('PEMBIAYAAN DISETUJUI')
+    + waAnggotaInfo(userById(p.userId))
+    + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
+    + '\nJangka Waktu : ' + p.tenor + ' bulan'
+    + '\nKeuntungan : ' + rupiah(marginNominalOf(p))
+    + '\nAngsuran / Bulan : ' + rupiah(p.angsuranPerBulan)
+    + '\nDisetujui pada : ' + waTanggal()
+    + waFooter());
+  notifKoordinatorKelompokWA(userById(p.userId).kelompokId, waHeader('PEMBIAYAAN DISETUJUI')
+    + waAnggotaInfo(userById(p.userId))
+    + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
+    + '\nJangka Waktu : ' + p.tenor + ' bulan'
+    + '\nAngsuran / Bulan : ' + rupiah(p.angsuranPerBulan)
+    + waFooter());
   bigSuccess('Pengajuan disetujui');
   renderContent();
 }
@@ -2976,8 +3073,18 @@ function tolakPengajuan(pembId){
     p.waktuTolak = nowISO();
     persist();
     addLog('Tolak pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' ditolak');
-    notifUserWA(p.userId, '❌ Pengajuan pinjaman Rp '+rupiah(p.jumlahPinjaman)+' ditolak.');
-    notifKoordinatorKelompokWA(userById(p.userId).kelompokId, '❌ Pinjaman '+userById(p.userId).nama+' Rp '+rupiah(p.jumlahPinjaman)+' ditolak.');
+    notifUserWA(p.userId, waHeader('PEMBERITAHUAN PENOLAKAN PEMBIAYAAN')
+      + waAnggotaInfo(userById(p.userId))
+      + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
+      + '\nJangka Waktu : ' + p.tenor + ' bulan'
+      + '\nStatus : DITOLAK'
+      + '\n\nSilakan menghubungi koordinator/admin untuk keterangan lebih lanjut.'
+      + waFooter());
+    notifKoordinatorKelompokWA(userById(p.userId).kelompokId, waHeader('PEMBIAYAAN DITOLAK')
+      + waAnggotaInfo(userById(p.userId))
+      + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
+      + '\nJangka Waktu : ' + p.tenor + ' bulan'
+      + waFooter());
     bigSuccess('Pengajuan ditolak');
     renderContent();
   });
@@ -5326,7 +5433,16 @@ async function submitPengajuanKoor(){
     return;
   }
   addLog('Ajukan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
-  notifAdminWA('📄 Pengajuan pinjaman baru: ' + userById(userId).nama + ' Rp ' + rupiah(jumlah) + ' / ' + tenor + ' bulan');
+  notifAdminWA(waHeader('PENGISUAN PEMBIAYAAN BARU')
+    + waAnggotaInfo(userById(userId))
+    + '\nJumlah Pembiayaan : ' + rupiah(jumlah)
+    + '\nJangka Waktu : ' + tenor + ' bulan'
+    + '\nKeuntungan : ' + rupiah(mp)
+    + '\nAngsuran / Bulan : ' + rupiah(Math.ceil(total/tenor/1000)*1000)
+    + (ket ? '\nKeterangan : ' + ket : '')
+    + '\nDiajukan oleh Koordinator : ' + userById(getSession().userId).nama
+    + '\nWaktu : ' + waTanggal()
+    + waFooter());
   bigSuccess('Pengajuan pembiayaan dikirim, menunggu ACC admin');
   closeModal();
   renderContent();
