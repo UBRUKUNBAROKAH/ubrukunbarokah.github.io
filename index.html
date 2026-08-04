@@ -1964,6 +1964,13 @@ function renderAdminBeranda(user){
   const totalKoor = DB.users.filter(u=>u.role==='koordinator').length;
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
   const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?p.jumlahPinjaman+marginNominalOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
+  const pembAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
+  const totalPembDisalurkan = DB.pembiayaan.reduce((s,p)=>s+(p.jumlahPinjaman||0),0);
+  const totalLembarSaham = (DB.kepemilikanSaham||[]).reduce((s,k)=>s+(k.lembar||0),0);
+  const totalNilaiSaham = totalNilaiSahamSemua();
+  const totalRekening = DB.tabunganAccounts.length;
+  const totalAngsuranDiterima = DB.pembiayaan.reduce((s,p)=>s+(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0),0);
+  const totalAset = computeNeraca().totalAset;
   return `
     <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
     <div class="stat-grid">
@@ -1971,6 +1978,13 @@ function renderAdminBeranda(user){
       <div class="stat-box stat-info"><div class="ic-badge">${ICONS.user_cog}</div><div class="n">${totalKoor}</div><div class="l">Koordinator</div></div>
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono">${rupiah(totalSimpanan)}</div><div class="l">Total simpanan</div></div>
       <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalPembiayaanAktif)}</div><div class="l">Sisa pembiayaan aktif</div></div>
+      <div class="stat-box stat-info"><div class="ic-badge">${ICONS.report}</div><div class="n">${pembAktif.length}</div><div class="l">Pembiayaan berjalan</div></div>
+      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono">${rupiah(totalPembDisalurkan)}</div><div class="l">Pembiayaan disalurkan</div></div>
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.coin}</div><div class="n">${totalLembarSaham}</div><div class="l">Total lembar saham</div></div>
+      <div class="stat-box stat-info"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalNilaiSaham)}</div><div class="l">Nilai saham (termasuk pemupukan)</div></div>
+      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.group}</div><div class="n">${totalRekening}</div><div class="l">Rekening tabungan</div></div>
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.book}</div><div class="n mono">${rupiah(totalAset)}</div><div class="l">Total aset (neraca)</div></div>
+      <div class="stat-box stat-info"><div class="ic-badge">${ICONS.up}</div><div class="n mono">${rupiah(totalAngsuranDiterima)}</div><div class="l">Total angsuran diterima</div></div>
     </div>
     ${renderNotifSaldoKoordinator()}
     ${(()=>{
