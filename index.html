@@ -2263,12 +2263,12 @@ const IMPORT_SPECS = {
     example: ['2026-10001','Siti Aminah','Simpanan Pokok','25000'],
     note: 'Isi no_rekening jika tahu (lebih akurat) atau nama_anggota. jenis_simpanan harus sama persis dengan nama jenis tabungan yang sudah ada. setoran_awal boleh dikosongkan/0.'
   },
-  pembiayaan: {
-    label: 'Pembiayaan',
-    headers: ['no_rekening','nama_anggota','jumlah_pinjaman','tenor_bulan','keuntungan','keterangan','tanggal_mulai'],
-    example: ['2026-10001','Siti Aminah','1000000','12','100000','Modal usaha','2026-07-01'],
-    note: 'Isi no_rekening jika tahu (lebih akurat) atau nama_anggota. tanggal_mulai opsional (format YYYY-MM-DD), jika kosong pakai tanggal hari ini.'
-  },
+   pembiayaan: {
+     label: 'Pembiayaan',
+     headers: ['no_rekening','nama_anggota','jumlah_pinjaman','tenor_bulan','keuntungan','tanggal_mulai'],
+     example: ['2026-10001','Siti Aminah','1000000','12','100000','2026-07-01'],
+     note: 'Isi no_rekening jika tahu (lebih akurat) atau nama_anggota. tanggal_mulai opsional (format YYYY-MM-DD), jika kosong pakai tanggal hari ini.'
+   },
   saham: {
     label: 'Saham',
     headers: ['nama_pemilik','kelompok','jenis_saham','jumlah_lembar'],
@@ -2329,12 +2329,9 @@ function validateTabunganRow(row){
   return {ok:true, obj:{userId:user.id, namaTampil:user.nama, jenisId:jenis.id, setoranAwal}};
 }
 function validatePembiayaanRow(row){
-  const noRek = csvGet(row,['no_rekening','norekening']);
-  const nama = csvGet(row,['nama_anggota','nama']);
   const jumlah = parseIdr(csvGet(row,['jumlah_pinjaman','pinjaman']));
   const tenor = parseIdr(csvGet(row,['tenor_bulan','tenor','jangka_waktu']));
   const margin = parseIdr(csvGet(row,['keuntungan','margin']));
-  const ket = csvGet(row,['keterangan']);
   const tglRaw = csvGet(row,['tanggal_mulai','mulai']);
   if(!noRek && !nama) return {ok:false, reason:'Kolom no_rekening / nama_anggota wajib diisi'};
   const found = findAnggotaByRekOrNama(noRek, nama);
@@ -2345,7 +2342,7 @@ function validatePembiayaanRow(row){
   if(!margin) return {ok:false, reason:'Kolom keuntungan kosong/tidak valid'};
   let mulai = nowISO();
   if(tglRaw){ const d = new Date(tglRaw); if(!isNaN(d)) mulai = d.toISOString(); }
-  return {ok:true, obj:{userId:user.id, namaTampil:user.nama, jumlah, tenor, margin, ket, mulai}};
+  return {ok:true, obj:{userId:user.id, namaTampil:user.nama, jumlah, tenor, margin, mulai}};
 }
 function validateSahamRow(row){
   const nama = csvGet(row,['nama_pemilik','nama']);
@@ -2472,7 +2469,7 @@ function commitImportRows(){
     validRows.forEach(r=>{
       const o = r.obj;
       const total = o.jumlah + o.margin;
-      const p = {id:uid('pemb'), userId:o.userId, jumlahPinjaman:o.jumlah, tenor:o.tenor, marginPersen:0, marginNominal:o.margin, angsuranPerBulan:Math.ceil(total/o.tenor/1000)*1000, mulai:o.mulai, sisaAngsuran:o.tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved', keterangan:o.ket};
+      const p = {id:uid('pemb'), userId:o.userId, jumlahPinjaman:o.jumlah, tenor:o.tenor, marginPersen:0, marginNominal:o.margin, angsuranPerBulan:Math.ceil(total/o.tenor/1000)*1000, mulai:o.mulai, sisaAngsuran:o.tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved'};
       DB.pembiayaan.push(p);
       count++;
     });
