@@ -10,1054 +10,1001 @@ DELETE FROM kepemilikan_saham;
 -- INSERT data baru dari Excel SHU Saham 2025
 -- Lembar dibagi rata ke setiap jenis saham
 
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qmdocx68', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ecei6tu5', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3vnvasx2', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wnwyziqn', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qsvhufm3', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nsnal2hf', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_n99n74i9', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_21cpto7b', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_z0sbzq24', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xmze5g8');
--- SABILILLAH | kelompok: SABILILLAH | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0tf0l7ye', 'SABILILLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabilillah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xmze5g8');
--- PENGEMBALIAN SAHAM H.ALBAR KE UB GUNA PELUNASAN TANGGUNGAN | kelompok: SABILILLAH | lembar: 0
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lhccamps', 'PENGEMBALIAN SAHAM H.ALBAR KE UB GUNA PELUNASAN TANGGUNGAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pengembalian saham h.albar ke ub guna pelunasan tanggungan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 0, 'kel_xmze5g8');
--- UB | kelompok: SABILILLAH | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bmdyqcbb', 'UB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ub'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_xmze5g8');
--- UB | kelompok: SABILILLAH | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wbd9ysiv', 'UB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ub'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_xmze5g8');
--- UB | kelompok: SABILILLAH | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vg6gmcj0', 'UB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ub'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_xmze5g8');
--- UB | kelompok: SABILILLAH | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e1p124kn', 'UB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ub'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_xmze5g8');
--- UB | kelompok: SABILILLAH | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4rse8ca0', 'UB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ub'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_xmze5g8');
--- PENJUALAN SAHAM HARDIMAN PERENGAN | kelompok: SABILILLAH | lembar: 0
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1cnfz266', 'PENJUALAN SAHAM HARDIMAN PERENGAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'penjualan saham hardiman perengan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 0, 'kel_xmze5g8');
--- UB | kelompok: SABILILLAH | lembar: 2500000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qh8y3tph', 'UB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ub'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 2500000, 'kel_xmze5g8');
--- H.BASUKI RAHMAT | kelompok: SIMO 2 | lembar: 240000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_delxtryf', 'H.BASUKI RAHMAT', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'h.basuki rahmat'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'kel_gqhyng9');
--- JUMENI | kelompok: SIMO 2 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9jr2ebaj', 'JUMENI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumeni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_gqhyng9');
--- WINARNO | kelompok: SIMO 2 | lembar: 240000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_edhoizau', 'WINARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'winarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'kel_gqhyng9');
--- LISNA | kelompok: SIMO 2 | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sew3kryq', 'LISNA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lisna'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_gqhyng9');
--- SUKIDI | kelompok: SIMO 2 | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_llg9v5wf', 'SUKIDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukidi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_gqhyng9');
--- TENDI | kelompok: SIMO 2 | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rovmhf3s', 'TENDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tendi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_gqhyng9');
--- SARWANTO | kelompok: SIMO 2 | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gpj1b0ca', 'SARWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarwanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_gqhyng9');
--- SUTARSI | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_83prx2ka', 'SUTARSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarsi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- DAROR ALAM PANJI ATMOKO | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5oyvhm2f', 'DAROR ALAM PANJI ATMOKO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daror alam panji atmoko'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- GUNGGUNG SAMUDERA W | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2unt2fbb', 'GUNGGUNG SAMUDERA W', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gunggung samudera w'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- GUGUS MUHAMMAD W | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jog4av4u', 'GUGUS MUHAMMAD W', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gugus muhammad w'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- SUHARNO | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_buqxjrr4', 'SUHARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suharno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- SUMIYANTI | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_40qsq9dv', 'SUMIYANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumiyanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- TENDI PAMUJI R | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1irxpw5z', 'TENDI PAMUJI R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tendi pamuji r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- LISNA FARIDA N | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v1760067', 'LISNA FARIDA N', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lisna farida n'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- YUSTINA PRAMURI AJI | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rlnh2ai5', 'YUSTINA PRAMURI AJI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yustina pramuri aji'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- FEBRIYANTI YAYUK BASUKI | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_utgqhm4v', 'FEBRIYANTI YAYUK BASUKI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'febriyanti yayuk basuki'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- SIGIT IMAM BASUKI | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f70zhud3', 'SIGIT IMAM BASUKI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sigit imam basuki'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- ERLIN HARUM MAWARNI | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6nbljjvg', 'ERLIN HARUM MAWARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'erlin harum mawarni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- AJI WASISO AHMAD | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lnnf7gjj', 'AJI WASISO AHMAD', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aji wasiso ahmad'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- FITRIANA | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xpn2a868', 'FITRIANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fitriana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- HERI WIBOWO | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4peihjzr', 'HERI WIBOWO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'heri wibowo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- LULUK TRI UTAMI | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2axu0c9n', 'LULUK TRI UTAMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'luluk tri utami'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- OVI NUR ROFIK | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3re3c87b', 'OVI NUR ROFIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ovi nur rofik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- OKTA M | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zlvcc951', 'OKTA M', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'okta m'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- INSIYATUN | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sa25d2mz', 'INSIYATUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'insiyatun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- AMIN | kelompok: SIMO 2 | lembar: 80000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v9pp2jyz', 'AMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 80000, 'kel_gqhyng9');
--- MUNJAMIL | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4747aspb', 'MUNJAMIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munjamil'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- MASHURI | kelompok: SIMO 2 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w1tbzlzz', 'MASHURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mashuri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_gqhyng9');
--- SUHARNO | kelompok: SIMO 2 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5mdje051', 'SUHARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suharno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_gqhyng9');
--- MARJANAH | kelompok: SIMO 2 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_krhlozwd', 'MARJANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marjanah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_gqhyng9');
--- SUWARDI | kelompok: SIMO 2 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_627nox1s', 'SUWARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suwardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_gqhyng9');
--- JOYO SUTARJO | kelompok: SIMO 2 | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pjyz5pqb', 'JOYO SUTARJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joyo sutarjo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_gqhyng9');
--- SLAMET | kelompok: SIMO 2 | lembar: 90000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sbt9cvua', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 90000, 'kel_gqhyng9');
--- WIYATNO | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9b646ct6', 'WIYATNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wiyatno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- ISMAIL | kelompok: SIMO 2 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_em8w0jg2', 'ISMAIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ismail'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_gqhyng9');
--- YUNI | kelompok: SIMO 2 | lembar: 240000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gplv9221', 'YUNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yuni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'kel_gqhyng9');
--- HADI SARWANTO | kelompok: SIMO 2 | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6mtbqasx', 'HADI SARWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi sarwanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_gqhyng9');
--- ABDUL LATIF | kelompok: SIMO 2 | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ah38m9fo', 'ABDUL LATIF', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdul latif'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_gqhyng9');
--- JAMIL | kelompok: SIMO 2 | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j93eaunw', 'JAMIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jamil'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_gqhyng9');
--- FATKHUR ROKHIM | kelompok: SIMO 2 | lembar: 500000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_o72iycul', 'FATKHUR ROKHIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fatkhur rokhim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 500000, 'kel_gqhyng9');
--- IBU SARWANTO | kelompok: SIMO 2 | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2dawxicb', 'IBU SARWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ibu sarwanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_gqhyng9');
--- SAHRIL | kelompok: SIMO 2 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gxcqgodv', 'SAHRIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sahril'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_gqhyng9');
--- MUNZAMIL | kelompok: SIMO 2 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y51r20cw', 'MUNZAMIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munzamil'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_gqhyng9');
--- MASKURI | kelompok: SIMO 2 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k7j1gbzp', 'MASKURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'maskuri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_gqhyng9');
+-- H.BASUKI RAHMAT | kelompok: SIMO | lembar: 240000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0zheaaj9', 'H.BASUKI RAHMAT', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'h.basuki rahmat'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'klp_SIMO');
+-- JUMENI | kelompok: SIMO | lembar: 100000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dx6xehqj', 'JUMENI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumeni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO');
+-- WINARNO | kelompok: SIMO | lembar: 240000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tndj5mt1', 'WINARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'winarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'klp_SIMO');
+-- LISNA | kelompok: SIMO | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wiv7r9j4', 'LISNA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lisna'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_SIMO');
+-- SUKIDI | kelompok: SIMO | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_x1r42ijr', 'SUKIDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukidi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_SIMO');
+-- TENDI | kelompok: SIMO | lembar: 60000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_a9y0ta5m', 'TENDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tendi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_SIMO');
+-- SARWANTO | kelompok: SIMO | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_114gslkn', 'SARWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarwanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_SIMO');
+-- SUTARSI | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ilryl7xf', 'SUTARSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarsi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- DAROR ALAM PANJI ATMOKO | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_h0ua03at', 'DAROR ALAM PANJI ATMOKO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daror alam panji atmoko'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- GUNGGUNG SAMUDERA W | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t8ql22a9', 'GUNGGUNG SAMUDERA W', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gunggung samudera w'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- GUGUS MUHAMMAD W | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8t3908ax', 'GUGUS MUHAMMAD W', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gugus muhammad w'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- SUHARNO | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_macj3nyc', 'SUHARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suharno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- SUMIYANTI | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8pmwz2mi', 'SUMIYANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumiyanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- TENDI PAMUJI R | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zd4btpug', 'TENDI PAMUJI R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tendi pamuji r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- LISNA FARIDA N | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r6r09typ', 'LISNA FARIDA N', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lisna farida n'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- YUSTINA PRAMURI AJI | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dyidsxx4', 'YUSTINA PRAMURI AJI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yustina pramuri aji'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- FEBRIYANTI YAYUK BASUKI | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v2t7hwp2', 'FEBRIYANTI YAYUK BASUKI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'febriyanti yayuk basuki'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- SIGIT IMAM BASUKI | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jxf3wtpx', 'SIGIT IMAM BASUKI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sigit imam basuki'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- ERLIN HARUM MAWARNI | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dbrkweao', 'ERLIN HARUM MAWARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'erlin harum mawarni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- AJI WASISO AHMAD | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4ufejyna', 'AJI WASISO AHMAD', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aji wasiso ahmad'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- FITRIANA | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7pv8fauy', 'FITRIANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fitriana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- HERI WIBOWO | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yl3nz5xe', 'HERI WIBOWO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'heri wibowo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- LULUK TRI UTAMI | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_veddbg9f', 'LULUK TRI UTAMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'luluk tri utami'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- OVI NUR ROFIK | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ak0wyxhg', 'OVI NUR ROFIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ovi nur rofik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- OKTA M | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ei6mojez', 'OKTA M', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'okta m'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- INSIYATUN | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_umfm1tsz', 'INSIYATUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'insiyatun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- AMIN | kelompok: SIMO | lembar: 80000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_z6vah0ax', 'AMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 80000, 'klp_SIMO');
+-- MUNJAMIL | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_338bmr2s', 'MUNJAMIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munjamil'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- MASHURI | kelompok: SIMO | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7kbffa5y', 'MASHURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mashuri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO');
+-- SUHARNO | kelompok: SIMO | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6o2xy2fa', 'SUHARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suharno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO');
+-- MARJANAH | kelompok: SIMO | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fyjx4i8v', 'MARJANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marjanah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO');
+-- SUWARDI | kelompok: SIMO | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pv9eu0w2', 'SUWARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suwardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO');
+-- JOYO SUTARJO | kelompok: SIMO | lembar: 120000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t5otd9fa', 'JOYO SUTARJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joyo sutarjo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_SIMO');
+-- SLAMET | kelompok: SIMO | lembar: 90000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6tns58j7', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 90000, 'klp_SIMO');
+-- WIYATNO | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dh0foil3', 'WIYATNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wiyatno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- ISMAIL | kelompok: SIMO | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3vs6tdoa', 'ISMAIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ismail'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO');
+-- YUNI | kelompok: SIMO | lembar: 240000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lulgyq90', 'YUNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yuni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'klp_SIMO');
+-- HADI SARWANTO | kelompok: SIMO | lembar: 60000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rjn4d3ub', 'HADI SARWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi sarwanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_SIMO');
+-- ABDUL LATIF | kelompok: SIMO | lembar: 60000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ee2vqovc', 'ABDUL LATIF', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdul latif'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_SIMO');
+-- JAMIL | kelompok: SIMO | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bk92fv0u', 'JAMIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jamil'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_SIMO');
+-- FATKHUR ROKHIM | kelompok: SIMO | lembar: 500000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1dpbwg9t', 'FATKHUR ROKHIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fatkhur rokhim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 500000, 'klp_SIMO');
+-- IBU SARWANTO | kelompok: SIMO | lembar: 200000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q67gfdy5', 'IBU SARWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ibu sarwanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_SIMO');
+-- SAHRIL | kelompok: SIMO | lembar: 100000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9t2k344r', 'SAHRIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sahril'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO');
+-- MUNZAMIL | kelompok: SIMO | lembar: 100000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_32amlrt6', 'MUNZAMIL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munzamil'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO');
+-- MASKURI | kelompok: SIMO | lembar: 100000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_09epezra', 'MASKURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'maskuri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO');
 -- SUMANTO | kelompok: BLUMBANG | lembar: 1220000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bjb6wptd', 'SUMANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1220000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hf9iksij', 'SUMANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1220000, 'klp_BLUMBANG');
 -- KOMARUDIN | kelompok: BLUMBANG | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_my9zttgb', 'KOMARUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'komarudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sfx210lg', 'KOMARUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'komarudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_BLUMBANG');
 -- SHOBIRIN | kelompok: BLUMBANG | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y4hqbn5e', 'SHOBIRIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'shobirin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9ew2r8q1', 'SHOBIRIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'shobirin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_BLUMBANG');
 -- ELIA PUTRI | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ji3z9kxj', 'ELIA PUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'elia putri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hkl49dtd', 'ELIA PUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'elia putri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- SUPOYO | kelompok: BLUMBANG | lembar: 230000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gtfssrz8', 'SUPOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'supoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 230000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8p15yytb', 'SUPOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'supoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 230000, 'klp_BLUMBANG');
 -- DANI MAULANA | kelompok: BLUMBANG | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nvckefqn', 'DANI MAULANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dani maulana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ppf9b8dd', 'DANI MAULANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dani maulana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_BLUMBANG');
 -- SITI SULAIMAH | kelompok: BLUMBANG | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_os5y6tc0', 'SITI SULAIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti sulaimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ku5tk1x7', 'SITI SULAIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti sulaimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_BLUMBANG');
 -- MARNO | kelompok: BLUMBANG | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k0exkhuy', 'MARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1lf7621f', 'MARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_BLUMBANG');
 -- SUWONO | kelompok: BLUMBANG | lembar: 80000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mf50jlez', 'SUWONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suwono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 80000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_s44xqlhq', 'SUWONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suwono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 80000, 'klp_BLUMBANG');
 -- MIRA BINTI QUROTA A | kelompok: BLUMBANG | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dnua84mx', 'MIRA BINTI QUROTA A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mira binti qurota a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wx85ic5k', 'MIRA BINTI QUROTA A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mira binti qurota a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_BLUMBANG');
 -- AWALLUDIN A | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qkh7rheu', 'AWALLUDIN A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'awalludin a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nhjb9467', 'AWALLUDIN A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'awalludin a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- M.ASAD DULLAH | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uxznybdn', 'M.ASAD DULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm.asad dullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t3pa5qe1', 'M.ASAD DULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm.asad dullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- ALFIAN M K | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kqnztaxb', 'ALFIAN M K', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alfian m k'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hu2b53ct', 'ALFIAN M K', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alfian m k'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- NGADENIN | kelompok: BLUMBANG | lembar: 30000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2answhoz', 'NGADENIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadenin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_z983bixj', 'NGADENIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadenin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'klp_BLUMBANG');
 -- WIDODO | kelompok: BLUMBANG | lembar: 290000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4nbfp6rn', 'WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 290000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_32mi7uad', 'WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 290000, 'klp_BLUMBANG');
 -- ILHAM | kelompok: BLUMBANG | lembar: 30000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j5ea97ha', 'ILHAM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilham'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_21efv9ea', 'ILHAM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilham'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'klp_BLUMBANG');
 -- FALAH NAFISA | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5iz9kcrf', 'FALAH NAFISA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'falah nafisa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ge7978sa', 'FALAH NAFISA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'falah nafisa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- FARA A | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uy7krh7t', 'FARA A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fara a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_umkfkxzh', 'FARA A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fara a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- SUTOYO | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3u9rafj7', 'SUTOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0mt42me4', 'SUTOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- DILA NADA S | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ilxuq1co', 'DILA NADA S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dila nada s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6nbqnd51', 'DILA NADA S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dila nada s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- RISKA R | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4qnlefgs', 'RISKA R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'riska r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hmq09e8c', 'RISKA R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'riska r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- SILVIA NIDA A | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fsimdunw', 'SILVIA NIDA A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'silvia nida a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ve86zv6d', 'SILVIA NIDA A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'silvia nida a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- GATOT S | kelompok: BLUMBANG | lembar: 180000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mbzgdapk', 'GATOT S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gatot s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 180000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cyb00dvo', 'GATOT S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gatot s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 180000, 'klp_BLUMBANG');
 -- MUDIYANTO | kelompok: BLUMBANG | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mfospk57', 'MUDIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mudiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_94dsykd8', 'MUDIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mudiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_BLUMBANG');
 -- SUMARNO | kelompok: BLUMBANG | lembar: 210000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rifnwdkx', 'SUMARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5k0y8au8', 'SUMARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'klp_BLUMBANG');
 -- SRI UTAMI | kelompok: BLUMBANG | lembar: 130000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l7ldq48t', 'SRI UTAMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri utami'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 130000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9dfauq1p', 'SRI UTAMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri utami'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 130000, 'klp_BLUMBANG');
 -- ADI P | kelompok: BLUMBANG | lembar: 70000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lp77gpwh', 'ADI P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'adi p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yq0mi1qw', 'ADI P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'adi p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'klp_BLUMBANG');
 -- PRATIWI | kelompok: BLUMBANG | lembar: 70000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nyvq8882', 'PRATIWI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pratiwi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4vz7jsga', 'PRATIWI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pratiwi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'klp_BLUMBANG');
 -- SHIVA | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7bs9l2u4', 'SHIVA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'shiva'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jvvsp2sy', 'SHIVA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'shiva'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- FIGO | kelompok: BLUMBANG | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rymu3fj5', 'FIGO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'figo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pfwwu7ie', 'FIGO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'figo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_BLUMBANG');
 -- YATIMAH | kelompok: BLUMBANG | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xq1otv3d', 'YATIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yatimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_my6hz08a', 'YATIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yatimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_BLUMBANG');
 -- KAYLA | kelompok: BLUMBANG | lembar: 70000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rdqqgzwe', 'KAYLA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kayla'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hnjb2bmz', 'KAYLA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kayla'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'klp_BLUMBANG');
 -- RIDWAN SUMANTO | kelompok: BLUMBANG | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bm55pmjf', 'RIDWAN SUMANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ridwan sumanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k5n9d0jo', 'RIDWAN SUMANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ridwan sumanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_BLUMBANG');
 -- BLUMBANG | kelompok: BLUMBANG | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cbip9ebx', 'BLUMBANG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'blumbang'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dyseus45', 'BLUMBANG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'blumbang'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'klp_BLUMBANG');
 -- BEJO | kelompok: BLUMBANG | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f9az0lu2', 'BEJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bejo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_p7bvy0dj', 'BEJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bejo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_BLUMBANG');
 -- SLAMET | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uz2uiui5', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nkhqcxr9', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SAIFUDIN | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4phk248q', 'SAIFUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'saifudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v44y3ebu', 'SAIFUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'saifudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SULASTRI | kelompok: BLUMBANG | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_epitqhd5', 'SULASTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulastri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_44o7769z', 'SULASTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulastri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_BLUMBANG');
 -- ROHMAWATI | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2cnuf8ge', 'ROHMAWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rohmawati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_u0ucbcq2', 'ROHMAWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rohmawati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SULAIMAN | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_p1wh3dg5', 'SULAIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulaiman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5x87uwqm', 'SULAIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulaiman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- DANNY MAULANA PUTRA | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q4txnt9z', 'DANNY MAULANA PUTRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'danny maulana putra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e0mexz3b', 'DANNY MAULANA PUTRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'danny maulana putra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- M. ILHAM ABDULLAH | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k9a1xhdz', 'M. ILHAM ABDULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm. ilham abdullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mk665n4k', 'M. ILHAM ABDULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm. ilham abdullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- BREGUT/ NGADEMIN | kelompok: BLUMBANG | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kycrt4xo', 'BREGUT/ NGADEMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bregut/ ngademin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j79ip6rr', 'BREGUT/ NGADEMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bregut/ ngademin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_BLUMBANG');
 -- SULAIMAH | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4d5wy9mq', 'SULAIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulaimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nejq35he', 'SULAIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulaimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- MARDI | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rlb17e7x', 'MARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nvhmg1sy', 'MARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SARJONO | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_d2c2t4bj', 'SARJONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarjono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tix7h70h', 'SARJONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarjono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SITI SYAMSIAH | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mn7po0fh', 'SITI SYAMSIAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti syamsiah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1w1n5lzz', 'SITI SYAMSIAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti syamsiah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- TARSO | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_o2g1z5i5', 'TARSO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tarso'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gb7cgx1r', 'TARSO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tarso'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- KANSA | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lwl0eq6k', 'KANSA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kansa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0opytxmv', 'KANSA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kansa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SENEN | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_an5dk1d6', 'SENEN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'senen'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_h53o1oza', 'SENEN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'senen'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- PUJI ASTUTI | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dxbdq7s2', 'PUJI ASTUTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'puji astuti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_12a6gdbk', 'PUJI ASTUTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'puji astuti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SAKINATUN N.S. | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_inptswhu', 'SAKINATUN N.S.', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sakinatun n.s.'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9xnd8add', 'SAKINATUN N.S.', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sakinatun n.s.'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- ALYA NUR AZIZAH | kelompok: BLUMBANG | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3o5ydz1p', 'ALYA NUR AZIZAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alya nur azizah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tiorvhga', 'ALYA NUR AZIZAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alya nur azizah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_BLUMBANG');
 -- RUKINI | kelompok: BLUMBANG | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_znicmbq0', 'RUKINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rukini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fbz518xl', 'RUKINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rukini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_BLUMBANG');
 -- KAFFA | kelompok: BLUMBANG | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6xx9osze', 'KAFFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kaffa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dr9fienb', 'KAFFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kaffa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_BLUMBANG');
 -- SEMIYATI | kelompok: BLUMBANG | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sk3h04z8', 'SEMIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'semiyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mpf5kzqg', 'SEMIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'semiyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_BLUMBANG');
 -- REVA | kelompok: BLUMBANG | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rwzk9lrq', 'REVA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'reva'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kgkhxf51', 'REVA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'reva'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_BLUMBANG');
 -- FAUZI AHMADI | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c28iszic', 'FAUZI AHMADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fauzi ahmadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7kym002l', 'FAUZI AHMADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fauzi ahmadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- TOMI | kelompok: BLUMBANG | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yq9sfqy6', 'TOMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tomi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qw6wgdl4', 'TOMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tomi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_BLUMBANG');
 -- PUTRI | kelompok: BLUMBANG | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_boj1hiq3', 'PUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'putri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cg1f2qtg', 'PUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'putri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_BLUMBANG');
 -- DEVI | kelompok: BLUMBANG | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6mk80ra2', 'DEVI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'devi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4beacbzs', 'DEVI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'devi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_BLUMBANG');
 -- K.BLUMBANG | kelompok: BLUMBANG | lembar: 2000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9bh3f6ne', 'K.BLUMBANG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'k.blumbang'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 2000000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4r0z2qy5', 'K.BLUMBANG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'k.blumbang'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 2000000, 'klp_BLUMBANG');
 -- SITI KAROMAH | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_20vtm3v0', 'SITI KAROMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti karomah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_twr9b6r1', 'SITI KAROMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti karomah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SLAMET WIBOWO | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k082bnlo', 'SLAMET WIBOWO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet wibowo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xvbg46ib', 'SLAMET WIBOWO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet wibowo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- KARNI | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_eb3z4pz3', 'KARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mp329dhh', 'KARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- BAMBANG | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lkwodyis', 'BAMBANG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bambang'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lv9jbptj', 'BAMBANG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bambang'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- SUWARTI | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hn73maiy', 'SUWARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suwarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j8iit2av', 'SUWARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suwarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- RENY PUJI RAHAYU | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uash2w3u', 'RENY PUJI RAHAYU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'reny puji rahayu'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_25p5e9gh', 'RENY PUJI RAHAYU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'reny puji rahayu'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- RUKIMIN | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yn97tkwi', 'RUKIMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rukimin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_222pl2cy', 'RUKIMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rukimin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
 -- JUMIRAH | kelompok: BLUMBANG | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1osuwsc3', 'JUMIRAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumirah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_yaiziq1');
--- PARNO | kelompok: GONDANGLEGI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g7k3idzi', 'PARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_t2s6wji');
--- SUPARNO | kelompok: GONDANGLEGI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ikufo026', 'SUPARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suparno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_t2s6wji');
--- SOLIKAH | kelompok: GONDANGLEGI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2iq7st5j', 'SOLIKAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'solikah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_t2s6wji');
--- SOLIKAH | kelompok: GONDANGLEGI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gr7pig3u', 'SOLIKAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'solikah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_t2s6wji');
--- NUR CHOIRIYAH | kelompok: GONDANGLEGI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_84girpm7', 'NUR CHOIRIYAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nur choiriyah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_t2s6wji');
--- SABERAN/NY.SABERAN | kelompok: GONDANGLEGI | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8zjd0ghy', 'SABERAN/NY.SABERAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'saberan/ny.saberan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_t2s6wji');
--- PARNI | kelompok: GONDANGLEGI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lpmq96ay', 'PARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_t2s6wji');
--- DAHLAN | kelompok: GONDANGLEGI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hlb6wbey', 'DAHLAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dahlan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_t2s6wji');
--- MUHAMMAD | kelompok: GEMPOL SARI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6pmnybzk', 'MUHAMMAD', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muhammad'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_3zh7mf5');
--- NGADENAN | kelompok: GEMPOL SARI | lembar: 210000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_m02pcyxp', 'NGADENAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadenan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'kel_3zh7mf5');
--- SUGENG | kelompok: GEMPOL SARI | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tq8394ee', 'SUGENG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugeng'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_3zh7mf5');
--- JOKO WIDODO | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ntrxtd77', 'JOKO WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- ZUNAIDA | kelompok: GEMPOL SARI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ydjl2boj', 'ZUNAIDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zunaida'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_3zh7mf5');
--- AHMAD YADI | kelompok: GEMPOL SARI | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ex76vsj4', 'AHMAD YADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ahmad yadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_3zh7mf5');
--- BU JUMIRAH | kelompok: GEMPOL SARI | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pjjlcw6g', 'BU JUMIRAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bu jumirah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_3zh7mf5');
--- ANDRI | kelompok: GEMPOL SARI | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_if2938z7', 'ANDRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'andri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_3zh7mf5');
--- ERLIN FAIJUN N | kelompok: GEMPOL SARI | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_s80j4yai', 'ERLIN FAIJUN N', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'erlin faijun n'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_3zh7mf5');
--- MUH FAQIH ASSIDIK | kelompok: GEMPOL SARI | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9x2vypoi', 'MUH FAQIH ASSIDIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muh faqih assidik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_3zh7mf5');
--- ADNA ULIN NUHA | kelompok: GEMPOL SARI | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8m3qmlpb', 'ADNA ULIN NUHA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'adna ulin nuha'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_3zh7mf5');
--- SYAIFUL | kelompok: GEMPOL SARI | lembar: 140000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lv9sjwu0', 'SYAIFUL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'syaiful'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 140000, 'kel_3zh7mf5');
--- ARI LESTARI | kelompok: GEMPOL SARI | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1s897vt1', 'ARI LESTARI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ari lestari'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_3zh7mf5');
--- MUJINAH | kelompok: GEMPOL SARI | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t1bj1l4x', 'MUJINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_3zh7mf5');
--- KHUSNI ABADI | kelompok: GEMPOL SARI | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jlvi1zj4', 'KHUSNI ABADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khusni abadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_3zh7mf5');
--- HAFID S | kelompok: GEMPOL SARI | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_37qffqrz', 'HAFID S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hafid s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_3zh7mf5');
--- FRISCA | kelompok: GEMPOL SARI | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0hlnupi2', 'FRISCA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'frisca'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_3zh7mf5');
--- JOKO S | kelompok: GEMPOL SARI | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_528gmcat', 'JOKO S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_3zh7mf5');
--- PARMO | kelompok: GEMPOL SARI | lembar: 130000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cwe8bdnf', 'PARMO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parmo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 130000, 'kel_3zh7mf5');
--- AKBAR | kelompok: GEMPOL SARI | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_elfvh5oy', 'AKBAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'akbar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_3zh7mf5');
--- SLAMET | kelompok: GEMPOL SARI | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_u8dx3x5y', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_3zh7mf5');
--- SUGENG S | kelompok: GEMPOL SARI | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lurj2hz0', 'SUGENG S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugeng s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_3zh7mf5');
--- NURHAYATI | kelompok: GEMPOL SARI | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vzfeet2v', 'NURHAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nurhayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_3zh7mf5');
--- ARIS | kelompok: GEMPOL SARI | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bhty54iu', 'ARIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aris'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_3zh7mf5');
--- DWI HARYANTO | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9hshlenk', 'DWI HARYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dwi haryanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- DINA LORENSA FEBRI | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hqunif8e', 'DINA LORENSA FEBRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dina lorensa febri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- JOKO SANTOSO | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qtuewlkq', 'JOKO SANTOSO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko santoso'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- DIKI FIRDAUS | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_19db2ofr', 'DIKI FIRDAUS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'diki firdaus'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- ARMADA | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jzbxieak', 'ARMADA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'armada'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- NENSI FADILA | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0o31pg45', 'NENSI FADILA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nensi fadila'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- ZENDA | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zga2v8ap', 'ZENDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zenda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- MOH IFAN NASRULLAH | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5kqcznun', 'MOH IFAN NASRULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'moh ifan nasrullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- BRIAN UBAIDILLAH A | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_so358sir', 'BRIAN UBAIDILLAH A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'brian ubaidillah a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- SISILIA | kelompok: GEMPOL SARI | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_iz6basx7', 'SISILIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sisilia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_3zh7mf5');
--- ANDRI A.K | kelompok: GEMPOL SARI | lembar: 2000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_73jqfw79', 'ANDRI A.K', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'andri a.k'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 2000000, 'kel_3zh7mf5');
--- NORISTA INDAH P | kelompok: GEMPOL SARI | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kvoulc7n', 'NORISTA INDAH P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'norista indah p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_3zh7mf5');
--- AQILA MEGAH P | kelompok: GEMPOL SARI | lembar: 1000000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2err6fju', 'AQILA MEGAH P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aqila megah p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'kel_3zh7mf5');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fnxqlxtt', 'JUMIRAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumirah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_BLUMBANG');
+-- MUHAMMAD | kelompok: GEMPOLSARI | lembar: 100000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k0gaw60m', 'MUHAMMAD', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muhammad'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GEMPOLSARI');
+-- NGADENAN | kelompok: GEMPOLSARI | lembar: 210000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sng0xc0s', 'NGADENAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadenan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'klp_GEMPOLSARI');
+-- SUGENG | kelompok: GEMPOLSARI | lembar: 120000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4jdsau14', 'SUGENG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugeng'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_GEMPOLSARI');
+-- JOKO WIDODO | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ycbozus6', 'JOKO WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- ZUNAIDA | kelompok: GEMPOLSARI | lembar: 100000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dscta30m', 'ZUNAIDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zunaida'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GEMPOLSARI');
+-- AHMAD YADI | kelompok: GEMPOLSARI | lembar: 60000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nr7jxlwk', 'AHMAD YADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ahmad yadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_GEMPOLSARI');
+-- BU JUMIRAH | kelompok: GEMPOLSARI | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mjzy7d7l', 'BU JUMIRAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bu jumirah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GEMPOLSARI');
+-- ANDRI | kelompok: GEMPOLSARI | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lk5l1icl', 'ANDRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'andri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GEMPOLSARI');
+-- ERLIN FAIJUN N | kelompok: GEMPOLSARI | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yqysxneu', 'ERLIN FAIJUN N', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'erlin faijun n'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GEMPOLSARI');
+-- MUH FAQIH ASSIDIK | kelompok: GEMPOLSARI | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zr7wh79l', 'MUH FAQIH ASSIDIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muh faqih assidik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GEMPOLSARI');
+-- ADNA ULIN NUHA | kelompok: GEMPOLSARI | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1q825p9u', 'ADNA ULIN NUHA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'adna ulin nuha'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GEMPOLSARI');
+-- SYAIFUL | kelompok: GEMPOLSARI | lembar: 140000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i6pz45a4', 'SYAIFUL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'syaiful'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 140000, 'klp_GEMPOLSARI');
+-- ARI LESTARI | kelompok: GEMPOLSARI | lembar: 110000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_m86fnpy5', 'ARI LESTARI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ari lestari'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_GEMPOLSARI');
+-- MUJINAH | kelompok: GEMPOLSARI | lembar: 60000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g6pc5np0', 'MUJINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_GEMPOLSARI');
+-- KHUSNI ABADI | kelompok: GEMPOLSARI | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_z7gddnv2', 'KHUSNI ABADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khusni abadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GEMPOLSARI');
+-- HAFID S | kelompok: GEMPOLSARI | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zya0kqoj', 'HAFID S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hafid s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_GEMPOLSARI');
+-- FRISCA | kelompok: GEMPOLSARI | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_a3pip11r', 'FRISCA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'frisca'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_GEMPOLSARI');
+-- JOKO S | kelompok: GEMPOLSARI | lembar: 10000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wlsx98gv', 'JOKO S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GEMPOLSARI');
+-- PARMO | kelompok: GEMPOLSARI | lembar: 130000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jpd74vy6', 'PARMO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parmo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 130000, 'klp_GEMPOLSARI');
+-- AKBAR | kelompok: GEMPOLSARI | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zy9is1q5', 'AKBAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'akbar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_GEMPOLSARI');
+-- SLAMET | kelompok: GEMPOLSARI | lembar: 20000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bl58s2zf', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_GEMPOLSARI');
+-- SUGENG S | kelompok: GEMPOLSARI | lembar: 60000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xyi019x1', 'SUGENG S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugeng s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_GEMPOLSARI');
+-- NURHAYATI | kelompok: GEMPOLSARI | lembar: 200000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_u77zbc4g', 'NURHAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nurhayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_GEMPOLSARI');
+-- ARIS | kelompok: GEMPOLSARI | lembar: 100000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_il4k7j9a', 'ARIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aris'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GEMPOLSARI');
+-- DWI HARYANTO | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j4n4s25a', 'DWI HARYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dwi haryanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- DINA LORENSA FEBRI | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9r7emhph', 'DINA LORENSA FEBRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dina lorensa febri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- JOKO SANTOSO | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0wnnw7qy', 'JOKO SANTOSO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko santoso'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- DIKI FIRDAUS | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tys2lm4s', 'DIKI FIRDAUS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'diki firdaus'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- ARMADA | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4id0pvnb', 'ARMADA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'armada'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- NENSI FADILA | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yaobrkpz', 'NENSI FADILA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nensi fadila'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- ZENDA | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3merdr26', 'ZENDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zenda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- MOH IFAN NASRULLAH | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bugyxmb8', 'MOH IFAN NASRULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'moh ifan nasrullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- BRIAN UBAIDILLAH A | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0k6ccpks', 'BRIAN UBAIDILLAH A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'brian ubaidillah a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- SISILIA | kelompok: GEMPOLSARI | lembar: 50000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nx0krpr5', 'SISILIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sisilia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GEMPOLSARI');
+-- ANDRI A.K | kelompok: GEMPOLSARI | lembar: 2000000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r09zad6q', 'ANDRI A.K', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'andri a.k'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 2000000, 'klp_GEMPOLSARI');
+-- NORISTA INDAH P | kelompok: GEMPOLSARI | lembar: 1000000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pq3526kt', 'NORISTA INDAH P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'norista indah p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'klp_GEMPOLSARI');
+-- AQILA MEGAH P | kelompok: GEMPOLSARI | lembar: 1000000
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dnn5o1a8', 'AQILA MEGAH P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aqila megah p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1000000, 'klp_GEMPOLSARI');
 -- PURWANI | kelompok: SIMO 1 | lembar: 140000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wtakexh2', 'PURWANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'purwani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 140000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5w3wfyjy', 'PURWANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'purwani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 140000, 'klp_SIMO 1');
 -- ZUMAR | kelompok: SIMO 1 | lembar: 800000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pzrw3kef', 'ZUMAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zumar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 800000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2r8dit9l', 'ZUMAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zumar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 800000, 'klp_SIMO 1');
 -- ZENI | kelompok: SIMO 1 | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ifkoj355', 'ZENI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zeni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j31s87nb', 'ZENI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'zeni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_SIMO 1');
 -- MUNASIR | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fkcyk6xp', 'MUNASIR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munasir'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gbh6b1xv', 'MUNASIR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munasir'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- HARNI | kelompok: SIMO 1 | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qcwyq3dp', 'HARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'harni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_eywu29zd', 'HARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'harni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_SIMO 1');
 -- ABDUL AZIS | kelompok: SIMO 1 | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tulk683a', 'ABDUL AZIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdul azis'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3vtkl2wr', 'ABDUL AZIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdul azis'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_SIMO 1');
 -- H. HARNIYANTO | kelompok: SIMO 1 | lembar: 590000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dzv9bts7', 'H. HARNIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'h. harniyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 590000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yrv5e4av', 'H. HARNIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'h. harniyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 590000, 'klp_SIMO 1');
 -- FAQIH | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r3yx3ggq', 'FAQIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faqih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xur4wqcp', 'FAQIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faqih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- PARTINI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_261xfe6c', 'PARTINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'partini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vz2nc2vo', 'PARTINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'partini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- ATIK | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yvqgl4ry', 'ATIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'atik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uhpliict', 'ATIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'atik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- NURUL B | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qr3i1kx9', 'NURUL B', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nurul b'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_52uxijmv', 'NURUL B', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nurul b'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- BAKERAN | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gt9skyiw', 'BAKERAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bakeran'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_b5vsdtvq', 'BAKERAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bakeran'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- SAPTO WASONO | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vf25pxji', 'SAPTO WASONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sapto wasono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4wx42dr6', 'SAPTO WASONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sapto wasono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- DINI FADILA R | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bdbf3rgv', 'DINI FADILA R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dini fadila r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dkle02rs', 'DINI FADILA R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dini fadila r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- DINAR FASHA R | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_annh7czo', 'DINAR FASHA R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dinar fasha r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wlw61jkr', 'DINAR FASHA R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dinar fasha r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- KUSEN | kelompok: SIMO 1 | lembar: 320000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_17aqktym', 'KUSEN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kusen'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 320000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e8vc1xwt', 'KUSEN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kusen'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 320000, 'klp_SIMO 1');
 -- RIYANTI | kelompok: SIMO 1 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q5cm705s', 'RIYANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'riyanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_un7u9xtj', 'RIYANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'riyanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO 1');
 -- RINA S | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_s5rz5tcx', 'RINA S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rina s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9j4uywqg', 'RINA S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rina s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- LISA | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nvvanx7a', 'LISA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lisa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fxpk6x44', 'LISA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lisa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- WIDODO | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6zhgv61d', 'WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1eca8c5s', 'WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- KHOIRUL SYAFEI | kelompok: SIMO 1 | lembar: 210000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8tpljcmo', 'KHOIRUL SYAFEI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khoirul syafei'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sfzabjll', 'KHOIRUL SYAFEI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khoirul syafei'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'klp_SIMO 1');
 -- JUMRI | kelompok: SIMO 1 | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qujwz659', 'JUMRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dpmho6yd', 'JUMRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_SIMO 1');
 -- KUFITA | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_utggsoah', 'KUFITA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kufita'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nz0aons5', 'KUFITA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kufita'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- TRIYONO | kelompok: SIMO 1 | lembar: 30000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3lizfiio', 'TRIYONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'triyono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_u5u6mgn2', 'TRIYONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'triyono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'klp_SIMO 1');
 -- SUMINAH | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0s2x0372', 'SUMINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suminah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_48wrznfw', 'SUMINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suminah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- IHSAN | kelompok: SIMO 1 | lembar: 210000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zh7opq0i', 'IHSAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ihsan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sthi4k6o', 'IHSAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ihsan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'klp_SIMO 1');
 -- ESTI AULIA PUTRI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mfvr6mmy', 'ESTI AULIA PUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'esti aulia putri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fdwcsrwx', 'ESTI AULIA PUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'esti aulia putri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- SULHAN HUDA | kelompok: SIMO 1 | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jz8i43fd', 'SULHAN HUDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulhan huda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cil68c7o', 'SULHAN HUDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulhan huda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_SIMO 1');
 -- MUNJAYIN | kelompok: SIMO 1 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jhvd9lcr', 'MUNJAYIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munjayin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0ffnlrx8', 'MUNJAYIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munjayin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO 1');
 -- RAHMAWATI SYAFAI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q8a58cu3', 'RAHMAWATI SYAFAI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rahmawati syafai'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_908frgro', 'RAHMAWATI SYAFAI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rahmawati syafai'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- YUZACKY ILHAM | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qzhirfke', 'YUZACKY ILHAM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yuzacky ilham'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3yabgigy', 'YUZACKY ILHAM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yuzacky ilham'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- M WILDAN SYAFAI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1rzqqx5u', 'M WILDAN SYAFAI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm wildan syafai'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g721ph5t', 'M WILDAN SYAFAI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm wildan syafai'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- SAPTO WIDODO | kelompok: SIMO 1 | lembar: 520000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cerpn11d', 'SAPTO WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sapto widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 520000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xrvi04b1', 'SAPTO WIDODO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sapto widodo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 520000, 'klp_SIMO 1');
 -- SOLIKIN | kelompok: SIMO 1 | lembar: 30000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ddlkz61b', 'SOLIKIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'solikin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_opv96i0t', 'SOLIKIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'solikin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'klp_SIMO 1');
 -- MUHSON | kelompok: SIMO 1 | lembar: 420000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6j1sesii', 'MUHSON', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muhson'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 420000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1ru76ho4', 'MUHSON', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muhson'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 420000, 'klp_SIMO 1');
 -- SUDARSIH | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_am9vtsgq', 'SUDARSIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sudarsih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_azidbb3x', 'SUDARSIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sudarsih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- PAIDI | kelompok: SIMO 1 | lembar: 480000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5yud3s1f', 'PAIDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paidi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 480000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vditz90t', 'PAIDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paidi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 480000, 'klp_SIMO 1');
 -- OKSI | kelompok: SIMO 1 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t7h1wkzo', 'OKSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'oksi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pflszvem', 'OKSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'oksi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO 1');
 -- LISTYORINI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_u3krxowr', 'LISTYORINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'listyorini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8mfon1t7', 'LISTYORINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'listyorini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- RUSTANTO | kelompok: SIMO 1 | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_77bohtoq', 'RUSTANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rustanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1i8ddizn', 'RUSTANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rustanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_SIMO 1');
 -- SUGIARTI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tt4g9aj3', 'SUGIARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugiarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xwf9idn2', 'SUGIARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugiarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- HARTIYAH | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_760dazhr', 'HARTIYAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hartiyah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6wakj3m6', 'HARTIYAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hartiyah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- KANI | kelompok: SIMO 1 | lembar: 30000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_47t4au1f', 'KANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dgzluhxz', 'KANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'klp_SIMO 1');
 -- SRIGATI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w0zsxam0', 'SRIGATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'srigati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_aulul7ri', 'SRIGATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'srigati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- SUMARNO | kelompok: SIMO 1 | lembar: 270000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t7bkzhbx', 'SUMARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 270000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i5sedku4', 'SUMARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 270000, 'klp_SIMO 1');
 -- BAHRUN | kelompok: SIMO 1 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_twtgerm7', 'BAHRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bahrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hxbsmtlh', 'BAHRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bahrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO 1');
 -- HUDA | kelompok: SIMO 1 | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_elq5ytn1', 'HUDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'huda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_14n0so3z', 'HUDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'huda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_SIMO 1');
 -- SUTIAH | kelompok: SIMO 1 | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2wh48uoy', 'SUTIAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutiah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lkhnsygw', 'SUTIAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutiah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_SIMO 1');
 -- SAMI | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j1wy0fwj', 'SAMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sami'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qhb8bgq6', 'SAMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sami'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- DENI S | kelompok: SIMO 1 | lembar: 240000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l5x3x9b0', 'DENI S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'deni s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mxxhzo58', 'DENI S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'deni s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 240000, 'klp_SIMO 1');
 -- DIDIK IRIYANTO | kelompok: SIMO 1 | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2s55zfp2', 'DIDIK IRIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'didik iriyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_akv16ks8', 'DIDIK IRIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'didik iriyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_SIMO 1');
 -- PAINO | kelompok: SIMO 1 | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yt1g3dz6', 'PAINO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paino'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g0ygvigg', 'PAINO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paino'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_SIMO 1');
 -- KUSAIN | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_taq8yuul', 'KUSAIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kusain'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e1n9dxiw', 'KUSAIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kusain'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- FANEZA | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_m31doc80', 'FANEZA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faneza'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_454psu6n', 'FANEZA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faneza'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- BIMA PRASETYA | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xw1i48pm', 'BIMA PRASETYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bima prasetya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8vx9w69g', 'BIMA PRASETYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bima prasetya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- ARIMAWATI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cieg07dn', 'ARIMAWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arimawati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_drgih8m5', 'ARIMAWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arimawati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- RIZKY ANDRIASTUTI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y0qypxy7', 'RIZKY ANDRIASTUTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rizky andriastuti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bdlixjqq', 'RIZKY ANDRIASTUTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rizky andriastuti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- M.ABDULROFIK | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vber9dpt', 'M.ABDULROFIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm.abdulrofik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_puhitocv', 'M.ABDULROFIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm.abdulrofik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- IRFAN ISKANDAR | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uyu46f85', 'IRFAN ISKANDAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'irfan iskandar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gkk0bfaj', 'IRFAN ISKANDAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'irfan iskandar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- ANNISA AZZAHRA | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vvaazut0', 'ANNISA AZZAHRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'annisa azzahra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_60jcwg2d', 'ANNISA AZZAHRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'annisa azzahra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- SITI MUNADIFA | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_p8wxwar2', 'SITI MUNADIFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti munadifa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0ira3a5x', 'SITI MUNADIFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti munadifa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- SEMIYATI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zatlj2i8', 'SEMIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'semiyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xk7qu6qf', 'SEMIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'semiyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- KARNO/NY.KARNO | kelompok: SIMO 1 | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zsxx84nk', 'KARNO/NY.KARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karno/ny.karno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ytu4sfx5', 'KARNO/NY.KARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karno/ny.karno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_SIMO 1');
 -- BADRUN | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rv1qjc0b', 'BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8crt2ojm', 'BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- MATYUNI/NY.MATYUNI | kelompok: SIMO 1 | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0brj8qzh', 'MATYUNI/NY.MATYUNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'matyuni/ny.matyuni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mfi6f1on', 'MATYUNI/NY.MATYUNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'matyuni/ny.matyuni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_SIMO 1');
 -- TUKIRAN | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gqow40ef', 'TUKIRAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tukiran'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ga6o0f21', 'TUKIRAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tukiran'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- JUMRONI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r99028i1', 'JUMRONI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumroni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w0dc9jqh', 'JUMRONI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumroni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- UHWATI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8h1ezqw1', 'UHWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'uhwati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ozgxlvoh', 'UHWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'uhwati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- SUTARNO | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ljdlo4yh', 'SUTARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1m4l8iim', 'SUTARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- AHMAD SAEBI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fsz4gcsp', 'AHMAD SAEBI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ahmad saebi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_96ggfnw6', 'AHMAD SAEBI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ahmad saebi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- SITI AISYAH | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fvhwakkd', 'SITI AISYAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti aisyah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ji9va8nm', 'SITI AISYAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti aisyah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- NY. SUFIROH | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bdh77hpd', 'NY. SUFIROH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. sufiroh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_raez16s9', 'NY. SUFIROH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. sufiroh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- NIKMAH | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_o45a3qb9', 'NIKMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nikmah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r21spbia', 'NIKMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nikmah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- SAPATAH | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dpwkoaxf', 'SAPATAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sapatah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vwcc52cw', 'SAPATAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sapatah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- SARYATUN | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ap7t6rli', 'SARYATUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'saryatun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_79qfzxkx', 'SARYATUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'saryatun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- TAJAB | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rm2jn6na', 'TAJAB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tajab'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4vx5qm7x', 'TAJAB', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tajab'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- PAINO | kelompok: SIMO 1 | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3w5ozldm', 'PAINO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paino'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_38v68bdc', 'PAINO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paino'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_SIMO 1');
 -- WARDI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_b2dsfvxs', 'WARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_loqbyd2a', 'WARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- JUNARDI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_23yjxu5g', 'JUNARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'junardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_agqlugab', 'JUNARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'junardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- JUMIRAH | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9x78so3k', 'JUMIRAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumirah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_epk1t9du', 'JUMIRAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumirah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- M SAHID IHSAN FAHRUDIN | kelompok: SIMO 1 | lembar: 500000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j0n8iz9a', 'M SAHID IHSAN FAHRUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm sahid ihsan fahrudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 500000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vohvukwg', 'M SAHID IHSAN FAHRUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm sahid ihsan fahrudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 500000, 'klp_SIMO 1');
 -- SITI MUNADIFA | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ky1vhhrl', 'SITI MUNADIFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti munadifa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_thuesptt', 'SITI MUNADIFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti munadifa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- SAFA INDI SURGAWI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_b4yhyqd2', 'SAFA INDI SURGAWI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'safa indi surgawi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w34kujoj', 'SAFA INDI SURGAWI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'safa indi surgawi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- M FAIZUL KAYIS | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c3jorfks', 'M FAIZUL KAYIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm faizul kayis'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e47kj24j', 'M FAIZUL KAYIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm faizul kayis'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- M DAWUD ALFARISI | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j9lhrh2a', 'M DAWUD ALFARISI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm dawud alfarisi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_a2eowc92', 'M DAWUD ALFARISI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm dawud alfarisi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- M FAWWAS FIRDAUS | kelompok: SIMO 1 | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_83dop5ln', 'M FAWWAS FIRDAUS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm fawwas firdaus'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5fvy4zbn', 'M FAWWAS FIRDAUS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'm fawwas firdaus'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_SIMO 1');
 -- TAUFIQ | kelompok: SIMO 1 | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ww4oy330', 'TAUFIQ', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'taufiq'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_h1x38bs');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v8wogiq8', 'TAUFIQ', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'taufiq'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_SIMO 1');
 -- WAGIMIN | kelompok: KLECO | lembar: 190000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qambl1qg', 'WAGIMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wagimin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 190000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i19b4tpn', 'WAGIMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wagimin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 190000, 'klp_KLECO');
 -- SENIN | kelompok: KLECO | lembar: 130000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jcmr99yw', 'SENIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'senin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 130000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uybyr3rb', 'SENIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'senin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 130000, 'klp_KLECO');
 -- TEGUH | kelompok: KLECO | lembar: 80000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_18dubost', 'TEGUH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'teguh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 80000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t22766h2', 'TEGUH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'teguh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 80000, 'klp_KLECO');
 -- ISTINGANAH | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c33zkvm1', 'ISTINGANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'istinganah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_d1ozmk2k', 'ISTINGANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'istinganah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- TITIK | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xf6uobe1', 'TITIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'titik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uydidiek', 'TITIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'titik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SUTOYO | kelompok: KLECO | lembar: 510000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pwm2864i', 'SUTOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 510000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rxgnrnue', 'SUTOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 510000, 'klp_KLECO');
 -- IBU SUTOYO | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c05uwl3s', 'IBU SUTOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ibu sutoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_je9el06u', 'IBU SUTOYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ibu sutoyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- WARSONO | kelompok: KLECO | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sb7ifn61', 'WARSONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'warsono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ozdv20bi', 'WARSONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'warsono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_KLECO');
 -- PAIJI | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_eqmem7s9', 'PAIJI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paiji'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2aqudsen', 'PAIJI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'paiji'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- FAQIHUDIN | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_p5zgbhc7', 'FAQIHUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faqihudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zabzcp6d', 'FAQIHUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faqihudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- AZIZ | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w2j0nlbt', 'AZIZ', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aziz'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w53j69ti', 'AZIZ', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aziz'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- AMALIA | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v9gktodh', 'AMALIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amalia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4b1t8puh', 'AMALIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amalia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- FATUR ROHMAN | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4i77ww6i', 'FATUR ROHMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fatur rohman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_11zgx7df', 'FATUR ROHMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fatur rohman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- EDY WINARNO | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_idh9efmt', 'EDY WINARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'edy winarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_87aage77', 'EDY WINARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'edy winarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- ENI YULIANA | kelompok: KLECO | lembar: 220000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ol9zg0gf', 'ENI YULIANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eni yuliana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 220000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xp9y1m2u', 'ENI YULIANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eni yuliana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 220000, 'klp_KLECO');
 -- ANASTASYA | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8hcwyplq', 'ANASTASYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'anastasya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hw1mr3ks', 'ANASTASYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'anastasya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SLAMET | kelompok: KLECO | lembar: 70000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8uhk9zko', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_23zy0hv8', 'SLAMET', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'slamet'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'klp_KLECO');
 -- S HAFID A | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7yrntmgp', 'S HAFID A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 's hafid a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jm6n4l1w', 'S HAFID A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 's hafid a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SABIQUL K | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rfrkll3e', 'SABIQUL K', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabiqul k'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_laf5ghuc', 'SABIQUL K', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sabiqul k'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- PUJIANTO | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nslmkygf', 'PUJIANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujianto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3hp8jlpm', 'PUJIANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujianto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SARTONO | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tjk9dtig', 'SARTONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sartono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_n6hvn367', 'SARTONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sartono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- WAGINAH | kelompok: KLECO | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jj97k31x', 'WAGINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'waginah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7dobnhca', 'WAGINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'waginah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_KLECO');
 -- ABDUL JALIL M | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2bm0h25n', 'ABDUL JALIL M', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdul jalil m'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l5h42psl', 'ABDUL JALIL M', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdul jalil m'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- UMAR ABDUL FATAH | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qdssz5cn', 'UMAR ABDUL FATAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'umar abdul fatah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xw2hh2w2', 'UMAR ABDUL FATAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'umar abdul fatah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- USMAN GINO MUKTI | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gdmd8o2h', 'USMAN GINO MUKTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'usman gino mukti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5lojnker', 'USMAN GINO MUKTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'usman gino mukti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- ALI SIMO GINOTO | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ko00lkr1', 'ALI SIMO GINOTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ali simo ginoto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cs60qys3', 'ALI SIMO GINOTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ali simo ginoto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- WINARNO | kelompok: KLECO | lembar: 160000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c9kmzysz', 'WINARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'winarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 160000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vaxoegb7', 'WINARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'winarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 160000, 'klp_KLECO');
 -- TASYA | kelompok: KLECO | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3g2d4fp5', 'TASYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tasya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hiwjsz8x', 'TASYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tasya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_KLECO');
 -- NANDA | kelompok: KLECO | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nxrznwid', 'NANDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nanda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3tfnmxq2', 'NANDA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nanda'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_KLECO');
 -- SARMIN | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q15ivfak', 'SARMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarmin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rbd6ccy2', 'SARMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarmin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ANA HUSLIKAH | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tzdux7fl', 'ANA HUSLIKAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ana huslikah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e2q31hmv', 'ANA HUSLIKAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ana huslikah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- UMI RATMINI | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1wfg3mz5', 'UMI RATMINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'umi ratmini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ocvccslm', 'UMI RATMINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'umi ratmini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SARJU | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_psj4jq4l', 'SARJU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarju'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_n82yeqie', 'SARJU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarju'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SUMARTO | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pidctk5a', 'SUMARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3kucy3zh', 'SUMARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- MUJIMIN | kelompok: KLECO | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mddacq9j', 'MUJIMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujimin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_liiski2q', 'MUJIMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujimin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_KLECO');
 -- WARSUM | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_95otlm4l', 'WARSUM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'warsum'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y1uw5tzv', 'WARSUM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'warsum'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- AMINAN | kelompok: KLECO | lembar: 180000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rnng6xrf', 'AMINAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aminan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 180000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4a1x9x1a', 'AMINAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aminan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 180000, 'klp_KLECO');
 -- MUNJANAH | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zc1eh34u', 'MUNJANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munjanah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_aahdoa14', 'MUNJANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'munjanah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SUTARNO | kelompok: KLECO | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_iz3rnou4', 'SUTARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rwxyo1zi', 'SUTARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_KLECO');
 -- SARJU | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_am7uxx3m', 'SARJU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarju'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mflxx27d', 'SARJU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sarju'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ISTINGANAH | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mb9v8eq6', 'ISTINGANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'istinganah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sw7808t3', 'ISTINGANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'istinganah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- WINANTI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_26u57jab', 'WINANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'winanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bpc4a4bi', 'WINANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'winanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- PARMAN | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pqyyeqvb', 'PARMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_x2xq48vc', 'PARMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- PUJIYANTO | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_srcp3f8t', 'PUJIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_egeo2gon', 'PUJIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- MUSI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8vq3szcd', 'MUSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'musi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_klpisuw5', 'MUSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'musi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- SULTHON | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nllkjrtl', 'SULTHON', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulthon'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jsw8jxpu', 'SULTHON', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulthon'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ALFI NUR AINI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q76vwzy8', 'ALFI NUR AINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alfi nur aini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4uuvn44l', 'ALFI NUR AINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alfi nur aini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- LUKY ARYA SAPUTRA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hb7kn753', 'LUKY ARYA SAPUTRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'luky arya saputra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mj0i3d1a', 'LUKY ARYA SAPUTRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'luky arya saputra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- PUTRI AYU OKTAVIA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6g3quvtv', 'PUTRI AYU OKTAVIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'putri ayu oktavia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bsvs863f', 'PUTRI AYU OKTAVIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'putri ayu oktavia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ASAFA APRILIA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4fami4xx', 'ASAFA APRILIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'asafa aprilia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4etj4xh9', 'ASAFA APRILIA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'asafa aprilia'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- RIKA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e7g2gpig', 'RIKA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rika'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8g0k9y6z', 'RIKA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rika'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ROSYID | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4p5s4yw0', 'ROSYID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rosyid'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w9skkxro', 'ROSYID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rosyid'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- LUSI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qfh2e9p3', 'LUSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lusi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7caybr18', 'LUSI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'lusi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- KHOIRUL | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g2u2a4x0', 'KHOIRUL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khoirul'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8wpgz1et', 'KHOIRUL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khoirul'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ALI MUSTOFA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_72ueiddh', 'ALI MUSTOFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ali mustofa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mmftmfxf', 'ALI MUSTOFA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ali mustofa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- WILDAN RIFAUL HAQ | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k43ihw1i', 'WILDAN RIFAUL HAQ', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wildan rifaul haq'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sm88s3w0', 'WILDAN RIFAUL HAQ', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wildan rifaul haq'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ALKA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8n97trkx', 'ALKA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alka'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8m8bxw28', 'ALKA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alka'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- BIYA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rclghzg0', 'BIYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'biya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tzgahsxu', 'BIYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'biya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- FAUL | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7u6d0t7d', 'FAUL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faul'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8lo8tpfn', 'FAUL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faul'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ARUM | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6w8zfdlv', 'ARUM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arum'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tp0p9g34', 'ARUM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arum'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- JUMANGIN | kelompok: KLECO | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0ugiq17y', 'JUMANGIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumangin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sjdqdqgf', 'JUMANGIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumangin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_KLECO');
 -- BILAL | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_iz2ieg8p', 'BILAL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bilal'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mdcxis5v', 'BILAL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bilal'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ENI LESTARI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jz3dqc7h', 'ENI LESTARI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eni lestari'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4xnvse21', 'ENI LESTARI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eni lestari'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- NURYANTI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ah9tisrs', 'NURYANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nuryanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_s9b6bmjj', 'NURYANTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nuryanti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- SUMARTO | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7tr0fkfj', 'SUMARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_apyahlmn', 'SUMARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- MUJIYEM | kelompok: KLECO | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c5jieg68', 'MUJIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1nwt33bg', 'MUJIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_KLECO');
 -- ANA NURYANI | kelompok: KLECO | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sw4yxmv0', 'ANA NURYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ana nuryani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8zbb3ad2', 'ANA NURYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ana nuryani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_KLECO');
 -- MARMI | kelompok: KLECO | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_m5cuq322', 'MARMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marmi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qk5kqudt', 'MARMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marmi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_KLECO');
 -- HAMID AMIRUDIN | kelompok: KLECO | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g4ulo6nq', 'HAMID AMIRUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hamid amirudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dmga33fj', 'HAMID AMIRUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hamid amirudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_KLECO');
 -- NISWATI | kelompok: KLECO | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hwd272cz', 'NISWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'niswati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0j872wh9', 'NISWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'niswati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_KLECO');
 -- MARSUM/NY.MARSUM | kelompok: KLECO | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_47sgota3', 'MARSUM/NY.MARSUM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marsum/ny.marsum'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y8b0eqbj', 'MARSUM/NY.MARSUM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marsum/ny.marsum'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_KLECO');
 -- SARTONO | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vu947m7k', 'SARTONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sartono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_oizpd98p', 'SARTONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sartono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- JIYEM | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8cg24h3r', 'JIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zr88pft8', 'JIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- NINDI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vvbz4vbb', 'NINDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nindi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pncvoexy', 'NINDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nindi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- DAVID | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y86ky73v', 'DAVID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'david'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wrlze9jz', 'DAVID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'david'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- CHELSEA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8fuk6hp9', 'CHELSEA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'chelsea'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6pxhivg0', 'CHELSEA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'chelsea'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- SRI MULYANI | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uj59gy4b', 'SRI MULYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri mulyani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e3yxn3rz', 'SRI MULYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri mulyani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- BILAL | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yfhn7mjb', 'BILAL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bilal'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_x6sn748o', 'BILAL', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bilal'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ILYAS | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nmuvtspp', 'ILYAS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilyas'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9nlknm0h', 'ILYAS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilyas'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- SUMARSIH | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w9xkdh2x', 'SUMARSIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarsih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6kc4yr7t', 'SUMARSIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarsih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- FAQIH | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7mzh1tmj', 'FAQIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faqih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7or2epcq', 'FAQIH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'faqih'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- ANNISA | kelompok: KLECO | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hq4laz95', 'ANNISA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'annisa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_xblheur');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cctd6ok6', 'ANNISA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'annisa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_KLECO');
 -- SUKAMTO | kelompok: LAOSAN | lembar: 410000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vc3lajsz', 'SUKAMTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukamto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 410000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v1e17x0s', 'SUKAMTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukamto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 410000, 'klp_LAOSAN');
 -- HANANTO | kelompok: LAOSAN | lembar: 450000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xz4ur5pv', 'HANANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hananto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 450000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_edd5fl4y', 'HANANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hananto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 450000, 'klp_LAOSAN');
 -- HIDAYATI | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_djvzmem5', 'HIDAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hidayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i6p1fm8v', 'HIDAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hidayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- MURTINI | kelompok: LAOSAN | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5hdogiyf', 'MURTINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'murtini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_msspfqbx', 'MURTINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'murtini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_LAOSAN');
 -- SUNARNO | kelompok: LAOSAN | lembar: 220000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w021itxr', 'SUNARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sunarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 220000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_htnnegav', 'SUNARNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sunarno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 220000, 'klp_LAOSAN');
 -- SUTARTO | kelompok: LAOSAN | lembar: 210000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_llzfvhao', 'SUTARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pdeifgb0', 'SUTARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'klp_LAOSAN');
 -- PUJIONO | kelompok: LAOSAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8x9dne3r', 'PUJIONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujiono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7bezfwyn', 'PUJIONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujiono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_LAOSAN');
 -- PUJIYANTO | kelompok: LAOSAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pdzw89ua', 'PUJIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4rx4fczo', 'PUJIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'pujiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_LAOSAN');
 -- PUJI ASMORO | kelompok: LAOSAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kmp71mnv', 'PUJI ASMORO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'puji asmoro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9sizd12e', 'PUJI ASMORO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'puji asmoro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_LAOSAN');
 -- ARIF SAMIATI | kelompok: LAOSAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_huw4eimc', 'ARIF SAMIATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arif samiati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xrzuyzp8', 'ARIF SAMIATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arif samiati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_LAOSAN');
 -- SAKIR | kelompok: LAOSAN | lembar: 70000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pukdpfmi', 'SAKIR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sakir'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ga4s4e0j', 'SAKIR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sakir'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'klp_LAOSAN');
 -- SUROTO | kelompok: LAOSAN | lembar: 210000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jqtih9lf', 'SUROTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suroto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g0df3859', 'SUROTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suroto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'klp_LAOSAN');
 -- SITI KOTIJAH | kelompok: LAOSAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8luqq6rm', 'SITI KOTIJAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti kotijah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qnmn2e5v', 'SITI KOTIJAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti kotijah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_LAOSAN');
 -- HADI SUMITRO | kelompok: LAOSAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4mnkin1f', 'HADI SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lnl07fax', 'HADI SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_LAOSAN');
 -- HASAN SIDIK | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qes3igas', 'HASAN SIDIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hasan sidik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_smx745qt', 'HASAN SIDIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hasan sidik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- JOKO KANDUNG | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ath4vk73', 'JOKO KANDUNG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko kandung'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_aum0e4im', 'JOKO KANDUNG', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko kandung'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- MITHA | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l9r7sw72', 'MITHA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mitha'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e6fba2zw', 'MITHA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mitha'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- SULIMAH | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_54me9mef', 'SULIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tcdgq5rw', 'SULIMAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulimah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- ICHSANUDIN WAKHID R | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5f0rdush', 'ICHSANUDIN WAKHID R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ichsanudin wakhid r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dwvzqb4u', 'ICHSANUDIN WAKHID R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ichsanudin wakhid r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- ROYANA IKRIMA | kelompok: LAOSAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v39e8aox', 'ROYANA IKRIMA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'royana ikrima'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r8405aat', 'ROYANA IKRIMA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'royana ikrima'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_LAOSAN');
 -- ETIK SUSILOWATI | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_390s1e3k', 'ETIK SUSILOWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'etik susilowati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_knxf25k8', 'ETIK SUSILOWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'etik susilowati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- WAHYU PRATAMA | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_egmvd1r4', 'WAHYU PRATAMA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wahyu pratama'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i0ezrv4z', 'WAHYU PRATAMA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wahyu pratama'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- REZA FATKHUROZZI | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g9gzehrc', 'REZA FATKHUROZZI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'reza fatkhurozzi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f40pwk5l', 'REZA FATKHUROZZI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'reza fatkhurozzi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- SUMIYATUN | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_o8qhg3h5', 'SUMIYATUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumiyatun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7zxs93z9', 'SUMIYATUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumiyatun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- ILYAS MALKI RIYAN | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y775ih49', 'ILYAS MALKI RIYAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilyas malki riyan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ivmgsjde', 'ILYAS MALKI RIYAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilyas malki riyan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- ISHAK ROFIQ RIYAN | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_iqpztwpw', 'ISHAK ROFIQ RIYAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ishak rofiq riyan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zyl4dvar', 'ISHAK ROFIQ RIYAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ishak rofiq riyan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- JUMERI | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c9fevgrk', 'JUMERI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumeri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_thepmeuk', 'JUMERI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumeri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- EKO | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uvocrytd', 'EKO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eko'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f237n2x7', 'EKO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eko'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- HIJRIYAH | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_exrmum3g', 'HIJRIYAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hijriyah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_aoukxrvj', 'HIJRIYAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hijriyah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- SALSA | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pvxf8f1x', 'SALSA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'salsa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7qr82tm3', 'SALSA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'salsa'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- AFIS | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pgmdxkvs', 'AFIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'afis'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6nderhhm', 'AFIS', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'afis'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- AL AZAM | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9sygs8ty', 'AL AZAM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'al azam'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qvwvcuga', 'AL AZAM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'al azam'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- ALIKA | kelompok: LAOSAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_52oal4wi', 'ALIKA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alika'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2sjcnt7j', 'ALIKA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'alika'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_LAOSAN');
 -- DULMANAN | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fzi1fspg', 'DULMANAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dulmanan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_o1a9m75q', 'DULMANAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dulmanan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- SUKAMTO/NY.SUKKAMTO | kelompok: LAOSAN | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r22mjp37', 'SUKAMTO/NY.SUKKAMTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukamto/ny.sukkamto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q2fax84v', 'SUKAMTO/NY.SUKKAMTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukamto/ny.sukkamto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_LAOSAN');
 -- SUMITRO/NY.SUMITRO | kelompok: LAOSAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_m14mz2vi', 'SUMITRO/NY.SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro/ny.sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4o1bv3ii', 'SUMITRO/NY.SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro/ny.sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_LAOSAN');
 -- SUYOTO/NY.SUYOTO | kelompok: LAOSAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3sns0jz5', 'SUYOTO/NY.SUYOTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suyoto/ny.suyoto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i883ucuz', 'SUYOTO/NY.SUYOTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suyoto/ny.suyoto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_LAOSAN');
 -- SUMITRO | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jfjai7q8', 'SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l9qryb9g', 'SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- SUSILOWATI | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_174q3mil', 'SUSILOWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'susilowati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jo4sf5mx', 'SUSILOWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'susilowati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- EKI NURHAYATI | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dmhxr2mh', 'EKI NURHAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eki nurhayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nx7czmrx', 'EKI NURHAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'eki nurhayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- PARIMA NUR HIDAYATI | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hjs23tfq', 'PARIMA NUR HIDAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parima nur hidayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xaziybm8', 'PARIMA NUR HIDAYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parima nur hidayati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- JUMERI | kelompok: LAOSAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fb1bcqrp', 'JUMERI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumeri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_x6z8xa8');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ycfev118', 'JUMERI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jumeri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_LAOSAN');
 -- SULISNO | kelompok: PERENGAN | lembar: 160000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7rlfx8sl', 'SULISNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulisno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 160000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2p4slal6', 'SULISNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sulisno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 160000, 'klp_PERENGAN');
 -- MUH HASYIM | kelompok: PERENGAN | lembar: 460000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cao32kyb', 'MUH HASYIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muh hasyim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 460000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3j0guumk', 'MUH HASYIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muh hasyim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 460000, 'klp_PERENGAN');
 -- SUPANGI | kelompok: PERENGAN | lembar: 350000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_t7sermc3', 'SUPANGI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'supangi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 350000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yidsfc5e', 'SUPANGI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'supangi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 350000, 'klp_PERENGAN');
 -- SUGIYARTI | kelompok: PERENGAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zyvo1jzf', 'SUGIYARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugiyarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_soigomtk', 'SUGIYARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sugiyarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_PERENGAN');
 -- MULYADI | kelompok: PERENGAN | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mbq3rin5', 'MULYADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mulyadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_hwaifj17', 'MULYADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mulyadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_PERENGAN');
 -- DIAN INDRI ASTUTI | kelompok: PERENGAN | lembar: 30000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mp4tktcu', 'DIAN INDRI ASTUTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dian indri astuti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gib89v70', 'DIAN INDRI ASTUTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dian indri astuti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 30000, 'klp_PERENGAN');
 -- WIRADI | kelompok: PERENGAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_geuaiaw0', 'WIRADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wiradi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nu4e2hiv', 'WIRADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wiradi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_PERENGAN');
 -- ST SUPRIYATI | kelompok: PERENGAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rjvl2m5o', 'ST SUPRIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'st supriyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yr41tjve', 'ST SUPRIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'st supriyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_PERENGAN');
 -- SUPARMIN | kelompok: PERENGAN | lembar: 70000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9fghsbca', 'SUPARMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suparmin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2s43llbe', 'SUPARMIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suparmin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'klp_PERENGAN');
 -- KOMSIANAH | kelompok: PERENGAN | lembar: 70000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mvtm1513', 'KOMSIANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'komsianah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_437zskxu', 'KOMSIANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'komsianah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 70000, 'klp_PERENGAN');
 -- HADI BADRUN | kelompok: PERENGAN | lembar: 210000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lkjb6gwm', 'HADI BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f3chwl7q', 'HADI BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 210000, 'klp_PERENGAN');
 -- NY. HADI BADRUN | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cctc2zh2', 'NY. HADI BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. hadi badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_a8b57ts6', 'NY. HADI BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. hadi badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- MITRO HARTONO | kelompok: PERENGAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_p1n7gg7n', 'MITRO HARTONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mitro hartono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7zy0bgm5', 'MITRO HARTONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mitro hartono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_PERENGAN');
 -- ROSYID R | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6fh7iiyl', 'ROSYID R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rosyid r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_c2027zq0', 'ROSYID R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rosyid r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- WAHYU P | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dxu9yaha', 'WAHYU P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wahyu p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_z4xziqub', 'WAHYU P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wahyu p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- MAWARDI | kelompok: PERENGAN | lembar: 270000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tw3uanph', 'MAWARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mawardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 270000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1u8mr0we', 'MAWARDI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mawardi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 270000, 'klp_PERENGAN');
 -- JOKO SULISTYO | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r6nptqtu', 'JOKO SULISTYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko sulistyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7e2lvj3m', 'JOKO SULISTYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'joko sulistyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- SITI AMANAH | kelompok: PERENGAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r6ck8vfa', 'SITI AMANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti amanah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_613cqvf6', 'SITI AMANAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti amanah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_PERENGAN');
 -- DIMAS P | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ctleeahj', 'DIMAS P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dimas p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_se7z6fl8', 'DIMAS P', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dimas p'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- PUJI R | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0m1tcsiy', 'PUJI R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'puji r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8ze9hn2b', 'PUJI R', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'puji r'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- SUJADI | kelompok: PERENGAN | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mhwx0wqs', 'SUJADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sujadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ub7g9vot', 'SUJADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sujadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_PERENGAN');
 -- MARYATI | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i08kyx92', 'MARYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'maryati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_osc4u7jv', 'MARYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'maryati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- MARFUDIYANTO | kelompok: PERENGAN | lembar: 20000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4ahalxyi', 'MARFUDIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marfudiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_950nhjeu', 'MARFUDIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marfudiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 20000, 'klp_PERENGAN');
 -- TRI RETNANIK | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_38q0q2v2', 'TRI RETNANIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tri retnanik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6wwdrw1n', 'TRI RETNANIK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tri retnanik'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- JELITA MAYANG SAPUTRI | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ezpfzcud', 'JELITA MAYANG SAPUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jelita mayang saputri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mpm93jj3', 'JELITA MAYANG SAPUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jelita mayang saputri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- BETARI PUTRI MITAYANI | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_igbzo8ug', 'BETARI PUTRI MITAYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'betari putri mitayani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4yvrtglg', 'BETARI PUTRI MITAYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'betari putri mitayani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- RAKA NUGRAHENDRA PUTRA | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gq3ctkar', 'RAKA NUGRAHENDRA PUTRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'raka nugrahendra putra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ndn4a409', 'RAKA NUGRAHENDRA PUTRA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'raka nugrahendra putra'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- AVITA AYU RATNA SAPUTRI | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5a8kfsxc', 'AVITA AYU RATNA SAPUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'avita ayu ratna saputri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uv21jbur', 'AVITA AYU RATNA SAPUTRI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'avita ayu ratna saputri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- DEDEN NUGROHO SAPUTRO | kelompok: PERENGAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pojmtapf', 'DEDEN NUGROHO SAPUTRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'deden nugroho saputro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sosezuro', 'DEDEN NUGROHO SAPUTRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'deden nugroho saputro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_PERENGAN');
 -- SUTINAH | kelompok: PERENGAN | lembar: 280000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7u1llmrw', 'SUTINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 280000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_82inht00', 'SUTINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 280000, 'klp_PERENGAN');
 -- JUWITA | kelompok: PERENGAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dp23hqei', 'JUWITA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'juwita'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v7k6klj8', 'JUWITA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'juwita'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_PERENGAN');
 -- MITRO | kelompok: PERENGAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mz4df2vj', 'MITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y9yvjmqg', 'MITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_PERENGAN');
 -- HARDIMAN | kelompok: PERENGAN | lembar: 7560000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5px0dlvq', 'HARDIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hardiman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 7560000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q3qcr292', 'HARDIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hardiman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 7560000, 'klp_PERENGAN');
 -- SUMITRO | kelompok: PERENGAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_sogpmrnw', 'SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_63w03dwj', 'SUMITRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_PERENGAN');
 -- DARMONO | kelompok: PERENGAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_n93tocy7', 'DARMONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'darmono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mxkr7h3m', 'DARMONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'darmono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_PERENGAN');
 -- NANIK HARYANI | kelompok: PERENGAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_05anmml0', 'NANIK HARYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nanik haryani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xbxkus5y', 'NANIK HARYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nanik haryani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_PERENGAN');
 -- SUTINI | kelompok: PERENGAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y24bbkwm', 'SUTINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ln4mn5fq', 'SUTINI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutini'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_PERENGAN');
 -- DALIMAN | kelompok: PERENGAN | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_74p9za44', 'DALIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daliman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y83o3r3e', 'DALIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daliman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_PERENGAN');
 -- SAMSURI | kelompok: PERENGAN | lembar: 160000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1cbcs4al', 'SAMSURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'samsuri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 160000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l59cr3g7', 'SAMSURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'samsuri'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 160000, 'klp_PERENGAN');
 -- BADRUN | kelompok: PERENGAN | lembar: 120000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ec52xk6f', 'BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6hbybrip', 'BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 120000, 'klp_PERENGAN');
 -- ROMDHON | kelompok: PERENGAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xif05ldw', 'ROMDHON', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'romdhon'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mybvah65', 'ROMDHON', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'romdhon'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_PERENGAN');
 -- KENZI AGHNA.A | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mex5454y', 'KENZI AGHNA.A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kenzi aghna.a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kic7o9lz', 'KENZI AGHNA.A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kenzi aghna.a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- RETNO AMBARWATI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ujw22m9g', 'RETNO AMBARWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'retno ambarwati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0ciibw00', 'RETNO AMBARWATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'retno ambarwati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- DARYANTI HASYIM | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tnnqcdu3', 'DARYANTI HASYIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daryanti hasyim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_upwcdpjv', 'DARYANTI HASYIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daryanti hasyim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- AGUS SURYADI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bb5f7r39', 'AGUS SURYADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'agus suryadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_w63agni1', 'AGUS SURYADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'agus suryadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SURURI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_44yj29bb', 'SURURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sururi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9zxn7z9d', 'SURURI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sururi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SRI RAHAYU | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kqnzeais', 'SRI RAHAYU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri rahayu'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_0m5jwx8z', 'SRI RAHAYU', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri rahayu'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- RUDIYANTO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ehwenp9z', 'RUDIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rudiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e4yhsflp', 'RUDIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rudiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- RAMELAN | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ogsyrm5c', 'RAMELAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ramelan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_grtz9acv', 'RAMELAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ramelan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- SUKINAH | kelompok: PERENGAN | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e718q9nu', 'SUKINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xvxz7cg6', 'SUKINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sukinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_PERENGAN');
 -- SYARIFUDIN | kelompok: PERENGAN | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pr7v8nd3', 'SYARIFUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'syarifudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_myvswoiu', 'SYARIFUDIN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'syarifudin'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_PERENGAN');
 -- KHUSNAH | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mzzc66xk', 'KHUSNAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khusnah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f9gqm8sr', 'KHUSNAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'khusnah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- SISWANTO | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_69rjng0u', 'SISWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siswanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ymh2uol9', 'SISWANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siswanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- FAUZAN S | kelompok: PERENGAN | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vwdspkdv', 'FAUZAN S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fauzan s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mcq03720', 'FAUZAN S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fauzan s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_PERENGAN');
 -- ILHAM M | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5y77vpxg', 'ILHAM M', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilham m'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_aaxhfb5i', 'ILHAM M', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ilham m'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- NY.RAMELAN | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_okzqp5ys', 'NY.RAMELAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny.ramelan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4y8hq1nu', 'NY.RAMELAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny.ramelan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- MARJO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g6dwomjl', 'MARJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marjo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ag7j52gl', 'MARJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marjo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- TUMINAH | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_64c79nj3', 'TUMINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tuminah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cljjlett', 'TUMINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'tuminah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- WAGIYANTO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ybdlpzc4', 'WAGIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wagiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_txwqrli3', 'WAGIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'wagiyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SUNGAEP | kelompok: PERENGAN | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8od9xsv1', 'SUNGAEP', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sungaep'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ugzr68dg', 'SUNGAEP', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sungaep'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_PERENGAN');
 -- NARTI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_eankjywr', 'NARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'narti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v2u6suz8', 'NARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'narti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- AKBAR | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xixuk7j7', 'AKBAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'akbar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ldeze3rg', 'AKBAR', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'akbar'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- YATMI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_nuoaz5rn', 'YATMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yatmi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ena15yfe', 'YATMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'yatmi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- NGATRIYANI | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8gsttz4j', 'NGATRIYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngatriyani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pev2qnni', 'NGATRIYANI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngatriyani'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- FAUZAN SETYO N | kelompok: PERENGAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_oh46zzi9', 'FAUZAN SETYO N', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fauzan setyo n'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xx2wq2hf', 'FAUZAN SETYO N', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'fauzan setyo n'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_PERENGAN');
 -- SUPARMAN | kelompok: PERENGAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_uobm2qil', 'SUPARMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suparman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_o4ngpvsd', 'SUPARMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suparman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_PERENGAN');
 -- MUJAHID | kelompok: PERENGAN | lembar: 250000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5opowoki', 'MUJAHID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujahid'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 250000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4shhf699', 'MUJAHID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'mujahid'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 250000, 'klp_PERENGAN');
 -- DAVID | kelompok: PERENGAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_az0pk40b', 'DAVID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'david'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_isjkqdmg', 'DAVID', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'david'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_PERENGAN');
 -- NATASYA | kelompok: PERENGAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yyfgt19v', 'NATASYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'natasya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_on2q9qon', 'NATASYA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'natasya'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_PERENGAN');
 -- ERNI ZULAIKAH | kelompok: PERENGAN | lembar: 1100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ydwm4tko', 'ERNI ZULAIKAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'erni zulaikah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4ejizkg2', 'ERNI ZULAIKAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'erni zulaikah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1100000, 'klp_PERENGAN');
 -- SUTIYATI | kelompok: PERENGAN | lembar: 1110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_o84cj1jq', 'SUTIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutiyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1110000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7fcdordz', 'SUTIYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutiyati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 1110000, 'klp_PERENGAN');
 -- KENZI AGHNA.A | kelompok: PERENGAN | lembar: 500000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yt26rrt9', 'KENZI AGHNA.A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kenzi aghna.a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 500000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3b3eqbg1', 'KENZI AGHNA.A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kenzi aghna.a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 500000, 'klp_PERENGAN');
 -- NY.HADI UMARTO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_n75mdcml', 'NY.HADI UMARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny.hadi umarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_emgddyag', 'NY.HADI UMARTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny.hadi umarto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- MARTO KROMO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6tdajgku', 'MARTO KROMO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marto kromo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lu2ytmbq', 'MARTO KROMO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marto kromo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- AMAT BASUNI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bghl3mnj', 'AMAT BASUNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amat basuni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tm0fgexp', 'AMAT BASUNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amat basuni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SURIPNI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_79ga8j0c', 'SURIPNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suripni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qwvff6tt', 'SURIPNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suripni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- DULKORIM | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qn34hywv', 'DULKORIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dulkorim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_43zg01rr', 'DULKORIM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dulkorim'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SOMOREJO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6wkc3145', 'SOMOREJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'somorejo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q9d736v9', 'SOMOREJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'somorejo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SRI BADRUN | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_v2b4xe04', 'SRI BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_2283ffot', 'SRI BADRUN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri badrun'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- DALIYEM | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_zr5bh4oj', 'DALIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daliyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_6pdtcxh7', 'DALIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'daliyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- KAAN PAWIRO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_y9ymvpib', 'KAAN PAWIRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kaan pawiro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pogetl4n', 'KAAN PAWIRO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kaan pawiro'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- AMAT DASORI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7c59cs4w', 'AMAT DASORI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amat dasori'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_blyxx2lx', 'AMAT DASORI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'amat dasori'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- NY. MATROIKROMO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_um4lmv1m', 'NY. MATROIKROMO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. matroikromo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ajyrxzak', 'NY. MATROIKROMO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. matroikromo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- NY. AMAT DASORI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8ibjbjlg', 'NY. AMAT DASORI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. amat dasori'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_azw85r14', 'NY. AMAT DASORI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. amat dasori'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- DARIYEM | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_71y363l5', 'DARIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dariyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yc7qzz33', 'DARIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'dariyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SUHARNI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_29jsfe27', 'SUHARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suharni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3jbq2y02', 'SUHARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suharni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SADIYEM | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k3uj7cvt', 'SADIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sadiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_oow9kj3v', 'SADIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sadiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- NGADINEM | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_j9kn18ou', 'NGADINEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadinem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ynarnvhm', 'NGADINEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadinem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SUHADI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_alli1um8', 'SUHADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suhadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_osdossyb', 'SUHADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suhadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- ABDULLAH | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_puo6a43j', 'ABDULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q7844x18', 'ABDULLAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'abdullah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- AMINAH | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fcoddl4e', 'AMINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aminah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_lioivzgf', 'AMINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'aminah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- NGADIMAN | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_fgee8y4o', 'NGADIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadiman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7vun4ui3', 'NGADIMAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ngadiman'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- RENDI FABIANO A | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_yltj8s43', 'RENDI FABIANO A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rendi fabiano a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9akr1c7h', 'RENDI FABIANO A', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'rendi fabiano a'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- MARYATI | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qac4b9ph', 'MARYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'maryati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ve9xvw2d', 'MARYATI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'maryati'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- JONO | kelompok: PERENGAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bngjcxki', 'JONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_eir1ia2');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_9s09b3ky', 'JONO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jono'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_PERENGAN');
 -- SUMITRO/NY | kelompok: GESIKAN | lembar: 460000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cku79krz', 'SUMITRO/NY', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro/ny'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 460000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kq49mor1', 'SUMITRO/NY', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumitro/ny'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 460000, 'klp_GESIKAN');
 -- NY. MARNI | kelompok: GESIKAN | lembar: 50000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f4vpcbyw', 'NY. MARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. marni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_k2xr7gqz', 'NY. MARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. marni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 50000, 'klp_GESIKAN');
 -- HADI SISMANTO | kelompok: GESIKAN | lembar: 770000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_cezvgy42', 'HADI SISMANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi sismanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 770000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1i33h692', 'HADI SISMANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'hadi sismanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 770000, 'klp_GESIKAN');
 -- KARYO SUMITO | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vyj8j56n', 'KARYO SUMITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karyo sumito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7461l9qa', 'KARYO SUMITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karyo sumito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- NY. KARYO SUMITO | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_53qh3g0z', 'NY. KARYO SUMITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. karyo sumito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8qkumts6', 'NY. KARYO SUMITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. karyo sumito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- NY. JIYEM | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e0v33o70', 'NY. JIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. jiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gradxuwt', 'NY. JIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. jiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- AGUS SALAM H | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mt3plxjb', 'AGUS SALAM H', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'agus salam h'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_wy2qg57b', 'AGUS SALAM H', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'agus salam h'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- A'AN | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_f3pba2pf', 'A''AN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'a''an'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_rj14hq74', 'A''AN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'a''an'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- NANA | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ei7o9q2b', 'NANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ri7gsp3z', 'NANA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'nana'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- ASKHA | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l3f16kud', 'ASKHA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'askha'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_u8xkhp8q', 'ASKHA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'askha'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- ESTI NUR S | kelompok: GESIKAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_8knhbr8d', 'ESTI NUR S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'esti nur s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mawucihp', 'ESTI NUR S', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'esti nur s'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_GESIKAN');
 -- HARSO SUWITO | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_e53a443x', 'HARSO SUWITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'harso suwito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_dhfkzl2z', 'HARSO SUWITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'harso suwito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- SURATNO | kelompok: GESIKAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_83cwd2r5', 'SURATNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suratno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tu3cnd4v', 'SURATNO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'suratno'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_GESIKAN');
 -- MARNI | kelompok: GESIKAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_x1soauuk', 'MARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bdrd4njy', 'MARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'marni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_GESIKAN');
 -- GENING ANASTI | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_jzwtdyd4', 'GENING ANASTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gening anasti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_h2bs6ebc', 'GENING ANASTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'gening anasti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- PARMI | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tfr5ew5r', 'PARMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parmi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gvc9n2ph', 'PARMI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'parmi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- SITI ZULAICHOH | kelompok: GESIKAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bvd2hwiq', 'SITI ZULAICHOH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti zulaichoh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kzn39ik7', 'SITI ZULAICHOH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'siti zulaichoh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_GESIKAN');
 -- SRI INDARTI | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gh1q9gii', 'SRI INDARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri indarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ngoc51yo', 'SRI INDARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sri indarti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- GIYARNI | kelompok: GESIKAN | lembar: 110000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_4jxe0ntj', 'GIYARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'giyarni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5eudmj5p', 'GIYARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'giyarni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 110000, 'klp_GESIKAN');
 -- TEGUH | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ttkdyoke', 'TEGUH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'teguh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gqqfmkzf', 'TEGUH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'teguh'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- NARTI | kelompok: GESIKAN | lembar: 60000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_bj0b5qd2', 'NARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'narti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ce2du27x', 'NARTI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'narti'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 60000, 'klp_GESIKAN');
 -- NY. KARJO | kelompok: GESIKAN | lembar: 10000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_vp8pnx5o', 'NY. KARJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. karjo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_a1p4dvni', 'NY. KARJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ny. karjo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 10000, 'klp_GESIKAN');
 -- JIYEM | kelompok: GESIKAN | lembar: 310000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_7xujc7xk', 'JIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 310000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_35ag7fvp', 'JIYEM', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'jiyem'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 310000, 'klp_GESIKAN');
 -- AGUS HURIYANTO | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kf335h58', 'AGUS HURIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'agus huriyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ymcvyttj', 'AGUS HURIYANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'agus huriyanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- BELLA | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_q05z8fpt', 'BELLA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bella'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_01oq1gm4', 'BELLA', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bella'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- SUMARNI | kelompok: GESIKAN | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_13neldgy', 'SUMARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ts5x8qnh', 'SUMARNI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumarni'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_GESIKAN');
 -- SUMADI | kelompok: GESIKAN | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_kji26oxr', 'SUMADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_ni58ixs6', 'SUMADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sumadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_GESIKAN');
 -- IBU SUTI'AH | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_s1gu15ik', 'IBU SUTI''AH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ibu suti''ah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mrecwl17', 'IBU SUTI''AH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'ibu suti''ah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- HARSO SAINO | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_awnef9l6', 'HARSO SAINO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'harso saino'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_gbqlsyrf', 'HARSO SAINO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'harso saino'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- NARTO KK | kelompok: GESIKAN | lembar: 150000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i1vykdsu', 'NARTO KK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'narto kk'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_42qd8n9l', 'NARTO KK', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'narto kk'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 150000, 'klp_GESIKAN');
 -- WARSINAH | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_1n2c3b2v', 'WARSINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'warsinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_mbmtoqj0', 'WARSINAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'warsinah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- KARJO SAMITO | kelompok: GESIKAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_r04915dl', 'KARJO SAMITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karjo samito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_g0ebbrxl', 'KARJO SAMITO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'karjo samito'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_GESIKAN');
 -- ARJO SETIKO | kelompok: GESIKAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_3knofdtt', 'ARJO SETIKO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arjo setiko'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_tadxh5r0', 'ARJO SETIKO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'arjo setiko'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_GESIKAN');
 -- SOWIREJO | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_pr0txx6y', 'SOWIREJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sowirejo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_xd91d26s', 'SOWIREJO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sowirejo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- BAGIYO | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_i8p3jt3v', 'BAGIYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bagiyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_l3u3eo34', 'BAGIYO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'bagiyo'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- MUHADI | kelompok: GESIKAN | lembar: 200000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_h6i0502z', 'MUHADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muhadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_eoifyfla', 'MUHADI', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'muhadi'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 200000, 'klp_GESIKAN');
 -- KELOMPOK GESIKAN | kelompok: GESIKAN | lembar: 300000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_eranbpkl', 'KELOMPOK GESIKAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kelompok gesikan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_5e7fn9b5', 'KELOMPOK GESIKAN', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kelompok gesikan'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 300000, 'klp_GESIKAN');
 -- SUTANTO | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_qb2uwljk', 'SUTANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_geswn0em', 'SUTANTO', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'sutanto'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 -- KAMILAH | kelompok: GESIKAN | lembar: 100000
-INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_n4ku3ibc', 'KAMILAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kamilah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'kel_qs5x2xq');
+INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('ks_u1l2aezt', 'KAMILAH', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = 'kamilah'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), 100000, 'klp_GESIKAN');
 
 -- Verifikasi setelah import:
 -- SELECT nama, anggota_id, kelompok_id, jenis_id, lembar FROM kepemilikan_saham ORDER BY nama LIMIT 20;
 -- SELECT COUNT(*) AS total FROM kepemilikan_saham;
--- SELECT nama, SUM(lembar) AS total_lembar FROM kepemilikan_saham GROUP BY nama ORDER BY nama LIMIT 20;
