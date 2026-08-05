@@ -103,16 +103,16 @@ function main() {
       if (!nama) continue;
       totalRows++;
 
-      const besarSaham = parseIdr(row[headerRow.findIndex(h => normalize(String(h)) === 'besarsaham')]);
-      const namaE = escapeSql(nama);
-      const namaLower = nama.toLowerCase();
+       const besarSaham = parseIdr(row[headerRow.findIndex(h => normalize(String(h)) === 'besarsaham')]);
+       const namaE = escapeSql(nama);
+       const namaLower = escapeSql(nama.toLowerCase());
 
-      if (MODE === 'delete') {
-        sql.push(`-- ${nama} | kelompok: ${matchedKelompok.nama} | lembar: ${besarSaham}`);
-        sql.push(`INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('${uid()}', '${namaE}', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), ${besarSaham}, '${kelompokId}');`);
-      } else {
-        sql.push(`UPDATE kepemilikan_saham SET kelompok_id = '${kelompokId}', anggota_id = (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}') WHERE LOWER(TRIM(nama)) = '${namaLower}' AND (kelompok_id IS NULL OR anggota_id IS NULL);`);
-      }
+       if (MODE === 'delete') {
+         sql.push(`-- ${nama} | kelompok: ${matchedKelompok.nama} | lembar: ${besarSaham}`);
+         sql.push(`INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('${uid()}', '${namaE}', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), ${besarSaham}, '${kelompokId}');`);
+       } else {
+         sql.push(`UPDATE kepemilikan_saham SET kelompok_id = '${kelompokId}', anggota_id = (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}') WHERE LOWER(TRIM(nama)) = '${namaLower}' AND (kelompok_id IS NULL OR anggota_id IS NULL);`);
+       }
       matchedRows++;
       sheetCount++;
     }
