@@ -1474,7 +1474,8 @@ function renderNav(){
       {p:'koor_beranda', ic:'home', label:'Beranda'},
       {p:'koor_anggota', ic:'users', label:'Anggota'},
       {p:'koor_tabungan', ic:'wallet', label:'Tabungan'},
-      {p:'koor_pembiayaan', ic:'finance', label:'Pembiayaan'}
+      {p:'koor_pembiayaan', ic:'finance', label:'Pembiayaan'},
+      {p:'koor_saham', ic:'coin', label:'Saham'}
     ];
   } else {
     items = [
@@ -2004,6 +2005,7 @@ function renderContent(){
     koor_anggota: renderKoorAnggota,
     koor_tabungan: renderKoorTabungan,
     koor_pembiayaan: renderKoorPembiayaan,
+    koor_saham: renderKoorSaham,
     nas_beranda: renderNasBeranda,
     nas_info: renderNasInfo,
     nas_tabungan: renderNasTabungan,
@@ -5281,6 +5283,49 @@ function renderKoorAnggotaDetail(user, userId){
   const nas = userById(userId);
   if(!nas || nas.kelompokId !== user.kelompokId) return `<div class="empty-state">Anggota tidak ditemukan</div>`;
   return renderMemberDetail(nas, 'koor_anggota');
+}
+function renderKoorSaham(user){
+  const jns = DB.koperasi.saham.jenis||[];
+  const allKs = DB.kepemilikanSaham||[];
+  const anggotaIds = nasabahOfKelompok(user.kelompokId).map(u=>u.id);
+  const ks = allKs.filter(k=>
+    k.kelompokId===user.kelompokId ||
+    (k.anggotaId && anggotaIds.includes(k.anggotaId)) ||
+    ownerKelompokId(k.nama)===user.kelompokId
+  );
+  const daftarPemilik = [];
+  const seen = {};
+  ks.forEach(k=>{ if(!seen[k.nama]){ seen[k.nama]=true; daftarPemilik.push(k.nama); } });
+  const totalLembar = ks.reduce((s,k)=>s+k.lembar,0);
+  const totalNilaiAwal = ks.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*(j.nominalPerLembar||0):0); },0);
+  const totalNilaiSesudah = ks.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+  const pct = DB.koperasi.saham.pemupukanPersen||0;
+  return `
+    <div class="page-title">Saham<span class="sub">${kelompokName(user.kelompokId)}</span></div>
+    <div class="stat-grid" style="margin-bottom:10px;">
+      <div class="stat-box stat-info"><div class="n mono">${rupiah(totalNilaiAwal)}</div><div class="l">Total nilai saham (awal)</div></div>
+      <div class="stat-box stat-gold"><div class="n mono">${rupiah(totalNilaiSesudah)}</div><div class="l">Total nilai saham (sesudah pemupukan${pct?' '+pct+'%':''})</div></div>
+      <div class="stat-box stat-primary"><div class="n">${totalLembar}</div><div class="l">Total lembar saham</div></div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:14px;">
+      ${jns.map(j=>{
+        const total = ks.filter(k=>k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0);
+        return `<div class="stat-box"><div class="n">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
+      }).join('')}
+    </div>
+    <div class="section-label">Pemilik saham (${daftarPemilik.length})</div>
+    <div class="card" style="padding:6px 18px;">
+      ${daftarPemilik.length ? daftarPemilik.map((nama,i)=>{
+        const holdings = ks.filter(k=>k.nama===nama);
+        const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+        return `<div class="list-row"${i>0?' style="border-top:1px dashed var(--border);"':''}>
+          <div class="row-num">${i+1}</div>
+          <div class="info"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;align-items:center;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div class="amt mono">${rupiah(total)}</div></div>
+        </div>`;
+      }).join('') : `<div class="empty-state"><div class="ic">${ICONS.coin}</div><div class="t">Belum ada pemilik saham</div><div class="d">Belum ada anggota di kelompok ini yang memiliki saham</div></div>`}
+    </div>
+  `;
 }
 
 /* =========================================================
