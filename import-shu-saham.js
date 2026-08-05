@@ -1,6 +1,9 @@
 const XLSX = require('xlsx');
 const fs = require('fs');
 
+const SUPABASE_URL = 'https://nuczywforbwbctwxbfky.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51Y3p5d2ZvcmJ3YmN0d3hiZmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjY5NTAsImV4cCI6MjA5ODkwMjk1MH0.4xQPbzS8EQ3NAdwzkU5Q5Fjbxi2Q0rlRDWYaYBCQ8Ic';
+
 const EXCEL_PATH = process.argv[2] || 'SHU Saham 2025.xlsx';
 const MODE = process.argv.includes('--delete') ? 'delete' : 'update';
 
@@ -23,19 +26,18 @@ function uid() {
   return 'ks_' + Math.random().toString(36).slice(2, 10);
 }
 
-function findKelompok(sheetName, kelompokList) {
-  const sn = normalize(sheetName);
-  for (const k of kelompokList) {
-    if (normalize(k.nama) === sn) return k;
-  }
-  for (const k of kelompokList) {
-    const kn = normalize(k.nama);
-    if (kn.includes(sn) || sn.includes(kn)) return k;
-  }
-  return null;
+async function fetchJson(url) {
+  const r = await fetch(url, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
+    }
+  });
+  if (!r.ok) throw new Error(url + ' ' + r.status);
+  return r.json();
 }
 
-function main() {
+async function main() {
   console.log('=== SHU Saham 2025 → SQL Generator ===');
   console.log('Mode:', MODE);
   console.log('Excel:', EXCEL_PATH);
@@ -45,8 +47,9 @@ function main() {
     process.exit(1);
   }
 
-  const backup = JSON.parse(fs.readFileSync('backup-supabase.json', 'utf8'));
-  const backupKelompok = backup.kelompok || [];
+  console.log('Fetching kelompok dari Supabase...');
+  const kelompokList = await fetchJson(SUPABASE_URL + '/rest/v1/kelompok?select=id,nama&limit=100');
+  console.log('Kelompok live:', kelompokList.length);
 
   const wb = XLSX.readFile(EXCEL_PATH);
   console.log('Sheets:', wb.SheetNames.join(', '));
@@ -85,11 +88,18 @@ function main() {
       continue;
     }
 
-    const matchedKelompok = findKelompok(sheetName, backupKelompok);
+    const sheetNorm = normalize(sheetName);
+    let matchedKelompok = kelompokList.find(k => normalize(k.nama) === sheetNorm);
+    if (!matchedKelompok) {
+      matchedKelompok = kelompokList.find(k => {
+        const kn = normalize(k.nama);
+        return kn.includes(sheetNorm) || sheetNorm.includes(kn);
+      });
+    }
     const kelompokId = matchedKelompok ? matchedKelompok.id : null;
 
     if (!kelompokId) {
-      console.log(`[${sheetName}] kelompok "${sheetName}" tidak ditemukan, skip`);
+      console.log(`[${sheetName}] kelompok "${sheetName}" tidak ditemukan di live Supabase, skip`);
       unmatchedKelompok.push(sheetName);
       continue;
     }
@@ -103,16 +113,16 @@ function main() {
       if (!nama) continue;
       totalRows++;
 
-       const besarSaham = parseIdr(row[headerRow.findIndex(h => normalize(String(h)) === 'besarsaham')]);
-       const namaE = escapeSql(nama);
-       const namaLower = escapeSql(nama.toLowerCase());
+      const besarSaham = parseIdr(row[headerRow.findIndex(h => normalize(String(h)) === 'besarsaham')]);
+      const namaE = escapeSql(nama);
+      const namaLower = escapeSql(nama.toLowerCase());
 
-       if (MODE === 'delete') {
-         sql.push(`-- ${nama} | kelompok: ${matchedKelompok.nama} | lembar: ${besarSaham}`);
-         sql.push(`INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('${uid()}', '${namaE}', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), ${besarSaham}, '${kelompokId}');`);
-       } else {
-         sql.push(`UPDATE kepemilikan_saham SET kelompok_id = '${kelompokId}', anggota_id = (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}') WHERE LOWER(TRIM(nama)) = '${namaLower}' AND (kelompok_id IS NULL OR anggota_id IS NULL);`);
-       }
+      if (MODE === 'delete') {
+        sql.push(`-- ${nama} | kelompok: ${matchedKelompok.nama} | lembar: ${besarSaham}`);
+        sql.push(`INSERT INTO kepemilikan_saham (id, nama, anggota_id, jenis_id, lembar, kelompok_id) VALUES ('${uid()}', '${namaE}', (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}'), (SELECT id FROM jenis_saham ORDER BY id LIMIT 1), ${besarSaham}, '${kelompokId}');`);
+      } else {
+        sql.push(`UPDATE kepemilikan_saham SET kelompok_id = '${kelompokId}', anggota_id = (SELECT id FROM users WHERE role='nasabah' AND LOWER(TRIM(nama)) = '${namaLower}') WHERE LOWER(TRIM(nama)) = '${namaLower}' AND (kelompok_id IS NULL OR anggota_id IS NULL);`);
+      }
       matchedRows++;
       sheetCount++;
     }
@@ -127,13 +137,12 @@ function main() {
     sql.push('-- Verifikasi setelah import:');
     sql.push('-- SELECT nama, anggota_id, kelompok_id, jenis_id, lembar FROM kepemilikan_saham ORDER BY nama LIMIT 20;');
     sql.push('-- SELECT COUNT(*) AS total FROM kepemilikan_saham;');
-    sql.push('-- SELECT nama, SUM(lembar) AS total_lembar FROM kepemilikan_saham GROUP BY nama ORDER BY nama LIMIT 20;');
   }
 
   console.log('\n=== RINGKASAN ===');
   console.log('Total baris anggota:', totalRows);
   console.log('Berhasil diproses:', matchedRows);
-  console.log('Kelompok tidak ditemukan:', unmatchedKelompok.length);
+  console.log('Kelompok tidak ditemukan di live:', unmatchedKelompok.length);
   if (unmatchedKelompok.length > 0) {
     console.log('Sheet tidak cocok:', unmatchedKelompok.join(', '));
   }
@@ -147,8 +156,7 @@ function main() {
   console.log('3. Jalankan (Run)');
   if (MODE === 'delete') {
     console.log('4. VERIFIKASI dulu: SELECT COUNT(*), nama, anggota_id, kelompok_id FROM kepemilikan_saham LIMIT 20;');
-    console.log('5. Jika sudah benar, lanjutkan. Jika tidak, hapus data lagi dan import ulang.');
   }
 }
 
-main();
+main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
