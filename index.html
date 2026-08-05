@@ -3209,7 +3209,6 @@ function openPengajuanModal(prefUserId){
       <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
       <input type="number" id="pemb-margin" value="${mMin}" min="${mMin}" max="${mMax}" step="1000" oninput="updatePengajuanPreview()">
     </div>
-    <div class="form-row"><label>Keterangan (opsional)</label><textarea id="pemb-ket" placeholder="cth. Untuk biaya pendidikan anak" rows="2"></textarea></div>
     <div class="hint" id="pemb-preview">Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -3243,12 +3242,11 @@ async function submitPengajuan(){
   const tenor = parseIdr(document.getElementById('pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
-  const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
-  const ket = document.getElementById('pemb-ket').value.trim();
-  if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
-  const total = jumlah + mp;
-  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved', keterangan:ket};
+   const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
+   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
+   if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+   const total = jumlah + mp;
+   const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved'};
   DB.pembiayaan.push(p);
   const btn = document.querySelector('button[onclick="submitPengajuan()"]');
   if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
@@ -3261,7 +3259,7 @@ async function submitPengajuan(){
     renderContent();
     return;
   }
-  addLog('Buat pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
+   addLog('Buat pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')');
   bigSuccess('Pengajuan berhasil dibuat');
   closeModal();
   renderContent();
@@ -3282,8 +3280,7 @@ function openEditPengajuanModal(pembId){
       <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
       <input type="number" id="edit-pemb-margin" value="${curMargin}" min="${mMin}" max="${mMax}" step="1000" oninput="updateEditPengajuanPreview()">
     </div>
-    <div class="form-row"><label>Keterangan (opsional)</label><textarea id="edit-pemb-ket" rows="2">${p.keterangan||''}</textarea></div>
-    <div class="hint" id="edit-pemb-preview"></div>
+       <div class="hint" id="edit-pemb-preview"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitEditPengajuan('${p.id}')">Simpan</button>
@@ -3318,32 +3315,30 @@ function submitEditPengajuan(pembId){
   const tenor = parseIdr(document.getElementById('edit-pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
-  const mp = parseIdr(document.getElementById('edit-pemb-margin').value)||mMin;
-  const ket = document.getElementById('edit-pemb-ket').value.trim();
-  if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
-  const total = jumlah + mp;
-  const angsuranBaru = Math.ceil(total/tenor/1000)*1000;
-  const sudahBayar = p.riwayatAngsuran.length;
-  p.userId = userId;
-  p.jumlahPinjaman = jumlah;
-  p.tenor = tenor;
-  p.marginPersen = 0;
-  p.marginNominal = mp;
-  p.angsuranPerBulan = angsuranBaru;
-  if(sudahBayar>0 && p.statusPengajuan==='approved'){
-    p.sisaAngsuran = Math.max(tenor - sudahBayar, 0);
-  } else {
-    p.sisaAngsuran = tenor;
-  }
-  if(p.statusPengajuan==='pending' && sudahBayar===0){
-    if(tenor>0) p.status = 'pending';
-  } else if(p.statusPengajuan==='approved'){
-    p.status = p.sisaAngsuran<=0 ? 'lunas' : 'berjalan';
-  }
-  p.keterangan = ket;
-  persist();
-  addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
+   const mp = parseIdr(document.getElementById('edit-pemb-margin').value)||mMin;
+   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
+   if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+   const total = jumlah + mp;
+   const angsuranBaru = Math.ceil(total/tenor/1000)*1000;
+   const sudahBayar = p.riwayatAngsuran.length;
+   p.userId = userId;
+   p.jumlahPinjaman = jumlah;
+   p.tenor = tenor;
+   p.marginPersen = 0;
+   p.marginNominal = mp;
+   p.angsuranPerBulan = angsuranBaru;
+   if(sudahBayar>0 && p.statusPengajuan==='approved'){
+     p.sisaAngsuran = Math.max(tenor - sudahBayar, 0);
+   } else {
+     p.sisaAngsuran = tenor;
+   }
+   if(p.statusPengajuan==='pending' && sudahBayar===0){
+     if(tenor>0) p.status = 'pending';
+   } else if(p.statusPengajuan==='approved'){
+     p.status = p.sisaAngsuran<=0 ? 'lunas' : 'berjalan';
+   }
+   persist();
+   addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')');
   bigSuccess('Pengajuan berhasil diperbarui');
   closeModal();
   renderContent();
@@ -5444,8 +5439,7 @@ function openPengajuanModalKoor(){
       <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
       <input type="number" id="pemb-margin" value="${mMin}" min="${mMin}" max="${mMax}" step="1000" oninput="updatePengajuanPreviewKoor()">
     </div>
-    <div class="form-row"><label>Keterangan (opsional)</label><textarea id="pemb-ket" placeholder="cth. Untuk biaya pendidikan anak" rows="2"></textarea></div>
-    <div class="hint" id="pemb-preview-koor">Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.</div>
+       <div class="hint" id="pemb-preview-koor">Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitPengajuanKoor()">Ajukan</button>
@@ -5477,12 +5471,11 @@ async function submitPengajuanKoor(){
   const tenor = parseIdr(document.getElementById('pemb-tenor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
-  const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
-  const ket = document.getElementById('pemb-ket').value.trim();
-  if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
-  const total = jumlah + mp;
-  const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'pending', keterangan:ket};
+   const mp = parseIdr(document.getElementById('pemb-margin').value)||mMin;
+   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
+   if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+   const total = jumlah + mp;
+   const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'pending'};
   DB.pembiayaan.push(p);
   const btn = document.querySelector('button[onclick="submitPengajuanKoor()"]');
   if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
@@ -5495,7 +5488,7 @@ async function submitPengajuanKoor(){
     renderContent();
     return;
   }
-  addLog('Ajukan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
+   addLog('Ajukan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')');
   notifAdminWA(waHeader('PENGISUAN PEMBIAYAAN BARU')
     + waAnggotaInfo(userById(userId))
     + '\nJumlah Pembiayaan : ' + rupiah(jumlah)
@@ -5526,8 +5519,7 @@ function openEditPengajuanModalKoor(pembId){
       <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
       <input type="number" id="edit-pemb-margin-koor" value="${curMargin}" min="${mMin}" max="${mMax}" step="1000" oninput="updateEditPengajuanPreviewKoor()">
     </div>
-    <div class="form-row"><label>Keterangan (opsional)</label><textarea id="edit-pemb-ket-koor" rows="2">${p.keterangan||''}</textarea></div>
-    <div class="hint" id="edit-pemb-preview-koor"></div>
+       <div class="hint" id="edit-pemb-preview-koor"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitEditPengajuanKoor('${p.id}')">Simpan</button>
@@ -5562,21 +5554,19 @@ function submitEditPengajuanKoor(pembId){
   const tenor = parseIdr(document.getElementById('edit-pemb-tenor-koor').value);
   const atur = DB.koperasi.aturKeuangan||{};
   const mMin = atur.marginNominal||50000, mMax = atur.marginMaxNominal||200000;
-  const mp = parseIdr(document.getElementById('edit-pemb-margin-koor').value)||mMin;
-  const ket = document.getElementById('edit-pemb-ket-koor').value.trim();
-  if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
-  if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
-  const total = jumlah + mp;
-  p.userId = userId;
-  p.jumlahPinjaman = jumlah;
-  p.tenor = tenor;
-  p.marginPersen = 0;
-  p.marginNominal = mp;
-  p.angsuranPerBulan = Math.ceil(total/tenor/1000)*1000;
-  p.sisaAngsuran = tenor;
-  p.keterangan = ket;
-  persist();
-  addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')' + (ket?' - '+ket:''));
+   const mp = parseIdr(document.getElementById('edit-pemb-margin-koor').value)||mMin;
+   if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
+   if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
+   const total = jumlah + mp;
+   p.userId = userId;
+   p.jumlahPinjaman = jumlah;
+   p.tenor = tenor;
+   p.marginPersen = 0;
+   p.marginNominal = mp;
+   p.angsuranPerBulan = Math.ceil(total/tenor/1000)*1000;
+   p.sisaAngsuran = tenor;
+   persist();
+   addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')');
   bigSuccess('Pengajuan berhasil diperbarui');
   closeModal();
   renderContent();
