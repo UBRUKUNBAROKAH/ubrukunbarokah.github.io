@@ -1714,6 +1714,11 @@ function groupByKelompokId(items, getKelompokIdFn){
   return Object.keys(groups).sort((a,b)=>a.localeCompare(b,'id')).map(nama=>({nama, items:groups[nama]}));
 }
 function userById(id){ return DB.users?.find(u=>u.id===id) || { nama:'-', kelompokId:null, role:'-', noRekening:'-' }; }
+function findUserByNama(nama){
+  if(!nama) return null;
+  const n = String(nama).trim().toLowerCase();
+  return DB.users.find(u=>u.role==='nasabah' && String(u.nama||'').trim().toLowerCase()===n) || null;
+}
 function nasabahOfKelompok(kelompokId){ return DB.users.filter(u=>u.role==='nasabah' && u.kelompokId===kelompokId); }
 function pembiayaanForUser(userId){ return DB.pembiayaan.filter(p=>p.userId===userId).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai)); }
 function koordinatorForKelompok(kelompokId){
@@ -3731,9 +3736,10 @@ function computeLapModalData(){
 }
 const LAP_MODAL_BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 function totalNilaiSaham(u){
-  const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===u.nama);
+  const uname = String(u.nama||'').trim().toLowerCase();
+  const holdings = (DB.kepemilikanSaham||[]).filter(k=>String(k.nama||'').trim().toLowerCase()===uname);
   const jns = DB.koperasi.saham.jenis||[];
-  return holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
+  return holdings.reduce((s,k)=>{ const j=jns.find(jj=>jj.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
 }
 function nilaiSahamPerLembar(j){
   if(!j || !j.nominalPerLembar) return 0;
@@ -4811,7 +4817,7 @@ const WARNA_SAHAM = ['#f59e0b','#0ea5e9','#22c55e','#8b5cf6','#ef4444','#ec4899'
 function ownerKelompokId(nama){
   const manual = (DB.kepemilikanSaham||[]).find(k=>k.nama===nama && k.kelompokId);
   if(manual) return manual.kelompokId;
-  const u = DB.users.find(u=>u.role==='nasabah' && u.nama===nama);
+  const u = findUserByNama(nama);
   return u ? u.kelompokId : null;
 }
 function renderAdminSaham(user){
@@ -4823,8 +4829,8 @@ function renderAdminSaham(user){
     if(!seen[k.nama]){ seen[k.nama]=true; daftarPemilikAll.push(k.nama); }
   });
   const kelFilter = currentSubState.sahamKelompok || '';
-  const daftarPemilik = kelFilter ? daftarPemilikAll.filter(nama=>ks.some(k=>k.nama===nama && k.kelompokId===kelFilter)) : daftarPemilikAll;
-  const ksForStats = kelFilter ? ks.filter(k=>k.kelompokId===kelFilter) : ks;
+  const daftarPemilik = kelFilter ? daftarPemilikAll.filter(nama=>ownerKelompokId(nama)===kelFilter) : daftarPemilikAll;
+  const ksForStats = kelFilter ? ks.filter(k=>ownerKelompokId(k.nama)===kelFilter) : ks;
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   const totalNilaiAwal = ksForStats.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*(j.nominalPerLembar||0):0); },0);
   const totalNilaiSesudah = ksForStats.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
@@ -4918,8 +4924,8 @@ function simpanKepemilikanSahamBaru(){
   const lembar = parseIdr(document.getElementById('ks-lembar').value)||0;
   const kelompokId = document.getElementById('ks-kelompok').value || null;
   if(!nama || !lembar){ toast('Lengkapi nama dan jumlah lembar'); return; }
-  const anggota = DB.users.find(u=>u.role==='nasabah'&&u.nama===nama);
-  DB.kepemilikanSaham.push({id:uid('ks'), nama, anggotaId: anggota?anggota.id:null, jenisId, lembar, kelompokId});
+  const anggota = findUserByNama(nama);
+  DB.kepemilikanSaham.push({id:uid('ks'), nama, anggotaId: anggota?anggota.id:null, jenisId, lembar, kelompokId: anggota?anggota.kelompokId:kelompokId});
   // also sync back to user.saham for backward compat
   if(anggota){
     if(!anggota.saham) anggota.saham={};
@@ -5171,10 +5177,10 @@ function simpanEditKepemilikanSaham(nama){
     }
   });
   // sync back to user.saham
-  const u = DB.users.find(u=>u.role==='nasabah'&&u.nama===nama);
+  const u = findUserByNama(nama);
   if(u){
     if(!u.saham) u.saham={};
-    (DB.koperasi.saham.jenis||[]).forEach(j=>{ u.saham[j.id] = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama&&k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0); });
+    (DB.koperasi.saham.jenis||[]).forEach(j=>{ u.saham[j.id] = (DB.kepemilikanSaham||[]).filter(k=>String(k.nama||'').trim().toLowerCase()===String(nama).trim().toLowerCase()&&k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0); });
   }
   persist();
   addLog('Edit kepemilikan saham', 'Memperbarui saham '+nama);
@@ -5185,7 +5191,7 @@ function simpanEditKepemilikanSaham(nama){
 function hapusKepemilikanSaham(nama){
   confirmDialog('Hapus semua kepemilikan saham?', 'Semua saham atas nama '+nama+' akan dihapus.', 'danger', ()=>{
     DB.kepemilikanSaham = DB.kepemilikanSaham.filter(k=>k.nama!==nama);
-    const u = DB.users.find(u=>u.role==='nasabah'&&u.nama===nama);
+    const u = findUserByNama(nama);
     if(u){ (DB.koperasi.saham.jenis||[]).forEach(j=>{ if(u.saham) u.saham[j.id]=0; }); }
     persist();
     supabaseClient.from(TABLES.kepemilikan_saham).delete().eq('nama', nama).then();
