@@ -3769,10 +3769,12 @@ function renderAdminLaporan(user){
       <button class="${tab==='ikhtisar'?'active':''}" onclick="go('admin_laporan',{lapTab:'ikhtisar'})">Ikhtisar</button>
       <button class="${tab==='modal'?'active':''}" onclick="go('admin_laporan',{lapTab:'modal'})">Posisi Modal</button>
       <button class="${tab==='neraca'?'active':''}" onclick="go('admin_laporan',{lapTab:'neraca'})">Neraca</button>
+      <button class="${tab==='labarugi'?'active':''}" onclick="go('admin_laporan',{lapTab:'labarugi'})">Laba Rugi</button>
     </div>
     ${tab==='ikhtisar'?renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham):''}
     ${tab==='modal'?renderLapModal():''}
     ${tab==='neraca'?renderLapNeraca():''}
+    ${tab==='labarugi'?renderLapLabaRugi():''}
   `;
 }
 const LAP_MODAL_COLS = [
@@ -4019,6 +4021,227 @@ function exportLapNeracaXLS(){
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Neraca');
   XLSX.writeFile(wb, sanitizeFileName('Neraca') + '.xlsx');
+  toast('File Excel berhasil diunduh');
+}
+const LAP_LABA_RUGI_CATATAN = 'Laporan Laba Rugi dihitung berbasis realisasi: pendapatan margin diakui setiap ada pembayaran angsuran (margin per angsuran = total margin dibagi tenor). Beban (bagi hasil tabungan, operasional, cadangan resiko, penyusutan, zakat, dana sosial) adalah alokasi dari margin yang tercatat di pool dana; SHU Saham diperlakukan sebagai alokasi laba untuk anggota, bukan beban. Sisa Laba / Cadangan Koperasi = Laba Bersih &minus; alokasi SHU Saham.';
+function computeLapLabaRugiData(){
+  const pemb = DB.pembiayaan || [];
+  const setoran = DB.setoran || [];
+  const atur = DB.koperasi.aturKeuangan || {};
+  const pools = atur.pools || [];
+  const dana = atur.dana || {};
+  function marginPerAngsuran(p){
+    if(!p || !p.tenor) return 0;
+    return Math.round(marginNominalOf(p) / p.tenor);
+  }
+  const angsurans = setoran.filter(s=>s.jenis==='angsuran');
+  // Ringkasan total (semua waktu): pendapatan dihitung ulang dari angsuran,
+  // beban memakai nilai pool dana aktual yang terakumulasi saat angsuran dibayar.
+  const totalPendapatan = angsurans.reduce((s,a)=>{
+    const p = pemb.find(pp=>pp.id===a.pembiayaanId);
+    return s + (p ? Math.min(marginPerAngsuran(p), a.jumlah||0) : 0);
+  },0);
+  const totalBeban = pools.reduce((s,p)=> p.id==='shu_saham' ? s : s+(dana[p.id]||0), 0);
+  const shuSaham = dana.shu_saham||0;
+  const labaBersih = totalPendapatan - totalBeban;
+  const sisaLaba = labaBersih - shuSaham;
+  // Rincian per bulan (rekomputasi alokasi pool memakai persentase saat ini)
+  const now = new Date();
+  let minDate = now;
+  angsurans.forEach(a=>{ if(!a.tanggal) return; const dt=new Date(a.tanggal); if(!isNaN(dt) && dt<minDate) minDate=dt; });
+  const startY = minDate.getFullYear(), startM = minDate.getMonth();
+  const endY = now.getFullYear(), endM = now.getMonth();
+  const months = [];
+  let yy = startY, mm = startM;
+  while(yy < endY || (yy===endY && mm<=endM)){
+    months.push({y:yy,m:mm});
+    mm++; if(mm>11){ mm=0; yy++; }
+  }
+  if(!months.length) months.push({y:now.getFullYear(), m:now.getMonth()});
+  const byYear = {};
+  let kumLaba = 0;
+  months.forEach(o=>{
+    const y = o.y, m = o.m;
+    const bulanIni = angsurans.filter(a=>{ const d=new Date(a.tanggal); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
+    let pendapatan = 0;
+    const bebanBulan = {};
+    pools.forEach(p=>bebanBulan[p.id]=0);
+    bulanIni.forEach(a=>{
+      const p = pemb.find(pp=>pp.id===a.pembiayaanId);
+      if(!p) return;
+      const marginBagian = Math.min(marginPerAngsuran(p), a.jumlah||0);
+      pendapatan += marginBagian;
+      pools.forEach(pool=>{ bebanBulan[pool.id] += Math.round(marginBagian * (pool.persen||0) / 100); });
+    });
+    const totalBebanBulan = pools.reduce((s,p)=> p.id==='shu_saham' ? s : s+(bebanBulan[p.id]||0), 0);
+    const laba = pendapatan - totalBebanBulan;
+    kumLaba += laba;
+    if(!byYear[y]) byYear[y] = {tahun:String(y), rows:[], total:{pendapatan:0, beban:0, laba:0, shuSaham:0}, bebanPools:{}};
+    byYear[y].rows.push({bulan:m+1, pendapatan, bebanBulan, totalBeban: totalBebanBulan, laba, kumLaba});
+    byYear[y].total.pendapatan += pendapatan;
+    byYear[y].total.beban += totalBebanBulan;
+    byYear[y].total.laba += laba;
+    pools.forEach(p=>{
+      if(p.id==='shu_saham'){ byYear[y].total.shuSaham += bebanBulan[p.id]||0; return; }
+      byYear[y].bebanPools[p.id] = (byYear[y].bebanPools[p.id]||0) + (bebanBulan[p.id]||0);
+    });
+  });
+  return {
+    pools, dana,
+    byYear: Object.keys(byYear).sort().map(k=>byYear[k]),
+    totalPendapatan, totalBeban, shuSaham, labaBersih, sisaLaba
+  };
+}
+function renderLapLabaRugi(){
+  const data = computeLapLabaRugiData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const shuPool = pools.find(p=>p.id==='shu_saham');
+  const fmt = v => rupiah(v);
+  const row = (label, val, bold) => `<div class="list-row" style="${bold?'font-weight:800;background:var(--primary-soft);':''}"><div class="info"><div class="title" style="${bold?'':'font-weight:400;'}">${label}</div></div><div class="amt mono">${fmt(val)}</div></div>`;
+  let html = '';
+  html += '<div class="stat-grid">';
+  html += '<div class="stat-box"><div class="n mono">'+fmt(data.totalPendapatan)+'</div><div class="l">Pendapatan margin</div></div>';
+  html += '<div class="stat-box"><div class="n mono">'+fmt(data.totalBeban)+'</div><div class="l">Total beban</div></div>';
+  html += '<div class="stat-box stat-primary"><div class="n mono">'+fmt(data.labaBersih)+'</div><div class="l">Laba bersih (SHU)</div></div>';
+  html += '</div>';
+  if(!data.byYear.length){
+    html += '<div class="hint" style="padding:10px;text-align:center;margin-top:14px;">Belum ada angsuran tercatat</div>';
+    html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.6;">'+LAP_LABA_RUGI_CATATAN+'</div>';
+    return html;
+  }
+  const tahun = currentSubState.labRugiTahun || data.byYear[data.byYear.length-1].tahun;
+  const yd = data.byYear.find(x=>x.tahun===tahun) || data.byYear[data.byYear.length-1];
+  html += '<div class="flex-between" style="margin:14px 0 10px;flex-wrap:wrap;gap:6px;">';
+  html += '<div style="width:150px;flex-shrink:0;"><select onchange="setLapLabaRugiTahun(this.value)">'+data.byYear.slice().reverse().map(x=>'<option value="'+x.tahun+'" '+(x.tahun===yd.tahun?'selected':'')+'>Tahun '+x.tahun+'</option>').join('')+'</select></div>';
+  html += '<div style="display:flex;gap:6px;">';
+  html += '<button class="btn btn-outline btn-sm" onclick="cetakLapLabaRugi(\''+yd.tahun+'\')">'+(ICONS.pdf||'📄')+' Unduh PDF</button>';
+  html += '<button class="btn btn-outline btn-sm" onclick="exportLapLabaRugiXLS(\''+yd.tahun+'\')">'+(ICONS.xls||'')+' Excel</button>';
+  html += '</div></div>';
+  html += '<div class="card" style="padding:6px 18px;">';
+  html += '<div class="section-label" style="margin-top:8px;">LABA RUGI \u2014 TAHUN '+yd.tahun+'</div>';
+  html += row('Pendapatan Margin Pembiayaan', yd.total.pendapatan, false);
+  html += row('TOTAL PENDAPATAN', yd.total.pendapatan, true);
+  html += '<div class="list-row" style="border-top:1px solid var(--border);"><div class="info"><div class="title">BEBAN</div></div><div class="amt"></div></div>';
+  bebanPools.forEach(p=>html += row(p.label, yd.bebanPools[p.id]||0, false));
+  html += row('TOTAL BEBAN', yd.total.beban, true);
+  html += row('LABA BERSIH SEBELUM BAGI HASIL (SHU)', yd.total.laba, true);
+  if(shuPool) html += row(shuPool.label+' (Alokasi SHU Anggota)', yd.total.shuSaham, false);
+  html += row('SISA LABA / CADANGAN KOPERASI', yd.total.laba - yd.total.shuSaham, false);
+  html += '</div>';
+  html += '<div class="section-label" style="margin-top:16px;">Rincian per Bulan \u2014 '+yd.tahun+'</div>';
+  html += '<div class="card" style="padding:0;overflow-x:auto;">';
+  html += '<table style="border-collapse:collapse;font-size:12px;white-space:nowrap;">';
+  html += '<thead><tr style="background:var(--primary-soft);"><th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);">Bln</th><th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">Pendapatan Margin</th><th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">Total Beban</th><th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">Laba Bersih</th><th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">Laba Kumulatif</th></tr></thead><tbody>';
+  yd.rows.forEach((r,i)=>{
+    html += '<tr'+(i%2===0?' style="background:#f9f9f9;"':'')+'><td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border);font-weight:600;">'+LAP_MODAL_BULAN[r.bulan-1]+'</td>';
+    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt(r.pendapatan)+'</td>';
+    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt(r.totalBeban)+'</td>';
+    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt(r.laba)+'</td>';
+    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt(r.kumLaba)+'</td></tr>';
+  });
+  html += '<tr style="background:var(--primary-soft);font-weight:700;"><td style="padding:7px 10px;text-align:center;border-top:2px solid var(--border);">Total</td>';
+  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.total.pendapatan)+'</td>';
+  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.total.beban)+'</td>';
+  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.total.laba)+'</td>';
+  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);"></td></tr>';
+  html += '</tbody></table></div>';
+  html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.6;">'+LAP_LABA_RUGI_CATATAN+'</div>';
+  return html;
+}
+function setLapLabaRugiTahun(t){ currentSubState.labRugiTahun = t; renderContent(); }
+function cetakLapLabaRugi(tahun){
+  const data = computeLapLabaRugiData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const shuPool = pools.find(p=>p.id==='shu_saham');
+  const yd = data.byYear.find(x=>x.tahun===tahun);
+  if(!yd){ toast('Data tidak ditemukan'); return; }
+  const { jsPDF } = window.jspdf;
+  const fmt = v => rupiah(v);
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const doc = new jsPDF({ orientation:'landscape' });
+  doc.setFontSize(13);
+  doc.text(orgName.toUpperCase(), 14, 14);
+  doc.setFontSize(10.5);
+  doc.text('LAPORAN LABA RUGI \u2014 TAHUN ' + yd.tahun, 14, 20.5);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Dicetak: ' + tgl, 14, 26);
+  doc.setTextColor(0);
+  const body = [];
+  body.push(['PENDAPATAN','']);
+  body.push(['  Pendapatan Margin Pembiayaan', fmt(yd.total.pendapatan)]);
+  body.push(['TOTAL PENDAPATAN', fmt(yd.total.pendapatan)]);
+  body.push(['','']);
+  body.push(['BEBAN','']);
+  bebanPools.forEach(p=>body.push(['  '+p.label, fmt(yd.bebanPools[p.id]||0)]));
+  body.push(['TOTAL BEBAN', fmt(yd.total.beban)]);
+  body.push(['','']);
+  body.push(['LABA BERSIH SEBELUM BAGI HASIL (SHU)', fmt(yd.total.laba)]);
+  if(shuPool) body.push(['  '+shuPool.label+' (Alokasi SHU Anggota)', fmt(yd.total.shuSaham)]);
+  body.push(['  Sisa Laba / Cadangan Koperasi', fmt(yd.total.laba - yd.total.shuSaham)]);
+  doc.autoTable({
+    head: [['Uraian','Jumlah']],
+    body,
+    startY: 31,
+    styles:{ fontSize:9, cellPadding:2.5, halign:'left' },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'left' },
+    columnStyles:{ 1:{ halign:'right', fontStyle:'bold' } },
+    didParseCell: function(d){
+      const txt = String(d.cell.raw||'');
+      if(d.section==='body' && (txt.startsWith('TOTAL') || txt==='PENDAPATAN' || txt==='BEBAN')){ d.cell.styles.fillColor=[218,232,222]; d.cell.styles.fontStyle='bold'; }
+    }
+  });
+  const rincian = yd.rows.map(r=>[LAP_MODAL_BULAN[r.bulan-1], r.pendapatan, r.totalBeban, r.laba, r.kumLaba]);
+  doc.autoTable({
+    head: [['Bulan','Pendapatan Margin','Total Beban','Laba Bersih','Laba Kumulatif']],
+    body: rincian.map(r=>[r[0], fmt(r[1]), fmt(r[2]), fmt(r[3]), fmt(r[4])]),
+    startY: (doc.lastAutoTable && doc.lastAutoTable.finalY) + 6,
+    styles:{ fontSize:7.5, cellPadding:2.5, halign:'right' },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'center' },
+    columnStyles:{ 0:{ halign:'center', fontStyle:'bold' } },
+    alternateRowStyles:{ fillColor:[244,248,244] }
+  });
+  const finalY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 40;
+  doc.setFontSize(7.5);
+  doc.setTextColor(100);
+  doc.text(doc.splitTextToSize(LAP_LABA_RUGI_CATATAN.replace(/&minus;/g,'-'), 270), 14, finalY + 8);
+  doc.save(sanitizeFileName('Laba Rugi ' + yd.tahun) + '.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function exportLapLabaRugiXLS(tahun){
+  const data = computeLapLabaRugiData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const shuPool = pools.find(p=>p.id==='shu_saham');
+  const yd = data.byYear.find(x=>x.tahun===tahun);
+  if(!yd){ toast('Data tidak ditemukan'); return; }
+  const rows = [];
+  rows.push(['LAPORAN LABA RUGI','']);
+  rows.push(['Koperasi: '+((DB.koperasi&&DB.koperasi.nama)||''),'']);
+  rows.push(['Tahun: '+tahun,'']);
+  rows.push(['','']);
+  rows.push(['PENDAPATAN','']);
+  rows.push(['Pendapatan Margin Pembiayaan', yd.total.pendapatan]);
+  rows.push(['TOTAL PENDAPATAN', yd.total.pendapatan]);
+  rows.push(['','']);
+  rows.push(['BEBAN','']);
+  bebanPools.forEach(p=>rows.push([p.label, yd.bebanPools[p.id]||0]));
+  rows.push(['TOTAL BEBAN', yd.total.beban]);
+  rows.push(['','']);
+  rows.push(['LABA BERSIH SEBELUM BAGI HASIL (SHU)', yd.total.laba]);
+  if(shuPool) rows.push([shuPool.label+' (Alokasi SHU Anggota)', yd.total.shuSaham]);
+  rows.push(['Sisa Laba / Cadangan Koperasi', yd.total.laba - yd.total.shuSaham]);
+  rows.push(['','']);
+  rows.push(['RINCIAN PER BULAN','']);
+  rows.push(['Bulan','Pendapatan Margin','Total Beban','Laba Bersih','Laba Kumulatif']);
+  yd.rows.forEach(r=>rows.push([LAP_MODAL_BULAN[r.bulan-1], r.pendapatan, r.totalBeban, r.laba, r.kumLaba]));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Laba Rugi '+tahun);
+  XLSX.writeFile(wb, sanitizeFileName('Laba Rugi '+tahun) + '.xlsx');
   toast('File Excel berhasil diunduh');
 }
 function renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham){
