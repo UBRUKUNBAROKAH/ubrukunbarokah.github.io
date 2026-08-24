@@ -1452,6 +1452,7 @@ const ADMIN_MORE_ITEMS = [
   {p:'admin_log', ic:'log', label:'Log Transaksi'}
 ];
 
+const NAV_ICON_EMOJI = { home:'🏠', users:'👥', wallet:'💰', finance:'🤝', coin:'📈', user_cog:'🧑\u200d💼', report:'📊', settings:'⚙️', log:'🗒️' };
 function renderNav(){
   const user = currentUser();
   if(!user) return;
@@ -1486,10 +1487,10 @@ function renderNav(){
     if(hasMyPem) items.push({p:'nas_pembiayaan', ic:'finance', label:'Pembiayaan'});
   }
   const renderBtn = (it, active) => {
-    const ic = ICONS[it.ic] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>';
-    return '<button class="'+(active?'active':'')+'" onclick="go(\''+it.p+'\')"><span class="ic">'+ic+'</span>'+it.label+'</button>';
+    const ic = NAV_ICON_EMOJI[it.ic] || '•';
+    return '<button class="'+(active?'active':'')+'" onclick="go(\''+it.p+'\')"><span class="ic" style="font-size:17px;">'+ic+'</span>'+it.label+'</button>';
   };
-  const moreIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>';
+  const moreIcon = '⋯';
   const moreActive = moreItems.some(it=>currentPage===it.p);
   const moreBtn = '<button class="'+(moreActive?'active':'')+'" onclick="openMoreMenu()"><span class="ic">'+moreIcon+'</span>Lainnya</button>';
 
@@ -1508,7 +1509,7 @@ function openMoreMenu(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       ${items.map(m=>`
         <div class="tx-acc-row" style="cursor:pointer;justify-content:center;padding:16px 8px;flex-direction:column;gap:6px;text-align:center;" onclick="closeModal();go('${m.p}')">
-          <span style="width:36px;height:36px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto;">${ICONS[m.ic]}</span>
+          <span style="width:36px;height:36px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:19px;">${NAV_ICON_EMOJI[m.ic]||'•'}</span>
           <span style="font-size:12px;font-weight:600;">${m.label}</span>
         </div>
       `).join('')}
@@ -2501,9 +2502,9 @@ function renderAdminAnggota(user){
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
     <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-outline btn-compact" onclick="openImportModal('anggota')" title="Import CSV">${ICONS.upload}</button>
-      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
+      <div class="search-box">🔍<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('anggota')" title="Import CSV">📤</button>
+      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">+ Tambah</button>
     </div>
     ${list.length ? groups.map(g=>`
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
@@ -2539,7 +2540,7 @@ function renderMemberDetail(nas, backPage){
   const pembs = pembiayaanForUser(nas.id);
   const isAktif = nas.status !== 'nonaktif';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>${nas.nama}</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">←</button>${nas.nama}</span></div>
     <div class="card">
       <div class="flex-between">
         <div class="flex"><div class="avatar">${initials(nas.nama)}</div><div><div style="font-weight:700;">${nas.nama}</div><div class="hint">${kelompokName(nas.kelompokId)} &middot; No. Rek ${nas.noRekening||'-'}</div></div></div>
@@ -2551,13 +2552,13 @@ function renderMemberDetail(nas, backPage){
         <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11.5px;">ALAMAT</span><br>${nas.alamat||'-'}</div>
       </div>
     </div>
-    <div class="flex-between"><div class="section-label" style="margin:0;">Buku Tabungan</div>${belum.length?`<button class="btn btn-outline btn-sm" onclick="openTambahRekeningModal('${nas.id}')">${ICONS.plus} Rekening</button>`:''}</div>
+    <div class="flex-between"><div class="section-label" style="margin:0;">Buku Tabungan</div>${belum.length?`<button class="btn btn-outline btn-sm" onclick="openTambahRekeningModal('${nas.id}')">+ Rekening</button>`:''}</div>
     <div class="card" style="padding:6px 18px;">
       ${accs.length ? accs.map(({j,acc})=>`
         <div class="list-row"><div class="info"><div class="title">${j.nama}</div></div><div class="amt">${rupiah(acc.saldo)}</div></div>
       `).join('') : emptyRow('Belum ada rekening tabungan dibuka')}
     </div>
-    <div class="flex-between"><div class="section-label" style="margin:0;">Pembiayaan</div><button class="btn btn-outline btn-sm" onclick="openPengajuanModal('${nas.id}')">${ICONS.plus} Ajukan</button></div>
+    <div class="flex-between"><div class="section-label" style="margin:0;">Pembiayaan</div><button class="btn btn-outline btn-sm" onclick="openPengajuanModal('${nas.id}')">+ Ajukan</button></div>
     <div class="card" style="padding:6px 18px;">
       ${pembs.length ? pembs.map(p=>`
         <div class="list-row"><div class="info"><div class="title">${rupiah(p.jumlahPinjaman)}</div><div class="sub">Sisa ${p.sisaAngsuran}/${p.tenor} angsuran</div></div><span class="badge ${pembBadge(p).cls}">${pembBadge(p).label}</span></div>
@@ -2728,10 +2729,10 @@ function renderAdminTabungan(user){
       `).join('')}
     </div>` : ''}
     <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download}</button>
-      <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">${ICONS.upload}</button>
-      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
+      <div class="search-box">🔍<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">⬇</button>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">📤</button>
+      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">+ Rekening</button>
     </div>
     ${nasabah.length ? groups.map(g=>`
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
@@ -2752,7 +2753,7 @@ function renderAdminTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">←</button>Buku Tabungan</span></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
@@ -2762,8 +2763,8 @@ function renderAdminTabunganDetail(user, userId){
       ${accs.length ? accs.map(({j,acc})=>`<div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(acc.saldo)}</div><div class="l">${j.nama}<br><span style="font-size:9px;color:var(--muted);">${acc.noRekening||'-'}</span></div></div>`).join('') : `<div class="hint">Belum ada rekening tabungan.</div>`}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','setor')">${ICONS.down} Setor</button>
-      <button class="btn btn-danger" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','tarik')">${ICONS.up} Tarik</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','setor')">+ Setor</button>
+      <button class="btn btn-danger" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','tarik')">Tarik</button>
     </div>
     <div class="section-label">Riwayat transaksi</div>
     <div class="ledger">
@@ -2794,8 +2795,8 @@ function openSetorTarikModal(prefUserId, defaultTipe){
     <div class="form-row"><label>Keterangan (opsional)</label><input type="text" id="tx-ket" placeholder="cth. Setoran bulan Juli"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
-      ${defaultTipe==='setor' ? `<button class="btn btn-primary" onclick="submitTx('setor')">${ICONS.down} Setor</button>` : ''}
-      ${defaultTipe==='tarik' ? `<button class="btn btn-danger" onclick="submitTx('tarik')">${ICONS.up} Tarik</button>` : ''}
+      ${defaultTipe==='setor' ? `<button class="btn btn-primary" onclick="submitTx('setor')">+ Setor</button>` : ''}
+      ${defaultTipe==='tarik' ? `<button class="btn btn-danger" onclick="submitTx('tarik')">Tarik</button>` : ''}
     </div>
   `);
   refreshTxPassbook(initialUser);
@@ -3017,10 +3018,10 @@ function renderAdminPembiayaan(user){
       <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
     </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download}</button>
-      <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">${ICONS.upload}</button>
-      <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
+      <div class="search-box">🔍<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">⬇</button>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">📤</button>
+      <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">+ Ajukan</button>
     </div>
     ${pending.length ? `
     <div class="section-label">Pengajuan Menunggu ACC (${pending.length})</div>
@@ -3165,7 +3166,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
   const progres = totalKew>0 ? ((totalDibayar/totalKew)*100).toFixed(0) : 0;
   const isActive = p.statusPengajuan==='approved' && p.status!=='lunas';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">←</button>Detail Pembiayaan</span></div>
     <div class="card balance-card">
       <div class="label">${nas.nama}</div>
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
@@ -3178,7 +3179,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
     ${p.statusPengajuan==='approved' ? `
     <div class="bar-row"><div class="lbl"><span>Progres pembayaran</span><span>${rupiah(totalDibayar)} / ${rupiah(totalKew)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${progres}%"></div></div></div>
     <div style="display:flex;gap:10px;margin-bottom:16px;margin-top:10px;">
-      ${isActive ? `<button class="btn btn-gold" style="flex:1;" onclick="bayarAngsuranPrompt('${p.id}')">${ICONS.down} Bayar angsuran</button>` : ''}
+      ${isActive ? `<button class="btn btn-gold" style="flex:1;" onclick="bayarAngsuranPrompt('${p.id}')">+ Bayar angsuran</button>` : ''}
       <button class="btn btn-outline" style="flex:1;" onclick="detailPengajuanModal('${p.id}')">Detail pengajuan</button>
     </div>
     <div class="section-label">Riwayat Angsuran</div>
@@ -5485,8 +5486,8 @@ function renderKoorAnggota(user){
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${kelompokName(user.kelompokId)}</span></div>
     <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah</button>
+      <div class="search-box">🔍<input id="search-koor-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal('${user.kelompokId}')">+ Tambah</button>
     </div>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map((u,i)=>`
@@ -5565,8 +5566,8 @@ function renderKoorTabungan(user){
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
     </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
+      <div class="search-box">🔍<input id="search-koor-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">+ Rekening</button>
     </div>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map((u,i)=>`
@@ -5585,7 +5586,7 @@ function renderKoorTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('koor_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('koor_tabungan')">←</button>Buku Tabungan</span></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
@@ -5595,8 +5596,8 @@ function renderKoorTabunganDetail(user, userId){
       ${accs.length ? accs.map(({j,acc})=>`<div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(acc.saldo)}</div><div class="l">${j.nama}<br><span style="font-size:9px;color:var(--muted);">${acc.noRekening||'-'}</span></div></div>`).join('') : `<div class="hint">Belum ada rekening tabungan.</div>`}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','setor')">${ICONS.down} Setor</button>
-      <button class="btn btn-danger" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','tarik')">${ICONS.up} Tarik</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','setor')">+ Setor</button>
+      <button class="btn btn-danger" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','tarik')">Tarik</button>
     </div>
     <div class="section-label">Riwayat transaksi</div>
     <div class="ledger">
@@ -5630,8 +5631,8 @@ const anggota = nasabahOfKelompok(user.kelompokId);
       <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
     </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-koor-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-primary btn-compact" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan</button>
+      <div class="search-box">🔍<input id="search-koor-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-primary btn-compact" onclick="openPengajuanModalKoor()">+ Ajukan</button>
     </div>
     <div class="card" style="padding:6px 18px;">
       ${list.length ? list.map((p,i)=>`
@@ -5834,8 +5835,8 @@ function renderNasBeranda(user){
       ${iconEl}
       <div style="font-size:16px;font-weight:600;color:var(--primary);">${DB.koperasi.nama}</div>
       <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px;">
-        <button class="btn btn-primary btn-block" style="padding:14px;font-size:16px;" onclick="go('nas_tabungan')">${ICONS.book} Buku Tabungan</button>
-        <button class="btn btn-outline btn-block" style="padding:14px;font-size:16px;" onclick="go('nas_pembiayaan')">${ICONS.finance} Pembiayaan</button>
+        <button class="btn btn-primary btn-block" style="padding:14px;font-size:16px;" onclick="go('nas_tabungan')">💰 Buku Tabungan</button>
+        <button class="btn btn-outline btn-block" style="padding:14px;font-size:16px;" onclick="go('nas_pembiayaan')">🤝 Pembiayaan</button>
       </div>
     </div>
   `;
