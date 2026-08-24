@@ -2835,8 +2835,9 @@ function openSetorTarikModal(prefUserId, defaultTipe){
     <div class="form-row"><label>Keterangan (opsional)</label><input type="text" id="tx-ket" placeholder="cth. Setoran bulan Juli"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
-      ${defaultTipe==='setor' ? `<button class="btn btn-primary" onclick="submitTx('setor')">${ICONS.down} Setor</button>` : ''}
-      ${defaultTipe==='tarik' ? `<button class="btn btn-danger" onclick="submitTx('tarik')">${ICONS.up} Tarik</button>` : ''}
+      <span id="tx-select-hint" class="hint" style="display:none;align-self:center;">Pilih rekening dahulu di atas</span>
+      ${defaultTipe==='setor' ? `<button id="tx-submit-btn" class="btn btn-primary" onclick="submitTx('setor')">${ICONS.down} Setor</button>` : ''}
+      ${defaultTipe==='tarik' ? `<button id="tx-submit-btn" class="btn btn-danger" onclick="submitTx('tarik')">${ICONS.up} Tarik</button>` : ''}
     </div>
   `);
   refreshTxPassbook(initialUser);
@@ -2847,21 +2848,34 @@ function refreshTxPassbook(userId){
   if(!accs.length){
     box.innerHTML = `<div class="hint">Anggota ini belum memiliki rekening tabungan. Buka rekening dulu lewat "Tambah Rekening".</div>`;
     document.getElementById('tx-jenis-selected').value = '';
+    updateTxActionsUI();
     return;
   }
+  const multi = accs.length > 1;
   box.innerHTML = accs.map(({j,acc},idx)=>`
-    <div class="tx-acc-row ${idx===0?'selected':''}" data-jenis="${j.id}" onclick="selectTxJenis('${j.id}')">
+    <div class="tx-acc-row ${(!multi && idx===0)?'selected':''}" data-jenis="${j.id}" onclick="selectTxJenis('${j.id}')">
       <div><div style="font-weight:600;font-size:13px;">${j.nama}</div><div class="hint" style="margin-top:2px;">Saldo saat ini</div></div>
       <div class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</div>
     </div>
   `).join('');
-  document.getElementById('tx-jenis-selected').value = accs[0].j.id;
+  document.getElementById('tx-jenis-selected').value = multi ? '' : accs[0].j.id;
+  updateTxActionsUI();
 }
 function selectTxJenis(jenisId){
   document.getElementById('tx-jenis-selected').value = jenisId;
   document.querySelectorAll('.tx-acc-row').forEach(el=>{
     el.classList.toggle('selected', el.dataset.jenis===jenisId);
   });
+  updateTxActionsUI();
+}
+function updateTxActionsUI(){
+  const jenisEl = document.getElementById('tx-jenis-selected');
+  const btn = document.getElementById('tx-submit-btn');
+  const hint = document.getElementById('tx-select-hint');
+  if(!jenisEl || !btn) return;
+  const hasSelection = !!jenisEl.value;
+  btn.style.display = hasSelection ? '' : 'none';
+  if(hint) hint.style.display = hasSelection ? 'none' : '';
 }
 function submitTx(tipe){
   const forcedEl = document.getElementById('tx-user-forced');
