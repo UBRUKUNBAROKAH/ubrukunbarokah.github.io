@@ -350,6 +350,45 @@ input,select{font-family:inherit;}
 .ledger-row .k{font-size:12px;}
 .ledger-row .j{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;font-weight:600;}
 
+/* === Buku Tabungan / Kartu Angsuran bergaya buku rekening asli === */
+.passbook{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;position:relative;}
+.passbook::before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background-color:var(--primary-soft);background-image:radial-gradient(circle,var(--surface) 3px,transparent 3.5px);background-size:16px 22px;background-position:0 9px;z-index:2;}
+.passbook-cover{background:linear-gradient(135deg,var(--primary) 0%, var(--primary-2) 100%);color:#fff;padding:20px 18px 18px 32px;position:relative;overflow:hidden;}
+.passbook-cover::after{content:"";position:absolute;right:-36px;top:-36px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.06);}
+.passbook-cover::before{content:"";position:absolute;right:-10px;bottom:-46px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.045);}
+.passbook-kop{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold-soft);opacity:.85;position:relative;z-index:1;}
+.passbook-title{font-family:'Playfair Display',serif;font-weight:700;font-size:19px;margin-top:3px;position:relative;z-index:1;}
+.passbook-toprow{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
+.passbook-holder{margin-top:14px;font-size:11.5px;color:rgba(255,255,255,.7);position:relative;z-index:1;}
+.passbook-holder b{color:#fff;font-size:15px;display:block;font-family:'Sora',sans-serif;font-weight:700;margin-bottom:1px;}
+.passbook-rekno{margin-top:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:1.8px;font-size:12px;color:var(--gold-soft);padding-top:9px;border-top:1px dashed rgba(255,255,255,.25);position:relative;z-index:1;}
+.passbook-stamp{flex-shrink:0;width:50px;height:50px;border:2px solid rgba(241,227,194,.55);border-radius:50%;display:flex;align-items:center;justify-content:center;transform:rotate(-14deg);font-family:'Playfair Display',serif;font-size:7.5px;text-align:center;line-height:1.2;color:var(--gold-soft);letter-spacing:.4px;opacity:.85;}
+.passbook-saldo-lbl{font-size:10.5px;color:rgba(255,255,255,.65);margin-top:16px;position:relative;z-index:1;}
+.passbook-saldo-amt{font-family:'Sora',sans-serif;font-size:24px;font-weight:800;margin-top:2px;position:relative;z-index:1;}
+.passbook-subaccs{display:flex;overflow-x:auto;padding:10px 14px 10px 32px;background:var(--primary-soft);border-bottom:1px dashed var(--border);}
+.passbook-subacc{flex-shrink:0;padding:2px 14px;border-right:1px dashed var(--border);}
+.passbook-subacc:last-child{border-right:none;}
+.passbook-subacc span{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
+.passbook-subacc b{display:block;font-size:12px;color:var(--primary);margin-top:2px;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.passbook-body{padding:14px 14px 16px 32px;}
+.passbook-table{width:100%;border-collapse:collapse;font-size:11px;}
+.passbook-table thead th{font-size:9px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);font-weight:700;text-align:left;padding:0 6px 7px;border-bottom:2px solid var(--primary);white-space:nowrap;}
+.passbook-table thead th.num{text-align:right;}
+.passbook-table tbody td{padding:8px 6px;border-bottom:1px dashed var(--border);vertical-align:top;}
+.passbook-table tbody tr:last-child td{border-bottom:none;}
+.passbook-table tbody tr:nth-child(even){background:#fafbfa;}
+.passbook-table td.num{text-align:right;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.passbook-table td.debit{color:var(--danger);font-weight:600;}
+.passbook-table td.kredit{color:var(--ok);font-weight:600;}
+.passbook-table td.saldo{font-weight:700;color:var(--primary);}
+.passbook-table .ket{font-size:9.5px;color:var(--muted);margin-top:1px;font-weight:400;}
+.installment-card{margin-bottom:14px;}
+.installment-head{background:linear-gradient(135deg,var(--primary) 0%, var(--primary-2) 100%);color:#fff;padding:16px 16px 16px 32px;display:flex;justify-content:space-between;align-items:flex-start;position:relative;overflow:hidden;}
+.installment-head::after{content:"";position:absolute;right:-28px;top:-28px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.06);}
+.installment-head .lbl{font-size:10.5px;color:rgba(255,255,255,.65);position:relative;z-index:1;}
+.installment-head .amt{font-family:'Sora',sans-serif;font-size:19px;font-weight:800;margin-top:2px;position:relative;z-index:1;}
+.installment-head .sub{font-size:10.5px;color:rgba(255,255,255,.65);margin-top:3px;position:relative;z-index:1;}
+
 /* bottom nav */
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;
@@ -5920,22 +5959,48 @@ function renderNasTabungan(user){
   const tx = txForUser(user.id);
   return `
     <div class="page-title">Buku Tabungan<span class="sub">${user.nama}</span></div>
-    <div class="card balance-card">
-      <div class="label">Total saldo tabungan</div>
-      <div class="amount">${rupiah(totalSaldoUser(user.id))}</div>
-      <div class="rekening">NO. REK ${user.noRekening}</div>
+    <div class="passbook">
+      <div class="passbook-cover">
+        <div class="passbook-toprow">
+          <div>
+            <div class="passbook-kop">Koperasi</div>
+            <div class="passbook-title">UB Rukun Barokah</div>
+          </div>
+          <div class="passbook-stamp">KOPERASI<br>SYARIAH</div>
+        </div>
+        <div class="passbook-holder"><b>${user.nama}</b>Pemegang Rekening</div>
+        <div class="passbook-rekno">NO. REK &nbsp;${user.noRekening||'-'}</div>
+        <div class="passbook-saldo-lbl">Total saldo tabungan</div>
+        <div class="passbook-saldo-amt mono">${rupiah(totalSaldoUser(user.id))}</div>
+      </div>
+      ${accs.length ? `
+        <div class="passbook-subaccs">
+          ${accs.map(({j,acc})=>`<div class="passbook-subacc"><span>${j.nama}</span><b>${rupiah(acc.saldo)}</b></div>`).join('')}
+        </div>
+      ` : ''}
+      <div class="passbook-body">
+        <div class="section-label" style="margin-top:0;">Riwayat transaksi</div>
+        ${tx.length ? `
+        <div style="overflow-x:auto;">
+        <table class="passbook-table">
+          <thead><tr><th>Tgl</th><th>Keterangan</th><th class="num">Debit</th><th class="num">Kredit</th><th class="num">Saldo</th></tr></thead>
+          <tbody>
+            ${tx.map(t=>`
+              <tr>
+                <td>${fmtDateShort(t.tanggal)}</td>
+                <td>${jenisName(t.jenisId)}${t.keterangan ? `<div class="ket">${t.keterangan}</div>` : ''}</td>
+                <td class="num debit">${t.tipe==='tarik' ? rupiah(t.jumlah) : ''}</td>
+                <td class="num kredit">${t.tipe==='setor' ? rupiah(t.jumlah) : ''}</td>
+                <td class="num saldo">${rupiah(t.saldoSetelah)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+        ` : `<div class="empty-state"><div class="ic">📖</div><div class="t">Belum ada transaksi</div><div class="d">Riwayat setoran dan penarikan akan muncul di sini.</div></div>`}
+      </div>
     </div>
-    <div class="stat-grid" style="margin-bottom:14px;">
-      ${accs.length ? accs.map(({j,acc})=>`<div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(acc.saldo)}</div><div class="l">${j.nama}<br><span style="font-size:9px;color:var(--muted);">${acc.noRekening||'-'}</span></div></div>`).join('') : `<div class="hint">Belum ada rekening tabungan yang dibuka.</div>`}
-    </div>
-    <div class="section-label">Riwayat transaksi</div>
-    <div class="ledger">
-      <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
-      ${tx.length ? tx.map((t,i)=>`
-        <div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>
-      `).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada transaksi</div>`}
-    </div>
-    <div class="hint" style="text-align:center;margin-top:14px;">Setoran dan penarikan dilakukan melalui koordinator kelompok Anda.</div>
+    <div class="hint" style="text-align:center;margin-top:6px;">Setoran dan penarikan dilakukan melalui koordinator kelompok Anda.</div>
   `;
 }
 
@@ -5952,23 +6017,38 @@ function renderNasPembiayaan(user){
   }
   return `
     <div class="page-title">Pembiayaan<span class="sub">${user.nama}</span></div>
-    ${list.map(p=>`
-      <div class="card">
-        <div class="flex-between" style="margin-bottom:10px;">
-          <div><div style="font-weight:700;font-size:15px;">${rupiah(p.jumlahPinjaman)}</div><div class="hint">Mulai ${fmtDateShort(p.mulai)}</div></div>
-          <span class="badge ${pembBadge(p).cls}">${pembBadge(p).label}</span>
-        </div>
-        <div class="bar-row"><div class="lbl"><span>Progres angsuran</span><span>${p.tenor-p.sisaAngsuran}/${p.tenor}</span></div><div class="bar-track"><div class="bar-fill" style="width:${((p.tenor-p.sisaAngsuran)/p.tenor*100).toFixed(0)}%"></div></div></div>
-        <div class="hint">Angsuran per bulan: ${rupiah(p.angsuranPerBulan)}</div>
-        ${p.riwayatAngsuran.length ? `
-          <div class="section-label" style="margin-top:14px;">Riwayat angsuran</div>
-          <div class="ledger">
-            <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Angsuran</div><div style="text-align:right;">Jumlah</div></div>
-            ${p.riwayatAngsuran.map((a,i)=>`<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div></div>`).join('')}
+    ${list.map(p=>{
+      let sisaLari = p.jumlahPinjaman + marginNominalOf(p);
+      return `
+      <div class="passbook installment-card">
+        <div class="installment-head">
+          <div>
+            <div class="lbl">Pembiayaan</div>
+            <div class="amt mono">${rupiah(p.jumlahPinjaman)}</div>
+            <div class="sub">Mulai ${fmtDateShort(p.mulai)}</div>
           </div>
-        ` : ''}
+          <span class="badge ${pembBadge(p).cls}" style="position:relative;z-index:1;">${pembBadge(p).label}</span>
+        </div>
+        <div class="passbook-body">
+          <div class="bar-row"><div class="lbl"><span>Progres angsuran</span><span>${p.tenor-p.sisaAngsuran}/${p.tenor}</span></div><div class="bar-track"><div class="bar-fill" style="width:${((p.tenor-p.sisaAngsuran)/p.tenor*100).toFixed(0)}%"></div></div></div>
+          <div class="hint">Angsuran per bulan: ${rupiah(p.angsuranPerBulan)}</div>
+          ${p.riwayatAngsuran.length ? `
+            <div class="section-label">Riwayat angsuran</div>
+            <div style="overflow-x:auto;">
+            <table class="passbook-table">
+              <thead><tr><th>Tgl</th><th>Ke-</th><th class="num">Dibayar</th><th class="num">Sisa Pinjaman</th></tr></thead>
+              <tbody>
+                ${p.riwayatAngsuran.map(a=>{
+                  sisaLari = Math.max(0, sisaLari - a.jumlah);
+                  return `<tr><td>${fmtDateShort(a.tanggal)}</td><td>Ke-${a.angsuranKe}</td><td class="num kredit">${rupiah(a.jumlah)}</td><td class="num saldo">${rupiah(sisaLari)}</td></tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+            </div>
+          ` : ''}
+        </div>
       </div>
-    `).join('')}
+    `;}).join('')}
   `;
 }
 
