@@ -565,11 +565,54 @@ input,select{font-family:inherit;}
   .stat-grid{grid-template-columns:1fr 1fr 1fr;}
 }
 
-/* mobile layout */
+/* mobile layout — nuansa m-banking modern */
 @media (max-width: 768px){
   .bottom-nav{display:flex !important;}
   .sidebar{display:none !important;}
-  .app-body #content{padding-bottom:80px;}
+  .app-body #content{padding-bottom:112px;}
+
+  /* header melengkung ala aplikasi bank, dengan gradasi & bayangan lembut */
+  .app-header{
+    background:linear-gradient(135deg,var(--primary) 0%, var(--primary-2) 55%, #082419 100%);
+    border-radius:0 0 26px 26px;
+    padding:calc(16px + env(safe-area-inset-top)) 18px 24px;
+    box-shadow:0 14px 30px -18px rgba(11,61,46,.6);
+    position:relative;
+  }
+  .app-header .koperasi-icon{width:40px;height:40px;box-shadow:0 4px 10px -4px rgba(0,0,0,.3);}
+  .app-header .titles .name{font-size:15px;}
+  .profile-avatar{box-shadow:0 0 0 2px rgba(255,255,255,.35);}
+  .icon-btn{box-shadow:0 4px 10px -4px rgba(0,0,0,.25);}
+
+  /* kartu lebih membulat & bertumpuk seperti hero card m-banking */
+  .card{border-radius:20px;}
+  .balance-card{border-radius:24px;}
+  .balance-card .amount{font-size:29px;}
+  .passbook, .installment-card{border-radius:22px;}
+
+  /* umpan balik sentuh yang terasa "native" */
+  .card:active, .list-row:active, .grid-menu .item:active, .stat-box:active, .qa-item:active{
+    transform:scale(.97);
+    transition:transform .12s ease;
+  }
+
+  /* bottom-nav mengambang, bukan menempel penuh di tepi layar */
+  .bottom-nav{
+    left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom));
+    border-radius:26px;
+    border-top:none;
+    padding:9px 6px 7px;
+    box-shadow:0 16px 34px -14px rgba(11,61,46,.42), 0 2px 10px rgba(11,61,46,.08);
+  }
+  .bottom-nav button{padding:6px 6px 5px;}
+  .bottom-nav button.active{font-weight:700;}
+  .bottom-nav button.active .ic{
+    background:var(--primary);
+    color:#fff;
+    transform:translateY(-3px) scale(1.08);
+    box-shadow:0 10px 18px -6px rgba(11,61,46,.55);
+  }
+  .bottom-nav .ic{transition:transform .18s cubic-bezier(.34,1.56,.64,1), background .18s, box-shadow .18s;}
 }
 
 /* modal */
