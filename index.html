@@ -35,7 +35,10 @@
   --radius-lg:20px;
   --radius-md:14px;
   --radius-sm:10px;
-  --shadow: 0 8px 24px -12px rgba(11,61,46,.25);
+  --shadow: 0 10px 28px -14px rgba(11,61,46,.28);
+  --shadow-lg: 0 24px 48px -20px rgba(11,61,46,.35);
+  --sidebar-w: 240px;
+  --content-max: 1360px;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -249,9 +252,9 @@ input,select{font-family:inherit;}
   font-size:14.5px;
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
 }
-.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 10px 20px -10px rgba(11,61,46,.55);}
 .btn-primary:active{background:var(--primary-2);}
-.btn-gold{background:var(--gold);color:#fff;}
+.btn-gold{background:var(--gold);color:#fff;box-shadow:0 10px 20px -10px rgba(185,143,51,.55);}
 .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text);}
 .btn-danger{background:var(--danger-soft);color:var(--danger);}
 .btn-block{width:100%;}
@@ -294,11 +297,19 @@ input,select{font-family:inherit;}
 .page-title span.sub{display:block;font-family:'Plus Jakarta Sans';font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;}
 
 .card{background:var(--surface);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--border);}
-.balance-card{background:linear-gradient(135deg,var(--primary) 0%, var(--primary-2) 100%);color:#fff;border:none;position:relative;overflow:hidden;}
+.balance-card{background:linear-gradient(150deg,var(--primary-2) 0%, var(--primary) 55%, #082419 100%);color:#fff;border:none;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);}
 .balance-card::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06);}
-.balance-card .label{font-size:12px;color:rgba(255,255,255,.75);}
-.balance-card .amount{font-family:'Sora',sans-serif;font-size:26px;font-weight:700;margin-top:6px;}
-.balance-card .rekening{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--gold-soft);margin-top:10px;letter-spacing:.5px;}
+.balance-card::before{
+  content:"";position:absolute;right:0;top:0;bottom:0;width:120px;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(58deg, rgba(241,227,194,.16) 0px, rgba(241,227,194,.16) 1px, transparent 1px, transparent 16px),
+    repeating-linear-gradient(-58deg, rgba(241,227,194,.09) 0px, rgba(241,227,194,.09) 1px, transparent 1px, transparent 16px);
+  -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 100%);
+  mask-image:linear-gradient(to left, #000 0%, transparent 100%);
+}
+.balance-card .label{font-size:12px;color:rgba(255,255,255,.75);position:relative;z-index:1;}
+.balance-card .amount{font-family:'Sora',sans-serif;font-size:27px;font-weight:700;margin-top:6px;letter-spacing:-.01em;position:relative;z-index:1;}
+.balance-card .rekening{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--gold-soft);margin-top:10px;letter-spacing:.5px;position:relative;z-index:1;}
 
 /* ============ QUICK ACTIONS (Setor / Tarik / Bayar Angsuran, dll) ============ */
 .qa-row{
@@ -396,9 +407,14 @@ input,select{font-family:inherit;}
 /* === Buku Tabungan / Kartu Angsuran bergaya buku rekening asli === */
 .passbook{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;position:relative;}
 .passbook::before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background-color:var(--primary-soft);background-image:radial-gradient(circle,var(--surface) 3px,transparent 3.5px);background-size:16px 22px;background-position:0 9px;z-index:2;}
-.passbook-cover{background:linear-gradient(135deg,var(--primary) 0%, var(--primary-2) 100%);color:#fff;padding:20px 18px 18px 32px;position:relative;overflow:hidden;}
+.passbook-cover{background:linear-gradient(150deg,var(--primary-2) 0%, var(--primary) 55%, #082419 100%);color:#fff;padding:20px 18px 18px 32px;position:relative;overflow:hidden;}
 .passbook-cover::after{content:"";position:absolute;right:-36px;top:-36px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.06);}
-.passbook-cover::before{content:"";position:absolute;right:-10px;bottom:-46px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.045);}
+.passbook-cover::before{
+  content:"";position:absolute;right:0;top:0;bottom:0;width:110px;pointer-events:none;
+  background-image:repeating-linear-gradient(58deg, rgba(241,227,194,.14) 0px, rgba(241,227,194,.14) 1px, transparent 1px, transparent 16px);
+  -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 100%);
+  mask-image:linear-gradient(to left, #000 0%, transparent 100%);
+}
 .passbook-kop{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold-soft);opacity:.85;position:relative;z-index:1;}
 .passbook-title{font-family:'Playfair Display',serif;font-weight:700;font-size:19px;margin-top:3px;position:relative;z-index:1;}
 .passbook-toprow{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
@@ -435,47 +451,64 @@ input,select{font-family:inherit;}
 /* bottom nav */
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;
-  background:var(--surface);
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
   border-top:1px solid var(--border);
+  border-radius:22px 22px 0 0;
   display:flex;
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
-  padding:8px 6px calc(8px + env(safe-area-inset-bottom));
-  box-shadow:0 -6px 18px -10px rgba(0,0,0,.15);
+  padding:9px 6px calc(9px + env(safe-area-inset-bottom));
+  box-shadow:0 -12px 28px -14px rgba(11,61,46,.28);
 }
-.bottom-nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 6px;color:var(--muted);font-size:10px;font-weight:600;border-radius:10px;white-space:nowrap;min-width:56px;}
+.bottom-nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 6px;color:var(--muted);font-size:10px;font-weight:600;border-radius:12px;white-space:nowrap;min-width:56px;transition:color .15s;}
 .bottom-nav button.active{color:var(--primary);}
 .bottom-nav button.active .ic{background:var(--primary-soft);}
-.bottom-nav .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.bottom-nav .ic{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
 
 /* sidebar for desktop */
 .sidebar{
   display:none;
-  width:220px;
+  width:var(--sidebar-w);
   background:var(--surface);
   border-right:1px solid var(--border);
-  padding:18px 12px;
+  padding:22px 14px;
   flex-shrink:0;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
+.sidebar::before{
+  content:"MENU";
+  display:block;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:1.4px;
+  color:var(--muted);
+  padding:0 12px 12px;
 }
 .sidebar button{
   width:100%;
   background:none;
   border:none;
+  border-left:3px solid transparent;
   display:flex;
   align-items:center;
-  gap:10px;
-  padding:10px 12px;
+  gap:11px;
+  padding:11px 12px 11px 10px;
   color:var(--muted);
   font-size:13px;
   font-weight:500;
-  border-radius:10px;
-  margin-bottom:4px;
+  border-radius:0 10px 10px 0;
+  margin-bottom:3px;
   cursor:pointer;
-  transition:background .15s, color .15s;
+  transition:background .15s, color .15s, border-color .15s;
 }
 .sidebar button:hover{background:var(--primary-soft);color:var(--primary);}
-.sidebar button.active{background:var(--primary-soft);color:var(--primary);font-weight:600;}
-.sidebar button .ic{width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+.sidebar button.active{background:var(--primary-soft);color:var(--primary);font-weight:700;border-left-color:var(--gold);}
+.sidebar button .ic{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
 .app-body{
   display:flex;
@@ -487,15 +520,44 @@ input,select{font-family:inherit;}
   padding-bottom:80px;
 }
 
-/* desktop layout */
+/* desktop layout: genuine dashboard, not a stretched phone screen */
 @media (min-width: 769px){
   .bottom-nav{display:none !important;}
   .sidebar{display:block;}
-  .app-header{padding:12px 24px;}
-  .app-body #content{padding:24px 32px 24px 24px;}
-  .page-title{font-size:22px;}
+  .app-header{padding:14px 28px;}
+  .app-body #content{
+    padding:28px 32px 40px;
+    max-width:var(--content-max);
+    margin:0 auto;
+    width:100%;
+  }
+  .page-title{font-size:23px; column-span:all; -webkit-column-span:all;}
   .page-title .sub{font-size:13px;}
   .stat-grid{grid-template-columns:1fr 1fr 1fr;}
+
+  /* multi-column dashboard flow: cards arrange themselves like panels
+     instead of one long mobile-style stack */
+  .app-body #content{
+    column-width:420px;
+    column-gap:22px;
+    column-fill:balance;
+  }
+  .card, .qa-row, .passbook, .installment-card, .ledger, .empty-state{
+    break-inside:avoid;
+    -webkit-column-break-inside:avoid;
+    display:inline-block;
+    width:100%;
+    vertical-align:top;
+  }
+  .stat-grid, .grid-menu, table{
+    break-inside:avoid;
+    -webkit-column-break-inside:avoid;
+  }
+}
+
+@media (min-width: 1180px){
+  .app-body #content{column-width:460px;}
+  .stat-grid{grid-template-columns:repeat(4,1fr);}
 }
 
 /* tablet: tetap 3 kolom biar hemat tempat */
