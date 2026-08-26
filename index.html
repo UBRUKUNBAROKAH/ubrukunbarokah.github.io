@@ -430,7 +430,7 @@ input,select{font-family:inherit;}
 .bottom-nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 6px;color:var(--muted);font-size:10px;font-weight:600;border-radius:10px;white-space:nowrap;min-width:56px;transition:color .12s;}
 .bottom-nav button.active{color:var(--primary);}
 .bottom-nav button.active .ic{background:var(--bg);box-shadow:var(--shadow-neu-in);}
-.bottom-nav .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:box-shadow .15s;}
+.bottom-nav .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:box-shadow .15s;font-size:18px;}
 
 /* sidebar for desktop */
 .sidebar{
@@ -459,7 +459,7 @@ input,select{font-family:inherit;}
 }
 .sidebar button:hover{background:var(--primary-soft);color:var(--primary);}
 .sidebar button.active{background:var(--primary-soft);color:var(--primary);font-weight:600;}
-.sidebar button .ic{width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+.sidebar button .ic{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:17px;}
 
 .app-body{
   display:flex;
@@ -751,25 +751,18 @@ const ICONS = {
   coin:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 15.2c0 1 .9 1.8 2.4 1.8 1.6 0 2.6-.8 2.6-1.9 0-2.8-5-1.4-5-4.1 0-1.1 1-1.9 2.5-1.9 1.4 0 2.4.7 2.4 1.7M12 6.4v11.2"/></svg>'
 };
 
-/* ---- Ikon menu navigasi: badge kotak bulat berwarna + glyph putih ---- */
-function navIconSvg(color, inner){
-  return '<svg width="20" height="20" viewBox="0 0 24 24">'
-    + '<rect x="0" y="0" width="24" height="24" rx="7" fill="'+color+'"/>'
-    + '<g transform="translate(12,12) scale(0.72) translate(-12,-12)" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">'
-    + inner
-    + '</g></svg>';
-}
+/* ---- Ikon menu navigasi: emoji sederhana (mengikuti gaya koperasi-rukun-barokah) ---- */
 const NAV_ICONS = {
-  home: navIconSvg('#2F9E6E', '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'),
-  users: navIconSvg('#3B82C4', '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.6"/><path d="M15 14.3c2.7.4 4.5 2.3 4.5 5.7"/>'),
-  wallet: navIconSvg('#D9A441', '<rect x="2.5" y="6" width="19" height="13" rx="2.4"/><path d="M2.5 10h19"/><circle cx="17" cy="14" r="1.3"/>'),
-  finance: navIconSvg('#8B6FE8', '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
-  coin: navIconSvg('#E8873F', '<circle cx="12" cy="12" r="9"/><path d="M9.5 15.2c0 1 .9 1.8 2.4 1.8 1.6 0 2.6-.8 2.6-1.9 0-2.8-5-1.4-5-4.1 0-1.1 1-1.9 2.5-1.9 1.4 0 2.4.7 2.4 1.7M12 6.4v11.2"/>'),
-  report: navIconSvg('#26A69A', '<path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v6h6M9 15h6M9 11h3"/>'),
-  user_cog: navIconSvg('#5C6BC0', '<circle cx="9" cy="7" r="3.4"/><path d="M2.5 20c0-3.7 2.9-6.2 6.5-6.2"/><circle cx="18" cy="16.5" r="2.6"/><path d="M18 12.5v1.2M18 19.3v1.2M21.3 14.7l-1 .6M15.7 17.7l-1 .6M21.3 18.3l-1-.6M15.7 15.3l-1-.6"/>'),
-  settings: navIconSvg('#78859A', '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5c.1-.5.1-1 0-1.5l1.6-1.3-2-3.4-1.9.5c-.4-.3-.8-.6-1.3-.8L15.4 5h-4l-.4 2c-.5.2-.9.5-1.3.8l-1.9-.5-2 3.4L7.4 12c-.1.5-.1 1 0 1.5l-1.6 1.3 2 3.4 1.9-.5c.4.3.8.6 1.3.8l.4 2h4l.4-2c.5-.2.9-.5 1.3-.8l1.9.5 2-3.4Z"/>'),
-  log: navIconSvg('#C0504D', '<path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9.2"/>'),
-  percent: navIconSvg('#4CAF7D', '<circle cx="7" cy="7" r="2.3"/><circle cx="17" cy="17" r="2.3"/><path d="M18 6L6 18"/>')
+  home: '🏠',
+  users: '👥',
+  wallet: '💰',
+  finance: '🤝',
+  coin: '📈',
+  report: '📊',
+  user_cog: '🧑\u200d💼',
+  settings: '⚙️',
+  log: '🗒️',
+  percent: '💹'
 };
 
 /* =========================================================
@@ -1576,7 +1569,7 @@ function renderNav(){
     const ic = NAV_ICONS[it.ic] || ICONS[it.ic] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>';
     return '<button class="'+(active?'active':'')+'" onclick="go(\''+it.p+'\')"><span class="ic">'+ic+'</span>'+it.label+'</button>';
   };
-  const moreIcon = navIconSvg('#8D96A6', '<circle cx="5" cy="12" r="1.6" fill="#fff" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="#fff" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="#fff" stroke="none"/>');
+  const moreIcon = '⋯';
   const moreActive = moreItems.some(it=>currentPage===it.p);
   const moreBtn = '<button class="'+(moreActive?'active':'')+'" onclick="openMoreMenu()"><span class="ic">'+moreIcon+'</span>Lainnya</button>';
 
@@ -1595,7 +1588,7 @@ function openMoreMenu(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       ${items.map(m=>`
         <div class="tx-acc-row" style="cursor:pointer;justify-content:center;padding:16px 8px;flex-direction:column;gap:6px;text-align:center;" onclick="closeModal();go('${m.p}')">
-          <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;margin:0 auto;">${NAV_ICONS[m.ic]||ICONS[m.ic]}</span>
+          <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:24px;">${NAV_ICONS[m.ic]||ICONS[m.ic]}</span>
           <span style="font-size:12px;font-weight:600;">${m.label}</span>
         </div>
       `).join('')}
