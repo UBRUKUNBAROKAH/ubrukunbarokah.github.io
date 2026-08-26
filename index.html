@@ -4420,15 +4420,6 @@ function renderAdminLaporanRingkas(user){
   html += '<div class="stat-box'+(data.overdue.length?' stat-danger':'')+'"><div class="n mono">'+data.overdue.length+'</div><div class="l">Anggota telat bayar saat ini</div></div>';
   html += '<div class="stat-box'+(data.totalTertunggak?' stat-danger':'')+'"><div class="n mono">'+fmt(data.totalTertunggak)+'</div><div class="l">Total tunggakan angsuran</div></div>';
   html += '</div>';
-  if(data.overdue.length){
-    html += '<div class="section-label" style="color:var(--danger);">Daftar Angsuran Macet</div>';
-    html += '<div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);margin-bottom:16px;">';
-    html += data.overdue.map(function(o){
-      const u = userById(o.p.userId);
-      return '<div class="list-row"><div class="info"><div class="title">'+(u?u.nama:'-')+'</div><div class="sub">Telat '+o.telat+' angsuran &middot; '+rupiah(o.p.angsuranPerBulan)+'/bln</div></div><span class="amt mono" style="color:var(--danger);">'+rupiah(o.telat*(o.p.angsuranPerBulan||0))+'</span></div>';
-    }).join('');
-    html += '</div>';
-  }
 
   if(!data.byYear.length){
     html += '<div class="hint" style="padding:10px;text-align:center;">Belum ada angsuran tercatat</div>';
@@ -4446,38 +4437,45 @@ function renderAdminLaporanRingkas(user){
   html += '</div></div>';
 
   const row = (label, val, bold) => '<div class="list-row" style="'+(bold?'font-weight:800;background:var(--primary-soft);':'')+'"><div class="info"><div class="title" style="'+(bold?'':'font-weight:400;')+'">'+label+'</div></div><div class="amt mono">'+fmt(val)+'</div></div>';
-  html += '<div class="card" style="padding:0 18px;">';
   html += '<div class="section-label" style="margin-top:8px;">RINGKASAN TAHUN '+yd.tahun+'</div>';
-  html += row('Angsuran Masuk', yd.total.angsuranMasuk||0, true);
-  bebanPools.forEach(p=>html += row(poolLabel(p), yd.bebanPools[p.id]||0, false));
-  html += row('SHU Saham', yd.total.shuSaham||0, false);
+  html += '<div class="card" style="background:linear-gradient(135deg,var(--primary) 0%, var(--primary-2) 100%);color:#fff;border:none;margin-bottom:10px;">';
+  html += '<div style="font-size:11.5px;color:rgba(255,255,255,.75);">Angsuran Masuk</div>';
+  html += '<div class="mono" style="font-family:\'Sora\',sans-serif;font-size:22px;font-weight:700;margin-top:4px;">'+fmt(yd.total.angsuranMasuk||0)+'</div>';
+  html += '</div>';
+  html += '<div class="stat-grid cols-4" style="margin-bottom:16px;">';
+  bebanPools.forEach(p=>{
+    html += '<div class="stat-box stat-primary"><div class="n mono">'+fmt(yd.bebanPools[p.id]||0)+'</div><div class="l">'+poolLabel(p)+'</div></div>';
+  });
+  html += '<div class="stat-box stat-gold"><div class="n mono">'+fmt(yd.total.shuSaham||0)+'</div><div class="l">SHU Saham</div></div>';
   html += '</div>';
 
-  html += '<div class="section-label" style="margin-top:16px;">Rincian per Bulan &mdash; '+yd.tahun+'</div>';
-  html += '<div class="card" style="padding:0;overflow-x:auto;">';
-  html += '<table style="border-collapse:collapse;font-size:12px;white-space:nowrap;">';
-  html += '<thead><tr style="background:var(--primary-soft);">';
-  html += '<th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);position:sticky;left:0;background:var(--primary-soft);">Bln</th>';
-  html += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">Angsuran Masuk</th>';
-  bebanPools.forEach(p=>{ html += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">'+poolLabel(p)+'</th>'; });
-  html += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">SHU Saham</th>';
-  html += '</tr></thead><tbody>';
-  yd.rows.forEach((r,i)=>{
-    const bg = i%2===0?'#f9f9f9':'#fff';
-    html += '<tr'+(i%2===0?' style="background:#f9f9f9;"':'')+'>';
-    html += '<td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border);font-weight:600;position:sticky;left:0;background:'+bg+';">'+LAP_MODAL_BULAN[r.bulan-1]+'</td>';
-    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt(r.angsuranMasuk||0)+'</td>';
-    bebanPools.forEach(p=>{ html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)+'</td>'; });
-    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)+'</td>';
-    html += '</tr>';
+  html += '<div class="section-label" style="margin-top:6px;">Rincian per Bulan &mdash; '+yd.tahun+'</div>';
+  yd.rows.forEach(r=>{
+    html += '<div class="card" style="padding:14px 16px;margin-bottom:10px;">';
+    html += '<div class="flex-between" style="margin-bottom:8px;">';
+    html += '<div style="font-weight:700;font-size:13.5px;">'+LAP_MODAL_BULAN[r.bulan-1]+' '+yd.tahun+'</div>';
+    html += '<div class="mono" style="font-weight:700;color:var(--primary);font-size:13.5px;">'+fmt(r.angsuranMasuk||0)+'</div>';
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;">';
+    bebanPools.forEach(p=>{
+      html += '<div><div style="font-size:10.5px;color:var(--muted);">'+poolLabel(p)+'</div><div class="mono" style="font-size:12.5px;font-weight:600;">'+fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)+'</div></div>';
+    });
+    html += '<div><div style="font-size:10.5px;color:var(--muted);">SHU Saham</div><div class="mono" style="font-size:12.5px;font-weight:600;">'+fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)+'</div></div>';
+    html += '</div>';
+    html += '</div>';
   });
-  html += '<tr style="background:var(--primary-soft);font-weight:700;">';
-  html += '<td style="padding:7px 10px;text-align:center;border-top:2px solid var(--border);position:sticky;left:0;background:var(--primary-soft);">Total</td>';
-  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.total.angsuranMasuk||0)+'</td>';
-  bebanPools.forEach(p=>{ html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.bebanPools[p.id]||0)+'</td>'; });
-  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.total.shuSaham||0)+'</td>';
-  html += '</tr>';
-  html += '</tbody></table></div>';
+  html += '<div class="card" style="padding:14px 16px;background:var(--primary-soft);border:none;margin-bottom:10px;">';
+  html += '<div class="flex-between" style="margin-bottom:8px;">';
+  html += '<div style="font-weight:800;font-size:13.5px;">Total '+yd.tahun+'</div>';
+  html += '<div class="mono" style="font-weight:800;color:var(--primary);font-size:13.5px;">'+fmt(yd.total.angsuranMasuk||0)+'</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;">';
+  bebanPools.forEach(p=>{
+    html += '<div><div style="font-size:10.5px;color:var(--muted);">'+poolLabel(p)+'</div><div class="mono" style="font-size:12.5px;font-weight:700;">'+fmt(yd.bebanPools[p.id]||0)+'</div></div>';
+  });
+  html += '<div><div style="font-size:10.5px;color:var(--muted);">SHU Saham</div><div class="mono" style="font-size:12.5px;font-weight:700;">'+fmt(yd.total.shuSaham||0)+'</div></div>';
+  html += '</div>';
+  html += '</div>';
   html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.6;">'+LAP_RINGKAS_CATATAN+'</div>';
   return html;
 }
