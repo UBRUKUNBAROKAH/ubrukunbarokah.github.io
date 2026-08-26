@@ -2795,7 +2795,7 @@ function renderAdminTabungan(user){
     </div>` : ''}
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download}</button>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download} Export</button>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
@@ -3098,7 +3098,7 @@ function renderAdminPembiayaan(user){
     </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download}</button>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download} Export</button>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
     </div>
@@ -5145,7 +5145,7 @@ function renderAdminSaham(user){
         <option value="">Semua kelompok</option>
         ${kelompokOptions}
       </select>
-      <button class="btn btn-outline btn-compact" onclick="openExportModal('saham')" title="Export">${ICONS.download}</button>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('saham')" title="Export">${ICONS.download} Export</button>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('saham')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="bukaPemilikSahamBaru()">${ICONS.plus} Tambah</button>
     </div>
