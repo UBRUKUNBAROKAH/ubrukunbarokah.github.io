@@ -395,7 +395,7 @@ input,select{font-family:inherit;}
 .search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;min-width:0;}
 .toolbar-row{display:flex;gap:8px;align-items:center;margin-bottom:0;}
 .toolbar-row .search-box{margin-bottom:0;}
-.toolbar-sticky{position:sticky;top:0;z-index:6;background:var(--bg);padding:10px 0;margin:-10px 0 4px;}
+.toolbar-sticky{position:sticky;top:var(--header-h, 76px);z-index:6;background:var(--bg);padding:10px 0;margin:-10px 0 4px;}
 .btn-compact{padding:9px 14px;font-size:12.5px;white-space:nowrap;flex-shrink:0;border-radius:10px;}
 
 .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
@@ -6356,6 +6356,20 @@ if ('serviceWorker' in navigator) {
 /* =========================================================
    INIT
 ========================================================= */
+/* keep --header-h in sync with the real rendered height of .app-header,
+   so sticky elements below it (search box, toolbar) stick right under it
+   instead of at top:0 (which would hide behind the header). */
+(function(){
+  const headerEl = document.querySelector('.app-header');
+  if(!headerEl) return;
+  function syncHeaderHeight(){
+    document.documentElement.style.setProperty('--header-h', headerEl.offsetHeight + 'px');
+  }
+  syncHeaderHeight();
+  window.addEventListener('resize', syncHeaderHeight);
+  new ResizeObserver(syncHeaderHeight).observe(headerEl);
+})();
+
 const loginYearEl = document.getElementById('login-year');
 if(loginYearEl) loginYearEl.textContent = new Date().getFullYear();
 ['login-username','login-password'].forEach(id=>{
