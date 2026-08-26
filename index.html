@@ -554,6 +554,9 @@ input,select{font-family:inherit;}
 .stat-box.stat-gold{border-left-color:var(--gold);}
 .stat-box.stat-gold .ic-badge{background:var(--gold-soft);color:var(--gold);}
 .stat-box.stat-gold .n{color:var(--text);}
+.stat-box.stat-danger{border-left-color:var(--danger);}
+.stat-box.stat-danger .ic-badge{background:var(--danger-soft);color:var(--danger);}
+.stat-box.stat-danger .n{color:var(--danger);}
 .stat-box.stat-info .n{color:var(--text);}
 
 .avatar{width:38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
@@ -770,7 +773,8 @@ const NAV_ICONS = {
   user_cog: '🧑\u200d💼',
   settings: '⚙️',
   log: '🗒️',
-  percent: '💹'
+  percent: '💹',
+  ringkas: '🧾'
 };
 
 /* =========================================================
@@ -783,6 +787,26 @@ function nowISO(){ return new Date().toISOString(); }
 function rupiah(n){ n = Math.round(Number(n)||0); return 'Rp' + n.toLocaleString('id-ID'); }
 // Parse IDR: hapus titik (pemisah ribuan), ganti koma jadi titik (desimal)
 function parseIdr(v){ if(typeof v==='number') return v; if(!v) return 0; return parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0; }
+// Daftar pembiayaan berjalan yang telat bayar (kondisi saat ini/real-time).
+// Dipakai bersama oleh dashboard ("Perlu Tindakan") dan Laporan Ringkas,
+// supaya definisi "macet" selalu konsisten di seluruh aplikasi.
+function computeOverdueLoans(){
+  const overdue = [];
+  const skrg = new Date();
+  DB.pembiayaan.forEach(function(p){
+    if(p.status!=='berjalan'||p.statusPengajuan!=='approved') return;
+    const mulai = new Date(p.mulai);
+    var blnBerjalan = (skrg.getFullYear()-mulai.getFullYear())*12 + (skrg.getMonth()-mulai.getMonth());
+    var hrsDibayar = Math.min(blnBerjalan, p.tenor);
+    var sdhDibayar = p.tenor - p.sisaAngsuran;
+    if(sdhDibayar < hrsDibayar){
+      var tglJatuh = new Date(p.mulai);
+      tglJatuh.setMonth(tglJatuh.getMonth() + sdhDibayar + 1);
+      overdue.push({p, telat:hrsDibayar-sdhDibayar, tglJatuh});
+    }
+  });
+  return overdue;
+}
 function marginNominalOf(p){
   if(p.marginNominal) return p.marginNominal;
   if(p.marginPersen) return Math.round(p.jumlahPinjaman * p.marginPersen / 100);
@@ -1536,6 +1560,7 @@ const ADMIN_MORE_ITEMS = [
   {p:'admin_usermgmt', ic:'user_cog', label:'User Management'},
   {p:'admin_shu', ic:'percent', label:'SHU'},
   {p:'admin_laporan', ic:'report', label:'Laporan'},
+  {p:'admin_laporan_ringkas', ic:'ringkas', label:'Laporan Ringkas'},
   {p:'admin_pengaturan', ic:'settings', label:'Pengaturan'},
   {p:'admin_log', ic:'log', label:'Log Transaksi'}
 ];
@@ -2091,6 +2116,7 @@ function renderContent(){
     admin_saham: renderAdminSaham,
     admin_usermgmt: renderAdminUserMgmt,
     admin_laporan: renderAdminLaporan,
+    admin_laporan_ringkas: renderAdminLaporanRingkas,
     admin_shu: renderAdminSHU,
     admin_pengaturan: renderAdminPengaturan,
     admin_log: renderAdminLog,
@@ -2153,22 +2179,7 @@ function renderAdminBeranda(user){
         </div>
       `).join('')}
     </div>` : '';
-  const overdue = [];
-  (function(){
-    const skrg = new Date();
-    DB.pembiayaan.forEach(function(p){
-      if(p.status!=='berjalan'||p.statusPengajuan!=='approved') return;
-      const mulai = new Date(p.mulai);
-      var blnBerjalan = (skrg.getFullYear()-mulai.getFullYear())*12 + (skrg.getMonth()-mulai.getMonth());
-      var hrsDibayar = Math.min(blnBerjalan, p.tenor);
-      var sdhDibayar = p.tenor - p.sisaAngsuran;
-      if(sdhDibayar < hrsDibayar){
-        var tglJatuh = new Date(p.mulai);
-        tglJatuh.setMonth(tglJatuh.getMonth() + sdhDibayar + 1);
-        overdue.push({p, telat:hrsDibayar-sdhDibayar, tglJatuh});
-      }
-    });
-  })();
+  const overdue = computeOverdueLoans();
   const overdueHtml = overdue.length ? `
     <div class="section-label" style="color:var(--danger);">Peringatan Pembiayaan Terlambat (${overdue.length})</div>
     <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);">
@@ -4362,6 +4373,201 @@ function exportLapLabaRugiXLS(tahun){
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laba Rugi '+tahun);
   XLSX.writeFile(wb, sanitizeFileName('Laba Rugi '+tahun) + '.xlsx');
+  toast('File Excel berhasil diunduh');
+}
+/* =========================================================
+   LAPORAN RINGKAS (menu terpisah)
+   Angsuran Masuk, Angsuran Macet (real-time, sama seperti dashboard),
+   SHU Tabungan, SHU Saham, dan tiap pool ATURAN KEUANGAN, per bulan/tahun.
+========================================================= */
+function computeLapRingkasData(){
+  const base = computeLapLabaRugiData();
+  const setoran = DB.setoran || [];
+  const angsurans = setoran.filter(s=>s.jenis==='angsuran');
+  // total angsuran masuk (nominal penuh yg dibayar, bukan cuma bagian margin) per tahun+bulan
+  const masukMap = {};
+  angsurans.forEach(a=>{
+    const d = new Date(a.tanggal);
+    if(isNaN(d)) return;
+    const y = d.getFullYear(), m = d.getMonth();
+    if(!masukMap[y]) masukMap[y] = {};
+    masukMap[y][m] = (masukMap[y][m]||0) + (a.jumlah||0);
+  });
+  base.byYear.forEach(yd=>{
+    let totalMasuk = 0;
+    yd.rows.forEach(r=>{
+      const masuk = (masukMap[yd.tahun] && masukMap[yd.tahun][r.bulan-1]) || 0;
+      r.angsuranMasuk = masuk;
+      totalMasuk += masuk;
+    });
+    yd.total.angsuranMasuk = totalMasuk;
+  });
+  const overdue = computeOverdueLoans();
+  const totalTertunggak = overdue.reduce((s,o)=>s+o.telat*(o.p.angsuranPerBulan||0),0);
+  return { pools: base.pools, byYear: base.byYear, overdue, totalTertunggak };
+}
+const LAP_RINGKAS_CATATAN = 'Angsuran Masuk = total nominal angsuran (pokok + margin) yang diterima pada bulan tsb. Angsuran Macet = kondisi real-time saat laporan dibuka (bukan histori per bulan), memakai definisi yang sama dengan daftar "Telat Bayar" di Beranda. SHU Tabungan, SHU Saham, dan pool lain dihitung dari alokasi persentase margin angsuran yang diterima, sesuai pengaturan di menu Pengaturan &rarr; Aturan Keuangan.';
+function renderAdminLaporanRingkas(user){
+  const data = computeLapRingkasData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const fmt = v => rupiah(v);
+  let html = '';
+  html += '<div class="page-title">Laporan Ringkas<span class="sub">Angsuran & bagi hasil, per bulan/tahun</span></div>';
+
+  html += '<div class="stat-grid" style="margin-bottom:14px;">';
+  html += '<div class="stat-box'+(data.overdue.length?' stat-danger':'')+'"><div class="n mono">'+data.overdue.length+'</div><div class="l">Anggota telat bayar saat ini</div></div>';
+  html += '<div class="stat-box'+(data.totalTertunggak?' stat-danger':'')+'"><div class="n mono">'+fmt(data.totalTertunggak)+'</div><div class="l">Total tunggakan angsuran</div></div>';
+  html += '</div>';
+  if(data.overdue.length){
+    html += '<div class="section-label" style="color:var(--danger);">Daftar Angsuran Macet</div>';
+    html += '<div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);margin-bottom:16px;">';
+    html += data.overdue.map(function(o){
+      const u = userById(o.p.userId);
+      return '<div class="list-row"><div class="info"><div class="title">'+(u?u.nama:'-')+'</div><div class="sub">Telat '+o.telat+' angsuran &middot; '+rupiah(o.p.angsuranPerBulan)+'/bln</div></div><span class="amt mono" style="color:var(--danger);">'+rupiah(o.telat*(o.p.angsuranPerBulan||0))+'</span></div>';
+    }).join('');
+    html += '</div>';
+  }
+
+  if(!data.byYear.length){
+    html += '<div class="hint" style="padding:10px;text-align:center;">Belum ada angsuran tercatat</div>';
+    html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.6;">'+LAP_RINGKAS_CATATAN+'</div>';
+    return html;
+  }
+  const tahun = currentSubState.lapRingkasTahun || data.byYear[data.byYear.length-1].tahun;
+  const yd = data.byYear.find(x=>x.tahun===tahun) || data.byYear[data.byYear.length-1];
+
+  html += '<div class="flex-between" style="margin:14px 0 10px;flex-wrap:wrap;gap:6px;">';
+  html += '<div style="width:150px;flex-shrink:0;"><select onchange="setLapRingkasTahun(this.value)">'+data.byYear.slice().reverse().map(x=>'<option value="'+x.tahun+'" '+(x.tahun===yd.tahun?'selected':'')+'>Tahun '+x.tahun+'</option>').join('')+'</select></div>';
+  html += '<div style="display:flex;gap:6px;">';
+  html += '<button class="btn btn-outline btn-sm" onclick="cetakLapRingkas(\''+yd.tahun+'\')">'+(ICONS.pdf||'📄')+' Unduh PDF</button>';
+  html += '<button class="btn btn-outline btn-sm" onclick="exportLapRingkasXLS(\''+yd.tahun+'\')">'+(ICONS.xls||'')+' Excel</button>';
+  html += '</div></div>';
+
+  const row = (label, val, bold) => '<div class="list-row" style="'+(bold?'font-weight:800;background:var(--primary-soft);':'')+'"><div class="info"><div class="title" style="'+(bold?'':'font-weight:400;')+'">'+label+'</div></div><div class="amt mono">'+fmt(val)+'</div></div>';
+  html += '<div class="card" style="padding:0 18px;">';
+  html += '<div class="section-label" style="margin-top:8px;">RINGKASAN TAHUN '+yd.tahun+'</div>';
+  html += row('Angsuran Masuk', yd.total.angsuranMasuk||0, true);
+  bebanPools.forEach(p=>html += row(poolLabel(p), yd.bebanPools[p.id]||0, false));
+  html += row('SHU Saham', yd.total.shuSaham||0, false);
+  html += '</div>';
+
+  html += '<div class="section-label" style="margin-top:16px;">Rincian per Bulan &mdash; '+yd.tahun+'</div>';
+  html += '<div class="card" style="padding:0;overflow-x:auto;">';
+  html += '<table style="border-collapse:collapse;font-size:12px;white-space:nowrap;">';
+  html += '<thead><tr style="background:var(--primary-soft);">';
+  html += '<th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);position:sticky;left:0;background:var(--primary-soft);">Bln</th>';
+  html += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">Angsuran Masuk</th>';
+  bebanPools.forEach(p=>{ html += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">'+poolLabel(p)+'</th>'; });
+  html += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);">SHU Saham</th>';
+  html += '</tr></thead><tbody>';
+  yd.rows.forEach((r,i)=>{
+    const bg = i%2===0?'#f9f9f9':'#fff';
+    html += '<tr'+(i%2===0?' style="background:#f9f9f9;"':'')+'>';
+    html += '<td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border);font-weight:600;position:sticky;left:0;background:'+bg+';">'+LAP_MODAL_BULAN[r.bulan-1]+'</td>';
+    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt(r.angsuranMasuk||0)+'</td>';
+    bebanPools.forEach(p=>{ html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)+'</td>'; });
+    html += '<td class="mono" style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);">'+fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)+'</td>';
+    html += '</tr>';
+  });
+  html += '<tr style="background:var(--primary-soft);font-weight:700;">';
+  html += '<td style="padding:7px 10px;text-align:center;border-top:2px solid var(--border);position:sticky;left:0;background:var(--primary-soft);">Total</td>';
+  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.total.angsuranMasuk||0)+'</td>';
+  bebanPools.forEach(p=>{ html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.bebanPools[p.id]||0)+'</td>'; });
+  html += '<td class="mono" style="padding:7px 10px;text-align:right;border-top:2px solid var(--border);">'+fmt(yd.total.shuSaham||0)+'</td>';
+  html += '</tr>';
+  html += '</tbody></table></div>';
+  html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.6;">'+LAP_RINGKAS_CATATAN+'</div>';
+  return html;
+}
+function setLapRingkasTahun(t){ currentSubState.lapRingkasTahun = t; renderContent(); }
+function cetakLapRingkas(tahun){
+  const data = computeLapRingkasData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const yd = data.byYear.find(x=>x.tahun===tahun);
+  if(!yd){ toast('Data tidak ditemukan'); return; }
+  const { jsPDF } = window.jspdf;
+  const fmt = v => rupiah(v);
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const doc = new jsPDF({ orientation:'landscape' });
+  doc.setFontSize(13);
+  doc.text(orgName.toUpperCase(), 14, 14);
+  doc.setFontSize(10.5);
+  doc.text('LAPORAN RINGKAS \u2014 TAHUN ' + yd.tahun, 14, 20.5);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Dicetak: ' + tgl + '  |  Anggota telat bayar saat ini: ' + data.overdue.length + '  |  Total tunggakan: ' + fmt(data.totalTertunggak), 14, 26);
+  doc.setTextColor(0);
+  const body = [];
+  body.push(['Angsuran Masuk', fmt(yd.total.angsuranMasuk||0)]);
+  bebanPools.forEach(p=>body.push([poolLabel(p), fmt(yd.bebanPools[p.id]||0)]));
+  body.push(['SHU Saham', fmt(yd.total.shuSaham||0)]);
+  doc.autoTable({
+    head: [['Ringkasan Tahun ' + yd.tahun,'Jumlah']],
+    body,
+    startY: 31,
+    styles:{ fontSize:9, cellPadding:2.5, halign:'left' },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'left' },
+    columnStyles:{ 1:{ halign:'right', fontStyle:'bold' } }
+  });
+  const cols = ['Bulan','Angsuran Masuk', ...bebanPools.map(poolLabel), 'SHU Saham'];
+  const rincian = yd.rows.map(r=>[
+    LAP_MODAL_BULAN[r.bulan-1],
+    fmt(r.angsuranMasuk||0),
+    ...bebanPools.map(p=>fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)),
+    fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)
+  ]);
+  doc.autoTable({
+    head: [cols],
+    body: rincian,
+    startY: (doc.lastAutoTable && doc.lastAutoTable.finalY) + 6,
+    styles:{ fontSize:7.5, cellPadding:2.5, halign:'right' },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'center' },
+    columnStyles:{ 0:{ halign:'center', fontStyle:'bold' } },
+    alternateRowStyles:{ fillColor:[244,248,244] }
+  });
+  const finalY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 40;
+  doc.setFontSize(7.5);
+  doc.setTextColor(100);
+  doc.text(doc.splitTextToSize(LAP_RINGKAS_CATATAN.replace(/&rarr;/g,'->'), 270), 14, finalY + 8);
+  doc.save(sanitizeFileName('Laporan Ringkas ' + yd.tahun) + '.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function exportLapRingkasXLS(tahun){
+  const data = computeLapRingkasData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const yd = data.byYear.find(x=>x.tahun===tahun);
+  if(!yd){ toast('Data tidak ditemukan'); return; }
+  const rows = [];
+  rows.push(['LAPORAN RINGKAS','']);
+  rows.push(['Koperasi: '+((DB.koperasi&&DB.koperasi.nama)||''),'']);
+  rows.push(['Tahun: '+tahun,'']);
+  rows.push(['Anggota telat bayar saat ini', data.overdue.length]);
+  rows.push(['Total tunggakan angsuran', data.totalTertunggak]);
+  rows.push(['','']);
+  rows.push(['RINGKASAN TAHUN '+tahun,'']);
+  rows.push(['Angsuran Masuk', yd.total.angsuranMasuk||0]);
+  bebanPools.forEach(p=>rows.push([poolLabel(p), yd.bebanPools[p.id]||0]));
+  rows.push(['SHU Saham', yd.total.shuSaham||0]);
+  rows.push(['','']);
+  rows.push(['RINCIAN PER BULAN','']);
+  rows.push(['Bulan','Angsuran Masuk', ...bebanPools.map(poolLabel), 'SHU Saham']);
+  yd.rows.forEach(r=>rows.push([
+    LAP_MODAL_BULAN[r.bulan-1],
+    r.angsuranMasuk||0,
+    ...bebanPools.map(p=>(r.bebanBulan&&r.bebanBulan[p.id])||0),
+    (r.bebanBulan&&r.bebanBulan['shu_saham'])||0
+  ]));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Laporan Ringkas '+tahun);
+  XLSX.writeFile(wb, sanitizeFileName('Laporan Ringkas '+tahun) + '.xlsx');
   toast('File Excel berhasil diunduh');
 }
 function renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham){
