@@ -4462,6 +4462,10 @@ function renderAdminLaporanRingkas(user){
     });
     html += '<div><div style="font-size:10.5px;color:var(--muted);">SHU Saham</div><div class="mono" style="font-size:12.5px;font-weight:600;">'+fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)+'</div></div>';
     html += '</div>';
+    html += '<div style="display:flex;gap:6px;margin-top:12px;">';
+    html += '<button class="btn btn-outline btn-sm" style="flex:1;font-size:11px;padding:6px 8px;" onclick="cetakLapRingkasBulan(\''+yd.tahun+'\','+r.bulan+')">'+(ICONS.pdf||'📄')+' PDF</button>';
+    html += '<button class="btn btn-outline btn-sm" style="flex:1;font-size:11px;padding:6px 8px;" onclick="exportLapRingkasBulanXLS(\''+yd.tahun+'\','+r.bulan+')">'+(ICONS.xls||'')+' Excel</button>';
+    html += '</div>';
     html += '</div>';
   });
   html += '<div class="card" style="padding:14px 16px;background:var(--primary-soft);border:none;margin-bottom:10px;">';
@@ -4566,6 +4570,70 @@ function exportLapRingkasXLS(tahun){
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan Ringkas '+tahun);
   XLSX.writeFile(wb, sanitizeFileName('Laporan Ringkas '+tahun) + '.xlsx');
+  toast('File Excel berhasil diunduh');
+}
+function cetakLapRingkasBulan(tahun, bulan){
+  const data = computeLapRingkasData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const yd = data.byYear.find(x=>x.tahun===tahun);
+  const r = yd && yd.rows.find(rr=>rr.bulan===Number(bulan));
+  if(!r){ toast('Data tidak ditemukan'); return; }
+  const { jsPDF } = window.jspdf;
+  const fmt = v => rupiah(v);
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const namaBulan = LAP_MODAL_BULAN[r.bulan-1];
+  const doc = new jsPDF();
+  doc.setFontSize(13);
+  doc.text(orgName.toUpperCase(), 14, 14);
+  doc.setFontSize(10.5);
+  doc.text('LAPORAN RINGKAS \u2014 ' + namaBulan.toUpperCase() + ' ' + yd.tahun, 14, 20.5);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Dicetak: ' + tgl, 14, 26);
+  doc.setTextColor(0);
+  const body = [];
+  body.push(['Angsuran Masuk', fmt(r.angsuranMasuk||0)]);
+  bebanPools.forEach(p=>body.push([poolLabel(p), fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)]));
+  body.push(['SHU Saham', fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)]);
+  doc.autoTable({
+    head: [[namaBulan + ' ' + yd.tahun,'Jumlah']],
+    body,
+    startY: 31,
+    styles:{ fontSize:9.5, cellPadding:3, halign:'left' },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'left' },
+    columnStyles:{ 1:{ halign:'right', fontStyle:'bold' } }
+  });
+  const finalY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 40;
+  doc.setFontSize(7.5);
+  doc.setTextColor(100);
+  doc.text(doc.splitTextToSize(LAP_RINGKAS_CATATAN.replace(/&rarr;/g,'->'), 180), 14, finalY + 8);
+  doc.save(sanitizeFileName('Laporan Ringkas ' + namaBulan + ' ' + yd.tahun) + '.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function exportLapRingkasBulanXLS(tahun, bulan){
+  const data = computeLapRingkasData();
+  const pools = data.pools || [];
+  const bebanPools = pools.filter(p=>p.id!=='shu_saham');
+  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const yd = data.byYear.find(x=>x.tahun===tahun);
+  const r = yd && yd.rows.find(rr=>rr.bulan===Number(bulan));
+  if(!r){ toast('Data tidak ditemukan'); return; }
+  const namaBulan = LAP_MODAL_BULAN[r.bulan-1];
+  const rows = [];
+  rows.push(['LAPORAN RINGKAS','']);
+  rows.push(['Koperasi: '+((DB.koperasi&&DB.koperasi.nama)||''),'']);
+  rows.push(['Periode: '+namaBulan+' '+yd.tahun,'']);
+  rows.push(['','']);
+  rows.push(['Angsuran Masuk', r.angsuranMasuk||0]);
+  bebanPools.forEach(p=>rows.push([poolLabel(p), (r.bebanBulan&&r.bebanBulan[p.id])||0]));
+  rows.push(['SHU Saham', (r.bebanBulan&&r.bebanBulan['shu_saham'])||0]);
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, namaBulan+' '+tahun);
+  XLSX.writeFile(wb, sanitizeFileName('Laporan Ringkas '+namaBulan+' '+tahun) + '.xlsx');
   toast('File Excel berhasil diunduh');
 }
 function renderLapIkhtisar(user,totalSimpanan,totalPembCair,totalPembSisa,totalSaham){
