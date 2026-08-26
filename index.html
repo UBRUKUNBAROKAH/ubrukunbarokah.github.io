@@ -294,6 +294,12 @@ input,select{font-family:inherit;}
   top:0;
   z-index:10;
   box-shadow:0 8px 18px -6px rgba(11,61,46,.55), inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(0,0,0,.18);
+  /* force its own compositing layer so mobile browsers (esp. iOS Safari)
+     don't clip/mis-paint the sticky header while the URL bar collapses
+     or expands during scroll */
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+  will-change:transform;
 }
 .app-header .left{display:flex;align-items:center;gap:10px;}
 .app-header .koperasi-icon{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;box-shadow:var(--shadow-neu-dark);}
@@ -395,7 +401,7 @@ input,select{font-family:inherit;}
 .search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;min-width:0;}
 .toolbar-row{display:flex;gap:8px;align-items:center;margin-bottom:0;}
 .toolbar-row .search-box{margin-bottom:0;}
-.toolbar-sticky{position:sticky;top:var(--header-h, 76px);z-index:6;background:var(--bg);padding:10px 0;margin:-10px 0 4px;}
+.toolbar-sticky{position:sticky;top:var(--header-h, 76px);z-index:6;background:var(--bg);padding:10px 0;margin:-10px 0 4px;transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;}
 .btn-compact{padding:9px 14px;font-size:12.5px;white-space:nowrap;flex-shrink:0;border-radius:10px;}
 
 .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
