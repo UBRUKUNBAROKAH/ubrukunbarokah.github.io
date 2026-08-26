@@ -394,6 +394,7 @@ input,select{font-family:inherit;}
 .search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;min-width:0;}
 .toolbar-row{display:flex;gap:8px;align-items:center;margin-bottom:0;}
 .toolbar-row .search-box{margin-bottom:0;}
+.toolbar-sticky{position:sticky;top:0;z-index:6;background:var(--bg);padding:10px 0;margin:-10px 0 4px;}
 .btn-compact{padding:9px 14px;font-size:12.5px;white-space:nowrap;flex-shrink:0;border-radius:10px;}
 
 .empty-state{text-align:center;padding:40px 10px;color:var(--muted);}
@@ -2127,6 +2128,53 @@ function renderAdminBeranda(user){
   const totalRekening = DB.tabunganAccounts.length;
   const totalAngsuranDiterima = DB.pembiayaan.reduce((s,p)=>s+(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0),0);
   const totalAset = computeNeraca().totalAset;
+
+  // ---- Blok "Perlu Tindakan": dikumpulkan & ditampilkan PALING ATAS ----
+  const notifSaldoKoorHtml = renderNotifSaldoKoordinator();
+  const pendingPemb = DB.pembiayaan.filter(p=>p.statusPengajuan==='pending');
+  const pendingPembHtml = pendingPemb.length ? `
+    <div class="section-label">Pengajuan Pembiayaan (${pendingPemb.length} menunggu ACC)</div>
+    <div class="card" style="padding:6px 18px;">
+      ${pendingPemb.map(p=>`
+        <div class="list-row">
+          <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.finance}</div>
+          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : '';
+  const overdue = [];
+  (function(){
+    const skrg = new Date();
+    DB.pembiayaan.forEach(function(p){
+      if(p.status!=='berjalan'||p.statusPengajuan!=='approved') return;
+      const mulai = new Date(p.mulai);
+      var blnBerjalan = (skrg.getFullYear()-mulai.getFullYear())*12 + (skrg.getMonth()-mulai.getMonth());
+      var hrsDibayar = Math.min(blnBerjalan, p.tenor);
+      var sdhDibayar = p.tenor - p.sisaAngsuran;
+      if(sdhDibayar < hrsDibayar){
+        var tglJatuh = new Date(p.mulai);
+        tglJatuh.setMonth(tglJatuh.getMonth() + sdhDibayar + 1);
+        overdue.push({p, telat:hrsDibayar-sdhDibayar, tglJatuh});
+      }
+    });
+  })();
+  const overdueHtml = overdue.length ? `
+    <div class="section-label" style="color:var(--danger);">Peringatan Pembiayaan Terlambat (${overdue.length})</div>
+    <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);">
+      ${overdue.map(function(o){
+        const u = userById(o.p.userId);
+        return '<div class="list-row"><div class="info"><div class="title">'+(u?u.nama:'-')+'</div><div class="sub">Telat '+o.telat+' angsuran &middot; '+rupiah(o.p.angsuranPerBulan)+'/bln &middot; Jatuh tempo '+o.tglJatuh.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+'</div></div><span class="badge badge-red">Telat</span></div>';
+      }).join('')}
+    </div>` : '';
+  const adaTindakan = !!(notifSaldoKoorHtml || pendingPembHtml || overdueHtml);
+
+  // ---- Statistik: 4 angka kunci selalu tampil, sisanya di balik "Lihat detail" ----
+  const showAllStats = !!currentSubState.berandaShowAllStats;
+
   return `
     <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
     <div class="card balance-card" style="margin-bottom:18px;">
@@ -2134,6 +2182,23 @@ function renderAdminBeranda(user){
       <div class="amount mono">${rupiah(totalAset)}</div>
     </div>
 
+    ${adaTindakan ? `<div class="section-label" style="color:var(--danger);">Perlu Tindakan</div>` : ''}
+    ${notifSaldoKoorHtml}
+    ${pendingPembHtml}
+    ${overdueHtml}
+
+    <div class="section-label">Ringkasan</div>
+    <div class="stat-grid cols-4">
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono">${rupiah(totalSimpanan)}</div><div class="l">Total simpanan</div></div>
+      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalPembiayaanAktif)}</div><div class="l">Sisa pembiayaan aktif</div></div>
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalNilaiSaham)}</div><div class="l">Nilai saham</div></div>
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.users}</div><div class="n">${totalAnggota}</div><div class="l">Anggota nasabah</div></div>
+    </div>
+    <div style="text-align:center;margin:10px 0 4px;">
+      <button class="btn btn-outline btn-sm" onclick="currentSubState.berandaShowAllStats=${showAllStats?'false':'true'};renderContent();">${showAllStats?'Sembunyikan detail':'Lihat detail statistik'} ${ICONS[showAllStats?'up':'down']}</button>
+    </div>
+
+    ${showAllStats ? `
     <div class="section-label">Anggota &amp; Simpanan</div>
     <div class="stat-grid cols-4">
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.users}</div><div class="n">${totalAnggota}</div><div class="l">Anggota nasabah</div></div>
@@ -2155,53 +2220,7 @@ function renderAdminBeranda(user){
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.coin}</div><div class="n">${totalLembarSaham}</div><div class="l">Total lembar saham</div></div>
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalNilaiSaham)}</div><div class="l">Nilai saham (termasuk pemupukan)</div></div>
     </div>
-    ${renderNotifSaldoKoordinator()}
-    ${(()=>{
-      const pendingPemb = DB.pembiayaan.filter(p=>p.statusPengajuan==='pending');
-      let html = '';
-      if(pendingPemb.length){
-        html += `
-    <div class="section-label">Pengajuan Pembiayaan (${pendingPemb.length} menunggu ACC)</div>
-    <div class="card" style="padding:6px 18px;">
-      ${pendingPemb.map(p=>`
-        <div class="list-row">
-          <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.finance}</div>
-          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
-            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
-          </div>
-        </div>
-      `).join('')}
-    </div>`;
-      }
-      return html;
-    })()}
-    ${(()=>{
-      const skrg = new Date();
-      const overdue = [];
-      DB.pembiayaan.forEach(function(p){
-        if(p.status!=='berjalan'||p.statusPengajuan!=='approved') return;
-        const mulai = new Date(p.mulai);
-        var blnBerjalan = (skrg.getFullYear()-mulai.getFullYear())*12 + (skrg.getMonth()-mulai.getMonth());
-        var hrsDibayar = Math.min(blnBerjalan, p.tenor);
-        var sdhDibayar = p.tenor - p.sisaAngsuran;
-        if(sdhDibayar < hrsDibayar){
-          var tglJatuh = new Date(p.mulai);
-          tglJatuh.setMonth(tglJatuh.getMonth() + sdhDibayar + 1);
-          overdue.push({p, telat:hrsDibayar-sdhDibayar, tglJatuh});
-        }
-      });
-      if(!overdue.length) return '';
-      return `
-    <div class="section-label" style="color:var(--danger);">Peringatan Pembiayaan Terlambat (${overdue.length})</div>
-    <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);">
-      ${overdue.map(function(o){
-        const u = userById(o.p.userId);
-        return '<div class="list-row"><div class="info"><div class="title">'+(u?u.nama:'-')+'</div><div class="sub">Telat '+o.telat+' angsuran &middot; '+rupiah(o.p.angsuranPerBulan)+'/bln &middot; Jatuh tempo '+o.tglJatuh.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+'</div></div><span class="badge badge-red">Telat</span></div>';
-      }).join('')}
-    </div>`;
-    })()}
+    ` : ''}
   `;
 }
 // Notifikasi ringkas: saldo di tiap koordinator yg belum disetor ke admin,
@@ -2580,7 +2599,7 @@ function renderAdminAnggota(user){
   let i = 0;
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('anggota')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
@@ -2807,7 +2826,7 @@ function renderAdminTabungan(user){
         </div>
       `).join('')}
     </div>` : ''}
-    <div class="toolbar-row" style="margin-bottom:14px;">
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download} Export</button>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">${ICONS.upload}</button>
@@ -3110,7 +3129,7 @@ function renderAdminPembiayaan(user){
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSisa)}</div><div class="l">Total Sisa Pembiayaan</div></div>
       <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
     </div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download} Export</button>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">${ICONS.upload}</button>
@@ -5154,7 +5173,7 @@ function renderAdminSaham(user){
         return `<div class="stat-box"><div class="n">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
       }).join('')}
     </div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <select onchange="currentSubState.sahamKelompok=this.value; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
         <option value="">Semua kelompok</option>
         ${kelompokOptions}
@@ -5578,7 +5597,7 @@ function renderKoorAnggota(user){
   if(q) anggota = anggota.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
   return `
     <div class="page-title">Daftar Anggota<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-koor-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah</button>
     </div>
@@ -5658,7 +5677,7 @@ function renderKoorTabungan(user){
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
     </div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-koor-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
@@ -5723,7 +5742,7 @@ const anggota = nasabahOfKelompok(user.kelompokId);
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSisa)}</div><div class="l">Total Sisa Pembiayaan</div></div>
       <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
     </div>
-    <div class="toolbar-row" style="margin-bottom:14px;">
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input id="search-koor-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-primary btn-compact" onclick="openPengajuanModalKoor()">${ICONS.plus} Ajukan</button>
     </div>
