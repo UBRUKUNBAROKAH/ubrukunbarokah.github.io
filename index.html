@@ -1854,8 +1854,23 @@ function doSetorKoordinator(userId, jenisId, jumlah, keterangan){
   DB.setoran.push({id:uid('st'), userId, jenisId, jumlah, keterangan: keterangan||'Setoran tunai', tanggal:nowISO(), dibuatOleh:s.userId, status:'di_koordinator'});
   autoLunasiHutangDariSetoran(s.userId);
   persist();
+  const nasabahSetor = userById(userId);
   notifAdminWA(waHeader('PEMBERITAHUAN SETORAN')
-    + waAnggotaInfo(userById(userId))
+    + waAnggotaInfo(nasabahSetor)
+    + '\nJenis Simpanan : ' + jenisName(jenisId)
+    + '\nNominal : ' + rupiah(jumlah)
+    + '\nDiterima oleh Koordinator : ' + userById(s.userId).nama
+    + '\nWaktu : ' + waTanggal()
+    + waFooter());
+  notifKoordinatorKelompokWA(nasabahSetor.kelompokId, waHeader('SETORAN DICATAT OLEH KOORDINATOR')
+    + waAnggotaInfo(nasabahSetor)
+    + '\nJenis Simpanan : ' + jenisName(jenisId)
+    + '\nNominal : ' + rupiah(jumlah)
+    + '\nDiterima oleh Koordinator : ' + userById(s.userId).nama
+    + '\nWaktu : ' + waTanggal()
+    + waFooter());
+  notifUserWA(userId, waHeader('SETORAN TELAH DICATAT')
+    + waAnggotaInfo(nasabahSetor)
     + '\nJenis Simpanan : ' + jenisName(jenisId)
     + '\nNominal : ' + rupiah(jumlah)
     + '\nDiterima oleh Koordinator : ' + userById(s.userId).nama
@@ -2970,15 +2985,23 @@ function submitTx(tipe){
         bigSuccess('Setoran dicatat, menunggu konfirmasi admin');
       } else {
         doSetor(userId, jenisId, jumlah, ket);
+        const nasabahSetor2 = userById(userId);
         notifAdminWA(waHeader('PEMBERITAHUAN SETORAN')
-          + waAnggotaInfo(userById(userId))
+          + waAnggotaInfo(nasabahSetor2)
+          + '\nJenis Simpanan : ' + jenisName(jenisId)
+          + '\nNominal : ' + rupiah(jumlah)
+          + '\nDilakukan oleh : ' + userById(s.userId).nama + ' (' + s.role + ')'
+          + '\nWaktu : ' + waTanggal()
+          + waFooter());
+        notifKoordinatorKelompokWA(nasabahSetor2.kelompokId, waHeader('PEMBERITAHUAN SETORAN')
+          + waAnggotaInfo(nasabahSetor2)
           + '\nJenis Simpanan : ' + jenisName(jenisId)
           + '\nNominal : ' + rupiah(jumlah)
           + '\nDilakukan oleh : ' + userById(s.userId).nama + ' (' + s.role + ')'
           + '\nWaktu : ' + waTanggal()
           + waFooter());
         notifUserWA(userId, waHeader('SETORAN TELAH DICATAT')
-          + waAnggotaInfo(userById(userId))
+          + waAnggotaInfo(nasabahSetor2)
           + '\nJenis Simpanan : ' + jenisName(jenisId)
           + '\nNominal : ' + rupiah(jumlah)
           + '\nSaldo : ' + rupiah(waSaldoUser(userId, jenisId) || 0)
