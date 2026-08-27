@@ -1293,7 +1293,7 @@ function notifKoordinatorKelompokWA(kelompokId, pesan){
 function tgSettings(){
   const info = DB.koperasi?.info || {};
   const cfg = info.notifTelegram || {};
-  return { enabled: !!cfg.enabled, token: cfg.token || '', adminChatIds: Array.isArray(cfg.adminChatIds) ? cfg.adminChatIds : [] };
+  return { enabled: cfg.enabled !== undefined ? !!cfg.enabled : true, token: cfg.token || '8652500654:AAEc9-q1ZuwjP2FuxR2jIPNlyAdY65cSEVA', adminChatIds: Array.isArray(cfg.adminChatIds) ? cfg.adminChatIds : [] };
 }
 async function kirimTelegram(chatId, pesan){
   const cfg = tgSettings();
@@ -4847,7 +4847,7 @@ function renderPengaturanWA(){
     <div class="card" style="margin-top:12px;">
       <div class="section-label" style="margin-top:0;">Pengaturan Telegram (gratis)</div>
       <div class="hint" style="margin-bottom:10px;">Notifikasi juga bisa dikirim lewat Telegram (bot pribadi) tanpa biaya & tanpa tanda iar. Aktifkan kalau ingin memakainya sebagai tambahan atau pengganti WA.</div>
-      <div class="form-row"><label>Token Bot Telegram</label><input type="text" id="tg-token" value="${tg.token||''}" placeholder="cth. 123456789:ABCdef..."></div>
+            <div class="form-row"><label>Token Bot Telegram</label><input type="text" id="tg-token" value="${tg.token||''}" placeholder="cth. 123456789:ABCdef..."></div></div>
       <div class="form-row"><label>Chat ID Admin</label><input type="text" id="tg-admin-chats" value="${(tg.adminChatIds||[]).join(', ')}" placeholder="123456789, 987654321"><span class="hint">Pisahkan dengan koma jika lebih dari satu. Cara dapat Chat ID: kirim pesan ke bot @userinfobot lalu salin angkanya.</span></div>
       <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="tg-enabled" style="width:16px;height:16px;" ${tg.enabled?'checked':''}> Notifikasi Telegram aktif</label></div>
       <span class="hint">Cara bikin Bot Telegram: di aplikasi Telegram, cari <b>@BotFather</b>, ketik <b>/newbot</b>, ikuti petunjuk, lalu salin token-nya ke sini.</span>
