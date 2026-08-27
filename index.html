@@ -1281,7 +1281,8 @@ function notifUserWA(userId, pesan){
   if(!u) return;
   const cfg = waSettings();
   if(cfg.enabled && u.noHp) kirimWA(u.noHp, pesan);
-  if(u.telegramChatId) notifTgChat(u.telegramChatId, pesan);
+  const tgChat = getTelegramChatId(userId);
+  if(tgChat) notifTgChat(tgChat, pesan);
 }
 function notifKoordinatorKelompokWA(kelompokId, pesan){
   if(!kelompokId) return;
@@ -1318,7 +1319,74 @@ function notifTgChat(chatId, pesan){
 }
 function notifTgAdmin(pesan){
   const cfg = tgSettings();
-  cfg.adminChatIds.forEach(id => kirimTelegram(id, pesan));
+  const ids = [...cfg.adminChatIds];
+  (DB.users||[]).forEach(u => { if(u.role==='admin'){ const c = getTelegramChatId(u.id); if(c && !ids.includes(c)) ids.push(c); } });
+  ids.forEach(id => kirimTelegram(id, pesan));
+}
+// ---------- Hubungkan Telegram (tombol di Profil Saya) ----------
+function tgBotUsername(){ return 'ubrukunbarokah_notif_bot'; }
+function telegramLinkMap(){
+  const info = DB.koperasi?.info || {};
+  if(!info.telegramLinks) info.telegramLinks = {};
+  return info.telegramLinks;
+}
+function getTelegramChatId(userId){
+  const map = telegramLinkMap();
+  if(map[userId]) return map[userId];
+  const u = userById(userId);
+  return u && u.telegramChatId ? u.telegramChatId : '';
+}
+function setTelegramLink(userId, chatId){
+  if(!chatId) return;
+  const map = telegramLinkMap();
+  map[userId] = String(chatId);
+  persist();
+  addLog('Hubungkan Telegram', 'Akun terhubung ke Telegram (chat id ' + chatId + ')');
+}
+function tgStartLinkForUser(u){
+  return 'https://t.me/' + tgBotUsername() + '?start=u_' + encodeURIComponent(u.id);
+}
+function tgLinkStatusForUser(u){
+  const cid = getTelegramChatId(u.id);
+  return cid ? { linked: true, chatId: cid } : { linked: false, chatId: '' };
+}
+async function pollTelegramLinks(){
+  const cfg = tgSettings();
+  if(!cfg.enabled || !cfg.token) return;
+  const info = DB.koperasi?.info || {};
+  const offset = info.telegramOffset || 0;
+  try {
+    const res = await fetch('https://api.telegram.org/bot' + cfg.token + '/getUpdates?timeout=1&offset=' + (offset || '') + '&allowed_updates=["message"]');
+    const data = await res.json();
+    if(!data.ok) return;
+    const updates = data.result || [];
+    for(const up of updates){
+      info.telegramOffset = (up.update_id + 1);
+      const msg = up.message;
+      if(!msg || !msg.chat || !msg.text) continue;
+      const text = String(msg.text).trim();
+      const m = text.match(/^\/start\s+u_(.+)$/);
+      if(m){
+        const userId = decodeURIComponent(m[1]);
+        const u = userById(userId);
+        if(u && u.id === userId){
+          setTelegramLink(userId, msg.chat.id);
+        }
+      }
+    }
+    if(updates.length) persist();
+  } catch(e){
+    console.warn('Telegram poll gagal:', e);
+  }
+}
+let _tgPollTimer = null;
+function scheduleTgPoll(){
+  if(_tgPollTimer) clearInterval(_tgPollTimer);
+  _tgPollTimer = setInterval(function(){
+    const cfg = tgSettings();
+    if(cfg.enabled && getSession() && document.visibilityState !== 'hidden') pollTelegramLinks();
+  }, 20000);
+  pollTelegramLinks();
 }
 // ---------- Format pesan WA yang lengkap & formal ----------
 function waHeader(title){
@@ -3539,6 +3607,8 @@ function submitEditPengajuan(pembId){
 function renderProfilSaya(user){
   const u = currentUser();
   if(!u) return '';
+  scheduleTgPoll();
+  const st = tgLinkStatusForUser(u);
   return `
     <div class="page-title">Profil Saya<span class="sub">Informasi akun Anda</span></div>
     <div class="card">
@@ -3546,10 +3616,22 @@ function renderProfilSaya(user){
       <div class="form-row"><label>Username</label><input type="text" id="ps-username" value="${u.username||''}" placeholder="Nama pengguna"></div>
       <div class="form-row"><label>Role</label><input type="text" value="${roleLabel(u.role)}" disabled style="opacity:.6;"></div>
       <div class="form-row"><label>Kata sandi baru <span class="hint" style="font-weight:400;">(kosongkan jika tidak ingin ganti)</span></label><input type="text" id="ps-password" placeholder="Kata sandi baru"></div>
-      <div class="form-row"><label>Telegram Chat ID <span class="hint" style="font-weight:400;">(utk notif Telegram ke pribadi)</span></label><input type="text" id="ps-tgchat" value="${u.telegramChatId||''}" placeholder="cth. 123456789"><span class="hint">Cara dapat Chat ID: kirim pesan ke bot @userinfobot di Telegram, lalu salin angkanya.</span></div>
+      <div class="section-label" style="margin-top:8px;">Hubungkan Telegram (untuk notifikasi)</div>
+      <div style="background:var(--primary-soft);border-radius:var(--radius-sm);padding:12px 14px;font-size:13.5px;line-height:1.6;margin-bottom:10px;">
+        <div>Status: ${st.linked ? '<b style="color:var(--primary);">Terhubung</b> (Chat ID '+st.chatId+')' : '<b style="color:var(--danger);">Belum terhubung</b>'}</div>
+        <div style="margin-top:6px;">Langkah: <b>1)</b> tekan tombol di bawah, <b>2)</b> di Telegram tekan <b>Start</b>, <b>3)</b> kembali ke sini — status otomatis jadi terhubung dalam sedetik.</div>
+      </div>
+      <a class="btn btn-primary btn-block" style="text-align:center;text-decoration:none;" target="_blank" rel="noopener" href="${tgStartLinkForUser(u)}" onclick="showTgWait()">Kirim ID Telegram ke Aplikasi</a>
+      <div id="tg-link-helper" style="background:#FFF8E1;border:1px solid #F0E0A0;border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.6;margin-top:10px;display:none;">Setelah menekan <b>Start</b> di Telegram, tunggu beberapa detik lalu status di atas akan berubah menjadi <b>Terhubung</b>. Jika belum, tekan tombol ini lagi untuk memeriksa ulang.</div>
+      <span class="hint" style="display:block;margin-top:10px;">Kotak di bawah hanya untuk cara manual (jika otomatis tidak berhasil). Cara dapat Chat ID: kirim pesan ke bot @userinfobot lalu salin angkanya.</span>
+      <div class="form-row"><label>Telegram Chat ID <span class="hint" style="font-weight:400;">(manual)</span></label><input type="text" id="ps-tgchat" value="${u.telegramChatId||''}" placeholder="cth. 123456789"></div>
       <button class="btn btn-primary btn-block" onclick="simpanProfilSaya()">Simpan Profil</button>
     </div>
   `;
+}
+function showTgWait(){
+  const el = document.getElementById('tg-link-helper');
+  if(el) el.style.display = 'block';
 }
 function simpanProfilSaya(){
   const u = currentUser();
