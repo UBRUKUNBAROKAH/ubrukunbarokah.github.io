@@ -1273,18 +1273,52 @@ async function kirimWA(nomor, pesan){
 }
 function notifAdminWA(pesan){
   const cfg = waSettings();
-  cfg.adminNumbers.forEach(n => kirimWA(n, pesan));
+  if(cfg.enabled) cfg.adminNumbers.forEach(n => kirimWA(n, pesan));
+  notifTgAdmin(pesan);
 }
 function notifUserWA(userId, pesan){
   const u = userById(userId);
-  if(!u || !u.noHp) return;
-  kirimWA(u.noHp, pesan);
+  if(!u) return;
+  const cfg = waSettings();
+  if(cfg.enabled && u.noHp) kirimWA(u.noHp, pesan);
+  if(u.telegramChatId) notifTgChat(u.telegramChatId, pesan);
 }
 function notifKoordinatorKelompokWA(kelompokId, pesan){
   if(!kelompokId) return;
   const koor = koordinatorForKelompok(kelompokId);
   if(!koor) return;
   notifUserWA(koor.id, pesan);
+}
+// ---------- Notifikasi Telegram (gratis, tanpa biaya) ----------
+function tgSettings(){
+  const info = DB.koperasi?.info || {};
+  const cfg = info.notifTelegram || {};
+  return { enabled: !!cfg.enabled, token: cfg.token || '', adminChatIds: Array.isArray(cfg.adminChatIds) ? cfg.adminChatIds : [] };
+}
+async function kirimTelegram(chatId, pesan){
+  const cfg = tgSettings();
+  if(!cfg.enabled) return;
+  if(!cfg.token){ console.warn('Telegram token belum diisi'); return; }
+  if(!chatId){ console.warn('Telegram chat ID kosong'); return; }
+  try {
+    const res = await fetch('https://api.telegram.org/bot' + cfg.token + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: String(chatId), text: pesan, disable_web_page_preview: true })
+    });
+    const data = await res.json();
+    if(!data.ok) console.warn('Telegram error:', data);
+    return data;
+  } catch(e){
+    console.warn('Telegram gagal:', e);
+  }
+}
+function notifTgChat(chatId, pesan){
+  kirimTelegram(chatId, pesan);
+}
+function notifTgAdmin(pesan){
+  const cfg = tgSettings();
+  cfg.adminChatIds.forEach(id => kirimTelegram(id, pesan));
 }
 // ---------- Format pesan WA yang lengkap & formal ----------
 function waHeader(title){
@@ -3057,6 +3091,7 @@ function openTambahAnggotaModal(forcedKelompokId){
     <div class="form-row"><label>NIK</label><input type="text" id="ta-nik" placeholder="Nomor Induk Kependudukan" maxlength="16"></div>
     <div class="form-row"><label>ALAMAT</label><textarea id="ta-alamat" placeholder="Alamat lengkap" rows="2"></textarea></div>
     <div class="form-row"><label>NO TLP</label><input type="text" id="ta-nohp" placeholder="cth. 08123456789"></div>
+    <div class="form-row"><label>TELEGRAM CHAT ID <span class="hint" style="font-weight:400;">(opsional, utk notif Telegram)</span></label><input type="text" id="ta-tgchat" placeholder="cth. 123456789"></div>
     <div class="form-row"><label>KELOMPOK</label>
       <select id="ta-kelompok" ${forcedKelompokId?'disabled':''}>${kelompokOptions}</select>
       ${forcedKelompokId?`<input type="hidden" id="ta-kelompok-forced" value="${forcedKelompokId}">`:''}
@@ -3073,6 +3108,7 @@ function submitTambahAnggota(){
   const nik = document.getElementById('ta-nik').value.trim();
   const alamat = document.getElementById('ta-alamat').value.trim();
   const noHp = document.getElementById('ta-nohp').value.trim();
+  const tgChat = document.getElementById('ta-tgchat') ? document.getElementById('ta-tgchat').value.trim() : '';
   const forcedEl = document.getElementById('ta-kelompok-forced');
   const kelompokId = forcedEl ? forcedEl.value : document.getElementById('ta-kelompok').value;
   if(!nama || !nik || !alamat || !noHp || !kelompokId){ toast('Lengkapi semua data anggota'); return; }
@@ -3084,7 +3120,7 @@ function submitTambahAnggota(){
   const password = 'anggota123';
 
   const newUser = {
-    id: uid('u'), username, password, role:'nasabah', nama, nik, alamat, noHp, kelompokId,
+    id: uid('u'), username, password, role:'nasabah', nama, nik, alamat, noHp, telegramChatId: tgChat, kelompokId,
     noRekening: '2026'+String(1000+DB.users.length), saham:{s_A:0,s_B:0,s_C:0}, status:'aktif',
     anggotaId: uid('agg'), createdAt: nowISO()
   };
@@ -3510,6 +3546,7 @@ function renderProfilSaya(user){
       <div class="form-row"><label>Username</label><input type="text" id="ps-username" value="${u.username||''}" placeholder="Nama pengguna"></div>
       <div class="form-row"><label>Role</label><input type="text" value="${roleLabel(u.role)}" disabled style="opacity:.6;"></div>
       <div class="form-row"><label>Kata sandi baru <span class="hint" style="font-weight:400;">(kosongkan jika tidak ingin ganti)</span></label><input type="text" id="ps-password" placeholder="Kata sandi baru"></div>
+      <div class="form-row"><label>Telegram Chat ID <span class="hint" style="font-weight:400;">(utk notif Telegram ke pribadi)</span></label><input type="text" id="ps-tgchat" value="${u.telegramChatId||''}" placeholder="cth. 123456789"><span class="hint">Cara dapat Chat ID: kirim pesan ke bot @userinfobot di Telegram, lalu salin angkanya.</span></div>
       <button class="btn btn-primary btn-block" onclick="simpanProfilSaya()">Simpan Profil</button>
     </div>
   `;
@@ -3520,10 +3557,12 @@ function simpanProfilSaya(){
   const nama = document.getElementById('ps-nama').value.trim();
   const username = document.getElementById('ps-username').value.trim();
   const password = document.getElementById('ps-password').value;
+  const tgChat = document.getElementById('ps-tgchat') ? document.getElementById('ps-tgchat').value.trim() : u.telegramChatId;
   if(!nama){ toast('Nama tidak boleh kosong'); return; }
   u.nama = nama;
   u.username = username || u.username;
   if(password) u.password = password;
+  u.telegramChatId = tgChat;
   persist();
   addLog('Ubah profil', 'Memperbarui profil sendiri');
   applyKoperasiBranding();
@@ -3604,6 +3643,7 @@ function openUserModal(userId, newRole){
       <select id="um-kelompok">${DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${editing&&editing.kelompokId===k.id?'selected':''}>${k.nama}</option>`).join('')}</select>
     </div>
     <div class="form-row"><label>No. HP (WhatsApp)</label><input type="text" id="um-nohp" value="${editing?editing.noHp||'':''}" placeholder="081234567890"><span class="hint">Dipakai untuk notifikasi WhatsApp (mis. konfirmasi setoran, ACC/tolak pengajuan).</span></div>
+    <div class="form-row"><label>Telegram Chat ID <span class="hint" style="font-weight:400;">(untuk notifikasi Telegram)</span></label><input type="text" id="um-tgchat" value="${editing?editing.telegramChatId||'':''}" placeholder="cth. 123456789"><span class="hint">Dipakai untuk notifikasi Telegram ke pribadi user. Cara dapat Chat ID: kirim pesan ke bot @userinfobot lalu salin angkanya.</span></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitUser('${editing?editing.id:''}')">Simpan</button>
@@ -3698,16 +3738,17 @@ async function submitUser(existingId){
   if(existingId){
     const u = userById(existingId);
     const noHp = document.getElementById('um-nohp') ? document.getElementById('um-nohp').value.trim() : u.noHp;
+    const tgChat = document.getElementById('um-tgchat') ? document.getElementById('um-tgchat').value.trim() : u.telegramChatId;
     // Simpan nilai lama untuk rollback kalau gagal simpan ke server
-    const prev = { nama: u.nama, username: u.username, password: u.password, kelompokId: u.kelompokId, noHp: u.noHp };
-    u.nama = nama; u.password = password; u.noHp = noHp;
+    const prev = { nama: u.nama, username: u.username, password: u.password, kelompokId: u.kelompokId, noHp: u.noHp, telegramChatId: u.telegramChatId };
+    u.nama = nama; u.password = password; u.noHp = noHp; u.telegramChatId = tgChat;
     if(u.id!=='u_admin') u.username = username;
     if(u.role!=='admin') u.kelompokId = kelompokId;
     if(u.role==='koordinator') await syncKoorKelompok(u.id, kelompokId);
     const result = await persistNow();
     if(!result.ok){
       // Gagal simpan ke server -> kembalikan nilai lama biar tidak bohong soal status "sukses"
-      u.nama = prev.nama; u.username = prev.username; u.password = prev.password; u.kelompokId = prev.kelompokId; u.noHp = prev.noHp;
+      u.nama = prev.nama; u.username = prev.username; u.password = prev.password; u.kelompokId = prev.kelompokId; u.noHp = prev.noHp; u.telegramChatId = prev.telegramChatId;
       toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
       if(btn){ btn.disabled = false; btn.textContent = 'Simpan'; }
       renderContent();
@@ -3715,7 +3756,7 @@ async function submitUser(existingId){
     }
     addLog('Ubah pengguna', 'Memperbarui data ' + nama);
   } else {
-    const newUser = {id:uid('u'), username, password, role, nama, noHp: document.getElementById('um-nohp') ? document.getElementById('um-nohp').value.trim() : '', createdAt: nowISO()};
+    const newUser = {id:uid('u'), username, password, role, nama, noHp: document.getElementById('um-nohp') ? document.getElementById('um-nohp').value.trim() : '', telegramChatId: document.getElementById('um-tgchat') ? document.getElementById('um-tgchat').value.trim() : '', createdAt: nowISO()};
     if(role!=='admin') newUser.kelompokId = kelompokId;
     DB.users.push(newUser);
     if(role==='koordinator') await syncKoorKelompok(newUser.id, kelompokId);
@@ -4784,7 +4825,9 @@ function renderAdminPengaturan(user){
 }
 function renderPengaturanWA(){
   const cfg = waSettings();
+  const tg = tgSettings();
   const testDefault = (cfg.adminNumbers||[])[0] || '';
+  const tgTestDefault = (tg.adminChatIds||[])[0] || '';
   return `
     <div class="card">
       <div class="section-label" style="margin-top:0;">Pengaturan WhatsApp (Fonnte)</div>
@@ -4800,6 +4843,22 @@ function renderPengaturanWA(){
       <div class="form-row"><label>Nomor tujuan tes</label><input type="text" id="wa-test-number" value="${testDefault}" placeholder="081234567890"></div>
       <button class="btn btn-primary btn-block" onclick="testNotifWA()">Kirim WA Tes</button>
       <div id="wa-test-result" style="margin-top:10px;font-size:13px;"></div>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="section-label" style="margin-top:0;">Pengaturan Telegram (gratis)</div>
+      <div class="hint" style="margin-bottom:10px;">Notifikasi juga bisa dikirim lewat Telegram (bot pribadi) tanpa biaya & tanpa tanda iar. Aktifkan kalau ingin memakainya sebagai tambahan atau pengganti WA.</div>
+      <div class="form-row"><label>Token Bot Telegram</label><input type="text" id="tg-token" value="${tg.token||''}" placeholder="cth. 123456789:ABCdef..."></div>
+      <div class="form-row"><label>Chat ID Admin</label><input type="text" id="tg-admin-chats" value="${(tg.adminChatIds||[]).join(', ')}" placeholder="123456789, 987654321"><span class="hint">Pisahkan dengan koma jika lebih dari satu. Cara dapat Chat ID: kirim pesan ke bot @userinfobot lalu salin angkanya.</span></div>
+      <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="tg-enabled" style="width:16px;height:16px;" ${tg.enabled?'checked':''}> Notifikasi Telegram aktif</label></div>
+      <span class="hint">Cara bikin Bot Telegram: di aplikasi Telegram, cari <b>@BotFather</b>, ketik <b>/newbot</b>, ikuti petunjuk, lalu salin token-nya ke sini.</span>
+      <button class="btn btn-primary btn-block" onclick="savePengaturanWA()" style="margin-top:10px;">Simpan pengaturan Telegram</button>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="section-label" style="margin-top:0;">Uji Kirim Telegram</div>
+      <div class="hint" style="margin-bottom:10px;">Kirim pesan tes untuk memastikan token & Chat ID berfungsi.</div>
+      <div class="form-row"><label>Chat ID tujuan tes</label><input type="text" id="tg-test-chat" value="${tgTestDefault}" placeholder="123456789"></div>
+      <button class="btn btn-primary btn-block" onclick="testNotifTG()">Kirim Telegram Tes</button>
+      <div id="tg-test-result" style="margin-top:10px;font-size:13px;"></div>
     </div>
   `;
 }
@@ -4840,8 +4899,13 @@ function savePengaturanWA(){
   cfg.adminNumbers = document.getElementById('wa-admin-numbers').value.split(',').map(s=>s.trim()).filter(Boolean);
   cfg.enabled = document.getElementById('wa-enabled').checked;
   DB.koperasi.info.notifWA = cfg;
+  const tg = DB.koperasi.info.notifTelegram || {};
+  tg.token = document.getElementById('tg-token').value.trim();
+  tg.adminChatIds = document.getElementById('tg-admin-chats').value.split(',').map(s=>s.trim()).filter(Boolean);
+  tg.enabled = document.getElementById('tg-enabled').checked;
+  DB.koperasi.info.notifTelegram = tg;
   persist();
-  toast('Pengaturan WhatsApp disimpan');
+  toast('Pengaturan notifikasi disimpan');
   renderContent();
 }
 async function testNotifWA(){
@@ -4873,6 +4937,35 @@ async function testNotifWA(){
   } catch(e){
     if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+e.message+'</span>';
     toast('Gagal kirim WA tes');
+  }
+}
+async function testNotifTG(){
+  const resultEl = document.getElementById('tg-test-result');
+  if(resultEl) resultEl.innerHTML = '';
+  const cfg = DB.koperasi.info.notifTelegram || {};
+  const token = (document.getElementById('tg-token').value.trim()) || cfg.token || '';
+  if(!token){ toast('Isi Token Bot Telegram dulu, lalu simpan'); return; }
+  const chat = (document.getElementById('tg-test-chat').value.trim()) || cfg.adminChatIds[0] || '';
+  if(!chat){ toast('Isi Chat ID tujuan tes'); return; }
+  if(resultEl){ resultEl.innerHTML = '<span style="color:var(--muted);">Mengirim ke <b>'+chat+'</b>...</span>'; }
+  try {
+    const res = await fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: String(chat), text: 'Tes notifikasi Telegram dari koperasi. Berhasil terkirim!' })
+    });
+    const data = await res.json();
+    if(data && data.ok){
+      if(resultEl) resultEl.innerHTML = '<span style="color:#1B7F3B;">✔ Pesan tes terkirim ke '+chat+'.</span>';
+      bigSuccess('Telegram tes terkirim');
+    } else {
+      const detail = data && data.description ? data.description : JSON.stringify(data);
+      if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+detail+'</span>';
+      toast('Gagal kirim Telegram tes');
+    }
+  } catch(e){
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+e.message+'</span>';
+    toast('Gagal kirim Telegram tes');
   }
 }
 let _pendingIconImage = null;
