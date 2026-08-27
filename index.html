@@ -4428,19 +4428,37 @@ function computeLapRingkasData(){
     byYear[y].total.angsuranMasuk = byYear[y].rows.reduce((s,r)=>s+r.angsuranMasuk,0);
   });
   base.byYear = Object.keys(byYear).sort().map(k=>byYear[k]);
+  // Pecah pool "Bagi Hasil" (shu) jadi SHU Saham + Bagi Hasil Tabungan menurut
+  // persentase aturan keuangan (bagiHasilTabunganPersen / default 100).
+  const atur = DB.koperasi.aturKeuangan || {};
+  const bhTabPersen = Math.max(0, Math.min(100, atur.bagiHasilTabunganPersen!=null?atur.bagiHasilTabunganPersen:(atur.bagiHasilPersen!=null?atur.bagiHasilPersen:100)));
+  const bhSahamPersen = 100 - bhTabPersen;
+  const splitPool = (val)=>({ bagiHasilTabungan: Math.round((val||0)*bhTabPersen/100), shuSaham: Math.round((val||0)*bhSahamPersen/100) });
+  base.byYear.forEach(yd=>{
+    (yd.rows||[]).forEach(r=>{
+      const sp = splitPool((r.bebanBulan&&r.bebanBulan['shu'])||0);
+      if(r.bebanBulan){ r.bebanBulan['bagiHasilTabungan'] = sp.bagiHasilTabungan; r.bebanBulan['shuSaham'] = sp.shuSaham; }
+    });
+    const tsp = splitPool((yd.bebanPools&&yd.bebanPools['shu'])||0);
+    if(yd.bebanPools){ yd.bebanPools['bagiHasilTabungan'] = tsp.bagiHasilTabungan; yd.bebanPools['shuSaham'] = tsp.shuSaham; }
+    if(yd.total) yd.total.shuSaham = tsp.shuSaham;
+  });
+  const pools = (base.pools||[]).filter(p=>p.id!=='shu').map(p=>p);
+  pools.push({id:'shuSaham', label:'SHU Saham', persen:bhSahamPersen});
+  pools.push({id:'bagiHasilTabungan', label:'Bagi Hasil Tabungan', persen:bhTabPersen});
   const overdue = computeOverdueLoans();
   const totalTertunggak = overdue.reduce((s,o)=>s+o.telat*(o.p.angsuranPerBulan||0),0);
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
   const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?p.jumlahPinjaman+marginNominalOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
   const poolSHUTabungan = (base.dana && base.dana.bagi_hasil_tabungan) || 0;
-  return { pools: base.pools, byYear: base.byYear, overdue, totalTertunggak, totalSimpanan, totalPembiayaanAktif, poolSHUTabungan };
+  return { pools: pools, byYear: base.byYear, overdue, totalTertunggak, totalSimpanan, totalPembiayaanAktif, poolSHUTabungan };
 }
 const LAP_RINGKAS_CATATAN = 'Angsuran Masuk = total nominal angsuran (pokok + margin) yang diterima pada bulan tsb. Angsuran Macet = kondisi real-time saat laporan dibuka (bukan histori per bulan), memakai definisi yang sama dengan daftar "Telat Bayar" di Beranda. SHU Tabungan, SHU Saham, dan pool lain dihitung dari alokasi persentase margin angsuran yang diterima, sesuai pengaturan di menu Pengaturan &rarr; Aturan Keuangan.';
 function renderAdminLaporanRingkas(user){
   const data = computeLapRingkasData();
   const pools = data.pools || [];
   const bebanPools = pools.filter(p=>p.id!=='shu_saham');
-  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const poolLabel = p => p.id==='bagiHasilTabungan' ? 'Bagi Hasil Tabungan' : (p.id==='shuSaham' ? 'SHU Saham' : p.label);
   const fmt = v => rupiah(v);
   let html = '';
   html += '<div class="page-title">Laporan Ringkas<span class="sub">Angsuran & bagi hasil, per bulan/tahun</span></div>';
@@ -4478,7 +4496,6 @@ function renderAdminLaporanRingkas(user){
   bebanPools.forEach(p=>{
     html += '<div class="stat-box stat-primary"><div class="n mono">'+fmt(yd.bebanPools[p.id]||0)+'</div><div class="l">'+poolLabel(p)+'</div></div>';
   });
-  html += '<div class="stat-box stat-gold"><div class="n mono">'+fmt(yd.total.shuSaham||0)+'</div><div class="l">SHU Saham</div></div>';
   html += '</div>';
 
   html += '<div class="section-label" style="margin-top:6px;">Rincian per Bulan &mdash; '+yd.tahun+'</div>';
@@ -4492,7 +4509,6 @@ function renderAdminLaporanRingkas(user){
     bebanPools.forEach(p=>{
       html += '<div><div style="font-size:10.5px;color:var(--muted);">'+poolLabel(p)+'</div><div class="mono" style="font-size:12.5px;font-weight:600;">'+fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)+'</div></div>';
     });
-    html += '<div><div style="font-size:10.5px;color:var(--muted);">SHU Saham</div><div class="mono" style="font-size:12.5px;font-weight:600;">'+fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)+'</div></div>';
     html += '</div>';
     html += '<div style="display:flex;gap:6px;margin-top:12px;">';
     html += '<button class="btn btn-outline btn-sm" style="flex:1;font-size:11px;padding:6px 8px;" onclick="cetakLapRingkasBulan(\''+yd.tahun+'\','+r.bulan+')">'+(ICONS.pdf||'📄')+' PDF</button>';
@@ -4509,7 +4525,6 @@ function renderAdminLaporanRingkas(user){
   bebanPools.forEach(p=>{
     html += '<div><div style="font-size:10.5px;color:var(--muted);">'+poolLabel(p)+'</div><div class="mono" style="font-size:12.5px;font-weight:700;">'+fmt(yd.bebanPools[p.id]||0)+'</div></div>';
   });
-  html += '<div><div style="font-size:10.5px;color:var(--muted);">SHU Saham</div><div class="mono" style="font-size:12.5px;font-weight:700;">'+fmt(yd.total.shuSaham||0)+'</div></div>';
   html += '</div>';
   html += '</div>';
   html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.6;">'+LAP_RINGKAS_CATATAN+'</div>';
@@ -4520,7 +4535,7 @@ function cetakLapRingkas(tahun){
   const data = computeLapRingkasData();
   const pools = data.pools || [];
   const bebanPools = pools.filter(p=>p.id!=='shu_saham');
-  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const poolLabel = p => p.id==='bagiHasilTabungan' ? 'Bagi Hasil Tabungan' : (p.id==='shuSaham' ? 'SHU Saham' : p.label);
   const yd = data.byYear.find(x=>x.tahun===tahun);
   if(!yd){ toast('Data tidak ditemukan'); return; }
   const { jsPDF } = window.jspdf;
@@ -4539,7 +4554,6 @@ function cetakLapRingkas(tahun){
   const body = [];
   body.push(['Angsuran Masuk', fmt(yd.total.angsuranMasuk||0)]);
   bebanPools.forEach(p=>body.push([poolLabel(p), fmt(yd.bebanPools[p.id]||0)]));
-  body.push(['SHU Saham', fmt(yd.total.shuSaham||0)]);
   doc.autoTable({
     head: [['Ringkasan Tahun ' + yd.tahun,'Jumlah']],
     body,
@@ -4548,12 +4562,11 @@ function cetakLapRingkas(tahun){
     headStyles:{ fillColor:[11,61,46], textColor:255, halign:'left' },
     columnStyles:{ 1:{ halign:'right', fontStyle:'bold' } }
   });
-  const cols = ['Bulan','Angsuran Masuk', ...bebanPools.map(poolLabel), 'SHU Saham'];
+  const cols = ['Bulan','Angsuran Masuk', ...bebanPools.map(poolLabel)];
   const rincian = yd.rows.map(r=>[
     LAP_MODAL_BULAN[r.bulan-1],
     fmt(r.angsuranMasuk||0),
-    ...bebanPools.map(p=>fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)),
-    fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)
+    ...bebanPools.map(p=>fmt((r.bebanBulan&&r.bebanBulan[p.id])||0))
   ]);
   doc.autoTable({
     head: [cols],
@@ -4575,7 +4588,7 @@ function exportLapRingkasXLS(tahun){
   const data = computeLapRingkasData();
   const pools = data.pools || [];
   const bebanPools = pools.filter(p=>p.id!=='shu_saham');
-  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const poolLabel = p => p.id==='bagiHasilTabungan' ? 'Bagi Hasil Tabungan' : (p.id==='shuSaham' ? 'SHU Saham' : p.label);
   const yd = data.byYear.find(x=>x.tahun===tahun);
   if(!yd){ toast('Data tidak ditemukan'); return; }
   const rows = [];
@@ -4588,15 +4601,13 @@ function exportLapRingkasXLS(tahun){
   rows.push(['RINGKASAN TAHUN '+tahun,'']);
   rows.push(['Angsuran Masuk', yd.total.angsuranMasuk||0]);
   bebanPools.forEach(p=>rows.push([poolLabel(p), yd.bebanPools[p.id]||0]));
-  rows.push(['SHU Saham', yd.total.shuSaham||0]);
   rows.push(['','']);
   rows.push(['RINCIAN PER BULAN','']);
-  rows.push(['Bulan','Angsuran Masuk', ...bebanPools.map(poolLabel), 'SHU Saham']);
+  rows.push(['Bulan','Angsuran Masuk', ...bebanPools.map(poolLabel)]);
   yd.rows.forEach(r=>rows.push([
     LAP_MODAL_BULAN[r.bulan-1],
     r.angsuranMasuk||0,
-    ...bebanPools.map(p=>(r.bebanBulan&&r.bebanBulan[p.id])||0),
-    (r.bebanBulan&&r.bebanBulan['shu_saham'])||0
+    ...bebanPools.map(p=>(r.bebanBulan&&r.bebanBulan[p.id])||0)
   ]));
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -4608,7 +4619,7 @@ function cetakLapRingkasBulan(tahun, bulan){
   const data = computeLapRingkasData();
   const pools = data.pools || [];
   const bebanPools = pools.filter(p=>p.id!=='shu_saham');
-  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const poolLabel = p => p.id==='bagiHasilTabungan' ? 'Bagi Hasil Tabungan' : (p.id==='shuSaham' ? 'SHU Saham' : p.label);
   const yd = data.byYear.find(x=>x.tahun===tahun);
   const r = yd && yd.rows.find(rr=>rr.bulan===Number(bulan));
   if(!r){ toast('Data tidak ditemukan'); return; }
@@ -4629,7 +4640,6 @@ function cetakLapRingkasBulan(tahun, bulan){
   const body = [];
   body.push(['Angsuran Masuk', fmt(r.angsuranMasuk||0)]);
   bebanPools.forEach(p=>body.push([poolLabel(p), fmt((r.bebanBulan&&r.bebanBulan[p.id])||0)]));
-  body.push(['SHU Saham', fmt((r.bebanBulan&&r.bebanBulan['shu_saham'])||0)]);
   doc.autoTable({
     head: [[namaBulan + ' ' + yd.tahun,'Jumlah']],
     body,
@@ -4649,7 +4659,7 @@ function exportLapRingkasBulanXLS(tahun, bulan){
   const data = computeLapRingkasData();
   const pools = data.pools || [];
   const bebanPools = pools.filter(p=>p.id!=='shu_saham');
-  const poolLabel = p => p.id==='bagi_hasil_tabungan' ? 'SHU Tabungan' : p.label;
+  const poolLabel = p => p.id==='bagiHasilTabungan' ? 'Bagi Hasil Tabungan' : (p.id==='shuSaham' ? 'SHU Saham' : p.label);
   const yd = data.byYear.find(x=>x.tahun===tahun);
   const r = yd && yd.rows.find(rr=>rr.bulan===Number(bulan));
   if(!r){ toast('Data tidak ditemukan'); return; }
@@ -4661,7 +4671,6 @@ function exportLapRingkasBulanXLS(tahun, bulan){
   rows.push(['','']);
   rows.push(['Angsuran Masuk', r.angsuranMasuk||0]);
   bebanPools.forEach(p=>rows.push([poolLabel(p), (r.bebanBulan&&r.bebanBulan[p.id])||0]));
-  rows.push(['SHU Saham', (r.bebanBulan&&r.bebanBulan['shu_saham'])||0]);
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, namaBulan+' '+tahun);
@@ -4954,9 +4963,29 @@ function renderPengaturanKeuangan(){
       <div style="margin:10px 0 4px;font-weight:600;font-size:13px;">Alokasi keuntungan ke pool (% dari total keuntungan):</div>
       ${poolInputs}
       <div class="hint" style="margin-bottom:8px;">Total alokasi harus = 100% (saat ini ${totalPoolPersen}%)</div>
+      <div style="margin:10px 0 4px;font-weight:600;font-size:13px;">Pembagian Bagi Hasil (Pool Bagi Hasil) ke Saham &amp; Tabungan:</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="form-row" style="flex:1;min-width:140px;"><label style="font-size:13px;">Ke Tabungan (%)</label><input type="number" id="atur-bh-tabungan" value="${atur.bagiHasilTabunganPersen!=null?atur.bagiHasilTabunganPersen:(atur.bagiHasilPersen!=null?atur.bagiHasilPersen:100)}" min="0" max="100" step="1" style="width:80px;text-align:center;" oninput="syncBagiHasilTabungan(this.value)"></div>
+        <div class="form-row" style="flex:1;min-width:140px;"><label style="font-size:13px;">Ke Saham (%)</label><input type="number" id="atur-bh-saham" value="${atur.bagiHasilSahamPersen!=null?atur.bagiHasilSahamPersen:(100-((atur.bagiHasilTabunganPersen!=null?atur.bagiHasilTabunganPersen:(atur.bagiHasilPersen!=null?atur.bagiHasilPersen:100))))}" min="0" max="100" step="1" style="width:80px;text-align:center;" oninput="syncBagiHasilSaham(this.value)"></div>
+      </div>
+      <div class="hint" style="margin:4px 0 8px;" id="hint-bagi-hasil">Total Saham + Tabungan harus = 100%. Saat ini Tabungan <span id="val-bh-tabungan">${atur.bagiHasilTabunganPersen!=null?atur.bagiHasilTabunganPersen:(atur.bagiHasilPersen!=null?atur.bagiHasilPersen:100)}</span>% + Saham <span id="val-bh-saham">${atur.bagiHasilSahamPersen!=null?atur.bagiHasilSahamPersen:(100-((atur.bagiHasilTabunganPersen!=null?atur.bagiHasilTabunganPersen:(atur.bagiHasilPersen!=null?atur.bagiHasilPersen:100))))}</span>%</div>
       <button class="btn btn-primary btn-block" onclick="simpanAturKeuangan()">Simpan Aturan</button>
     </div>
   `;
+}
+function syncBagiHasilTabungan(v){
+  v = Math.max(0, Math.min(100, parseInt(v)||0));
+  const saham = document.getElementById('atur-bh-saham');
+  if(saham){ saham.value = 100 - v; }
+  const hint = document.getElementById('hint-bagi-hasil');
+  if(hint){ hint.innerHTML = 'Total Saham + Tabungan harus = 100%. Saat ini Tabungan <span id="val-bh-tabungan">'+v+'</span>% + Saham <span id="val-bh-saham">'+(100-v)+'</span>%'; }
+}
+function syncBagiHasilSaham(v){
+  v = Math.max(0, Math.min(100, parseInt(v)||0));
+  const tabungan = document.getElementById('atur-bh-tabungan');
+  if(tabungan){ tabungan.value = 100 - v; }
+  const hint = document.getElementById('hint-bagi-hasil');
+  if(hint){ hint.innerHTML = 'Total Saham + Tabungan harus = 100%. Saat ini Tabungan <span id="val-bh-tabungan">'+(100-v)+'</span>% + Saham <span id="val-bh-saham">'+v+'</span>%'; }
 }
 function saveProfilKoperasi(){
   DB.koperasi.nama = document.getElementById('set-nama').value.trim() || DB.koperasi.nama;
@@ -4985,12 +5014,23 @@ async function simpanAturKeuangan(){
   const pools = (DB.koperasi.aturKeuangan.pools||[]).map(p=>({...p, persen: Math.max(0, parseIdr(document.getElementById('pool-'+p.id).value)||0)}));
   const total = pools.reduce((s,p)=>s+p.persen,0);
   if(Math.abs(total-100)>0.01){ toast('Total alokasi pool harus = 100% (sekarang '+total+'%)'); return; }
+  const bhTabEl = document.getElementById('atur-bh-tabungan');
+  const bhSahamEl = document.getElementById('atur-bh-saham');
+  if(bhTabEl){
+    const bhTab = Math.max(0, Math.min(100, parseInt(bhTabEl.value)||0));
+    const bhSaham = Math.max(0, Math.min(100, parseInt(bhSahamEl.value)||0));
+    if(bhTab + bhSaham !== 100){ toast('Total Bagi Hasil (Saham + Tabungan) harus = 100%'); return; }
+  }
   if(!DB.koperasi.aturKeuangan) DB.koperasi.aturKeuangan = {};
   // Simpan backup nilai lama untuk rollback kalau gagal
   const backup = JSON.parse(JSON.stringify(DB.koperasi.aturKeuangan));
   DB.koperasi.aturKeuangan.marginNominal = marginNominal;
   DB.koperasi.aturKeuangan.marginMaxNominal = marginMaxNominal;
   DB.koperasi.aturKeuangan.pools = pools;
+  if(bhTabEl){
+    DB.koperasi.aturKeuangan.bagiHasilTabunganPersen = Math.max(0, Math.min(100, parseInt(bhTabEl.value)||0));
+    DB.koperasi.aturKeuangan.bagiHasilSahamPersen = Math.max(0, Math.min(100, parseInt(bhSahamEl.value)||0));
+  }
   if(!DB.koperasi.aturKeuangan.dana) DB.koperasi.aturKeuangan.dana = {};
   const btn = document.querySelector('button[onclick="simpanAturKeuangan()"]');
   if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
