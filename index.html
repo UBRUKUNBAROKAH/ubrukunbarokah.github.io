@@ -4383,26 +4383,46 @@ function exportLapLabaRugiXLS(tahun){
 ========================================================= */
 function computeLapRingkasData(){
   const base = computeLapLabaRugiData();
-  const setoran = DB.setoran || [];
-  const angsurans = setoran.filter(s=>s.jenis==='angsuran');
+  // Baca angsuran masuk dari riwayatAngsuran pembiayaan (berlaku untuk semua
+  // jalur bayar), bukan hanya dari tabel setoran.
+  const pemb = DB.pembiayaan || [];
+  const riwayat = [];
+  pemb.forEach(p=>(p.riwayatAngsuran||[]).forEach(a=>riwayat.push({tanggal:a.tanggal, jumlah:a.jumlah||0})));
   // total angsuran masuk (nominal penuh yg dibayar, bukan cuma bagian margin) per tahun+bulan
   const masukMap = {};
-  angsurans.forEach(a=>{
+  riwayat.forEach(a=>{
     const d = new Date(a.tanggal);
     if(isNaN(d)) return;
     const y = d.getFullYear(), m = d.getMonth();
     if(!masukMap[y]) masukMap[y] = {};
     masukMap[y][m] = (masukMap[y][m]||0) + (a.jumlah||0);
   });
+  // Pastikan bulan yang hanya punya catatan riwayatAngsuran (tanpa baris setoran)
+  // tetap muncul di grid tahunan.
+  const bulanSet = {};
+  base.byYear.forEach(yd=>yd.rows.forEach(r=>bulanSet[yd.tahun+'-'+r.bulan]=true));
+  riwayat.forEach(a=>{ const d=new Date(a.tanggal); if(!isNaN(d)) bulanSet[d.getFullYear()+'-'+(d.getMonth()+1)] = true; });
+  // Gabungkan bulan tambahan dari riwayatAngsuran ke grid byYear (basis = setoran),
+  // agar bulan yang hanya punya catatan riwayatAngsuran tetap muncul.
+  const byYear = {};
   base.byYear.forEach(yd=>{
-    let totalMasuk = 0;
-    yd.rows.forEach(r=>{
-      const masuk = (masukMap[yd.tahun] && masukMap[yd.tahun][r.bulan-1]) || 0;
-      r.angsuranMasuk = masuk;
-      totalMasuk += masuk;
-    });
-    yd.total.angsuranMasuk = totalMasuk;
+    byYear[yd.tahun] = JSON.parse(JSON.stringify({
+      tahun: yd.tahun, rows: yd.rows, total: yd.total, bebanPools: yd.bebanPools||{}
+    }));
+    byYear[yd.tahun].rows.forEach(r=>r.angsuranMasuk = (r.angsuranMasuk||0));
   });
+  Object.keys(bulanSet).forEach(k=>{
+    const [yStr,mStr] = k.split('-'); const y = Number(yStr), m = Number(mStr);
+    if(!byYear[y]) byYear[y] = {tahun:String(y), rows:[], total:{angsuranMasuk:0, pendapatan:0, beban:0, shuSaham:0}, bebanPools:{}};
+    const row = byYear[y].rows.find(r=>r.bulan===m);
+    if(!row) byYear[y].rows.push({bulan:m, pendapatan:0, bebanBulan:{}, totalBeban:0, laba:0, kumLaba:0, angsuranMasuk:0});
+  });
+  Object.keys(byYear).forEach(y=>{
+    byYear[y].rows.sort((a,b)=>a.bulan-b.bulan);
+    byYear[y].rows.forEach(r=>r.angsuranMasuk = (masukMap[y]&&masukMap[y][r.bulan-1])||0);
+    byYear[y].total.angsuranMasuk = byYear[y].rows.reduce((s,r)=>s+r.angsuranMasuk,0);
+  });
+  base.byYear = Object.keys(byYear).sort().map(k=>byYear[k]);
   const overdue = computeOverdueLoans();
   const totalTertunggak = overdue.reduce((s,o)=>s+o.telat*(o.p.angsuranPerBulan||0),0);
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
