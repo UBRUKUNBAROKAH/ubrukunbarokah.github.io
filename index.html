@@ -4158,7 +4158,6 @@ function exportLapNeracaXLS(){
 const LAP_LABA_RUGI_CATATAN = 'Laporan Laba Rugi dihitung berbasis realisasi: pendapatan margin diakui setiap ada pembayaran angsuran (margin per angsuran = total margin dibagi tenor). Beban (bagi hasil tabungan, operasional, cadangan resiko, penyusutan, zakat, dana sosial) adalah alokasi dari margin yang tercatat di pool dana; SHU Saham diperlakukan sebagai alokasi laba untuk anggota, bukan beban. Sisa Laba / Cadangan Koperasi = Laba Bersih &minus; alokasi SHU Saham.';
 function computeLapLabaRugiData(){
   const pemb = DB.pembiayaan || [];
-  const setoran = DB.setoran || [];
   const atur = DB.koperasi.aturKeuangan || {};
   const pools = atur.pools || [];
   const dana = atur.dana || {};
@@ -4166,7 +4165,13 @@ function computeLapLabaRugiData(){
     if(!p || !p.tenor) return 0;
     return Math.round(marginNominalOf(p) / p.tenor);
   }
-  const angsurans = setoran.filter(s=>s.jenis==='angsuran');
+  // Sumber angsuran dibaca dari riwayatAngsuran pembiayaan (berlaku untuk semua
+  // jalur bayar), karena tabel setoran bisa kosong meski pembayaran tercatat.
+  const angsurans = [];
+  pemb.forEach(p=>(p.riwayatAngsuran||[]).forEach(a=>{
+    if(!a.tanggal) return;
+    angsurans.push({pembiayaanId:p.id, jumlah:a.jumlah||0, tanggal:a.tanggal});
+  }));
   // Ringkasan total (semua waktu): pendapatan dihitung ulang dari angsuran,
   // beban memakai nilai pool dana aktual yang terakumulasi saat angsuran dibayar.
   const totalPendapatan = angsurans.reduce((s,a)=>{
