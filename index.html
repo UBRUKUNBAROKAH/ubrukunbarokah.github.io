@@ -4406,7 +4406,8 @@ function computeLapRingkasData(){
   const totalTertunggak = overdue.reduce((s,o)=>s+o.telat*(o.p.angsuranPerBulan||0),0);
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
   const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?p.jumlahPinjaman+marginNominalOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
-  return { pools: base.pools, byYear: base.byYear, overdue, totalTertunggak, totalSimpanan, totalPembiayaanAktif };
+  const poolSHUTabungan = (base.dana && base.dana.bagi_hasil_tabungan) || 0;
+  return { pools: base.pools, byYear: base.byYear, overdue, totalTertunggak, totalSimpanan, totalPembiayaanAktif, poolSHUTabungan };
 }
 const LAP_RINGKAS_CATATAN = 'Angsuran Masuk = total nominal angsuran (pokok + margin) yang diterima pada bulan tsb. Angsuran Macet = kondisi real-time saat laporan dibuka (bukan histori per bulan), memakai definisi yang sama dengan daftar "Telat Bayar" di Beranda. SHU Tabungan, SHU Saham, dan pool lain dihitung dari alokasi persentase margin angsuran yang diterima, sesuai pengaturan di menu Pengaturan &rarr; Aturan Keuangan.';
 function renderAdminLaporanRingkas(user){
@@ -4421,6 +4422,7 @@ function renderAdminLaporanRingkas(user){
   html += '<div class="stat-grid cols-4" style="margin-bottom:14px;">';
   html += '<div class="stat-box stat-primary"><div class="ic-badge">'+(ICONS.wallet||'')+'</div><div class="n mono">'+fmt(data.totalSimpanan)+'</div><div class="l">Total tabungan</div></div>';
   html += '<div class="stat-box stat-gold"><div class="ic-badge">'+(ICONS.finance||'')+'</div><div class="n mono">'+fmt(data.totalPembiayaanAktif)+'</div><div class="l">Sisa pembiayaan aktif</div></div>';
+  html += '<div class="stat-box stat-primary"><div class="ic-badge">'+(ICONS.finance||'')+'</div><div class="n mono">'+fmt(data.poolSHUTabungan)+'</div><div class="l">Pool SHU Tabungan</div></div>';
   html += '<div class="stat-box'+(data.overdue.length?' stat-danger':'')+'"><div class="n mono">'+data.overdue.length+'</div><div class="l">Anggota telat bayar saat ini</div></div>';
   html += '<div class="stat-box'+(data.totalTertunggak?' stat-danger':'')+'"><div class="n mono">'+fmt(data.totalTertunggak)+'</div><div class="l">Total tunggakan angsuran</div></div>';
   html += '</div>';
