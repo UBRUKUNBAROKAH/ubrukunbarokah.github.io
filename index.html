@@ -6210,7 +6210,7 @@ function bayarAngsuranPrompt(pembId){
     </div>
   `);
 }
-function confirmBayarAngsuran(pembId){
+async function confirmBayarAngsuran(pembId){
   const jumlah = parseIdr(document.getElementById('bayar-angsuran-jumlah').value);
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
   const tglInput = document.getElementById('bayar-angsuran-tanggal').value;
@@ -6220,8 +6220,33 @@ function confirmBayarAngsuran(pembId){
   const tglDate = new Date(ty, tm-1, td, now.getHours(), now.getMinutes(), now.getSeconds());
   if(tglDate > now){ toast('Tanggal tidak boleh di masa depan'); return; }
   const s = getSession();
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  const snapshot = p ? {
+    riwayatLen: p.riwayatAngsuran.length,
+    sisaAngsuran: p.sisaAngsuran,
+    status: p.status,
+    setoranLen: DB.setoran.length,
+    dana: JSON.parse(JSON.stringify(DB.koperasi.aturKeuangan.dana||{}))
+  } : null;
   const r = doBayarAngsuran(pembId, s.userId, jumlah, tglDate.toISOString());
   if(!r.ok){ toast(r.msg); return; }
+  const btn = document.querySelector('button[onclick="confirmBayarAngsuran(\''+pembId+'\')"]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  const result = await persistNow();
+  if(!result.ok){
+    // Gagal simpan ke server -> batalkan biar tidak "hilang diam-diam" pas refresh & user tau ada masalah
+    if(p && snapshot){
+      p.riwayatAngsuran.length = snapshot.riwayatLen;
+      p.sisaAngsuran = snapshot.sisaAngsuran;
+      p.status = snapshot.status;
+      DB.setoran.length = snapshot.setoranLen;
+      DB.koperasi.aturKeuangan.dana = snapshot.dana;
+    }
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+    if(btn){ btn.disabled = false; btn.textContent = 'Konfirmasi bayar'; }
+    renderContent();
+    return;
+  }
   bigSuccess('Angsuran berhasil dicatat');
   closeModal();
   renderContent();
