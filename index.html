@@ -2047,20 +2047,21 @@ async function bayarHutangKoorUI(hutangId){
     renderContent();
   }, 'Ya, sudah dibayar');
 }
-function doBayarAngsuran(pembId, oleh, jumlah){
+function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.status==='lunas') return {ok:false, msg:'Pembiayaan tidak ditemukan atau sudah lunas.'};
   if(p.statusPengajuan!=='approved') return {ok:false, msg:'Pembiayaan belum disetujui admin.'};
   if(!jumlah || jumlah<=0) return {ok:false, msg:'Jumlah tidak valid.'};
+  const tgl = tanggal || nowISO();
   const angsuranKe = p.tenor - p.sisaAngsuran + 1;
-  p.riwayatAngsuran.push({id:uid('ang'), tanggal:nowISO(), jumlah, oleh, angsuranKe});
+  p.riwayatAngsuran.push({id:uid('ang'), tanggal:tgl, jumlah, oleh, angsuranKe});
   p.sisaAngsuran--;
   const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
   if(totalDibayar >= totalKew || p.sisaAngsuran<=0) p.status='lunas';
   const olehUser = userById(oleh);
   const isAdmin = olehUser && olehUser.role==='admin';
-  const st = {id:uid('st'), userId:p.userId, jenis:'angsuran', pembiayaanId:p.id, jumlah, keterangan:'Angsuran ke-'+angsuranKe, tanggal:nowISO(), dibuatOleh:oleh, status: isAdmin ? 'sudah_di_admin' : 'di_koordinator'};
+  const st = {id:uid('st'), userId:p.userId, jenis:'angsuran', pembiayaanId:p.id, jumlah, keterangan:'Angsuran ke-'+angsuranKe, tanggal:tgl, dibuatOleh:oleh, status: isAdmin ? 'sudah_di_admin' : 'di_koordinator'};
   if(isAdmin){ st.dikonfirmasiOleh = oleh; st.waktuKonfirmasi = nowISO(); }
   DB.setoran.push(st);
   if(!isAdmin) autoLunasiHutangDariSetoran(oleh);
@@ -6195,12 +6196,14 @@ function bayarAngsuranPrompt(pembId){
   const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
   const sisaTagihan = totalKew - totalDibayar;
+  const todayStr = new Date().toISOString().slice(0,10);
   openModal(`
     <h3>Bayar Angsuran</h3>
     <div class="card" style="margin-bottom:14px;">
       <div class="list-row"><div class="info"><div class="title">${userById(p.userId).nama}</div><div class="sub">Angsuran ke-${angsuranKe} dari ${p.tenor} &middot; Sisa tagihan ${rupiah(sisaTagihan)}</div></div></div>
     </div>
     <div class="form-row"><label>Jumlah bayar (Rp)</label><input type="number" id="bayar-angsuran-jumlah" min="0" step="5000" value="${Math.min(p.angsuranPerBulan, sisaTagihan)}"></div>
+    <div class="form-row"><label>Tanggal bayar</label><input type="date" id="bayar-angsuran-tanggal" max="${todayStr}" value="${todayStr}"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="confirmBayarAngsuran('${p.id}')">Konfirmasi bayar</button>
@@ -6210,8 +6213,14 @@ function bayarAngsuranPrompt(pembId){
 function confirmBayarAngsuran(pembId){
   const jumlah = parseIdr(document.getElementById('bayar-angsuran-jumlah').value);
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
+  const tglInput = document.getElementById('bayar-angsuran-tanggal').value;
+  if(!tglInput){ toast('Pilih tanggal bayar'); return; }
+  const now = new Date();
+  const [ty,tm,td] = tglInput.split('-').map(Number);
+  const tglDate = new Date(ty, tm-1, td, now.getHours(), now.getMinutes(), now.getSeconds());
+  if(tglDate > now){ toast('Tanggal tidak boleh di masa depan'); return; }
   const s = getSession();
-  const r = doBayarAngsuran(pembId, s.userId, jumlah);
+  const r = doBayarAngsuran(pembId, s.userId, jumlah, tglDate.toISOString());
   if(!r.ok){ toast(r.msg); return; }
   bigSuccess('Angsuran berhasil dicatat');
   closeModal();
