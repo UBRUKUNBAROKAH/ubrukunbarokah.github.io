@@ -1295,7 +1295,7 @@ function notifKoordinatorKelompokWA(kelompokId, pesan){
 function tgSettings(){
   const info = DB.koperasi?.info || {};
   const cfg = info.notifTelegram || {};
-  return { enabled: cfg.enabled !== undefined ? !!cfg.enabled : true, token: cfg.token || '8652500654:AAEc9-q1ZuwjP2FuxR2jIPNlyAdY65cSEVA', adminChatIds: Array.isArray(cfg.adminChatIds) ? cfg.adminChatIds : [] };
+  return { enabled: cfg.enabled !== undefined ? !!cfg.enabled : true, token: cfg.token || '8652500654:AAEc9-q1ZuwjP2FuxR2jIPNlyAdY65cSEVA', adminChatIds: Array.isArray(cfg.adminChatIds) && cfg.adminChatIds.length ? cfg.adminChatIds : ['5370804782'] };
 }
 async function kirimTelegram(chatId, pesan){
   const cfg = tgSettings();
