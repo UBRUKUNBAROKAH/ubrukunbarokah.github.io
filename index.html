@@ -715,6 +715,7 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 const SUPABASE_URL = 'https://nuczywforbwbctwxbfky.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51Y3p5d2ZvcmJ3YmN0d3hiZmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjY5NTAsImV4cCI6MjA5ODkwMjk1MH0.4xQPbzS8EQ3NAdwzkU5Q5Fjbxi2Q0rlRDWYaYBCQ8Ic';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const TG_FN_URL = SUPABASE_URL + '/functions/v1/telegram';
 let SUPABASE_ENABLED = true;
 
 const TABLES = {
@@ -1302,16 +1303,18 @@ async function kirimTelegram(chatId, pesan){
   if(!cfg.token){ console.warn('Telegram token belum diisi'); return; }
   if(!chatId){ console.warn('Telegram chat ID kosong'); return; }
   try {
-    const res = await fetch('https://api.telegram.org/bot' + cfg.token + '/sendMessage', {
+    const res = await fetch(TG_FN_URL + '?action=send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: String(chatId), text: pesan, disable_web_page_preview: true })
+      body: JSON.stringify({ chatId: String(chatId), text: pesan })
     });
-    const data = await res.json();
-    if(!data.ok) console.warn('Telegram error:', data);
+    const data = await res.json().catch(()=>({}));
+    if(data && data.ok) return data;
+    if(data && data.telegram) return data.telegram;
+    console.warn('Telegram relay:', data);
     return data;
   } catch(e){
-    console.warn('Telegram gagal:', e);
+    console.warn('Telegram relay gagal:', e);
   }
 }
 function notifTgChat(chatId, pesan){
@@ -1352,31 +1355,32 @@ function tgLinkStatusForUser(u){
 }
 async function pollTelegramLinks(){
   const cfg = tgSettings();
-  if(!cfg.enabled || !cfg.token) return;
+  if(!cfg.enabled) return;
+  const me = currentUser();
+  if(!me) return;
   const info = DB.koperasi?.info || {};
-  const offset = info.telegramOffset || 0;
   try {
-    const res = await fetch('https://api.telegram.org/bot' + cfg.token + '/getUpdates?timeout=1&offset=' + (offset || '') + '&allowed_updates=["message"]');
-    const data = await res.json();
-    if(!data.ok) return;
-    const updates = data.result || [];
-    for(const up of updates){
-      info.telegramOffset = (up.update_id + 1);
-      const msg = up.message;
-      if(!msg || !msg.chat || !msg.text) continue;
-      const text = String(msg.text).trim();
-      const m = text.match(/^\/start\s+u_(.+)$/);
-      if(m){
-        const userId = decodeURIComponent(m[1]);
-        const u = userById(userId);
-        if(u && u.id === userId){
-          setTelegramLink(userId, msg.chat.id);
-        }
+    const res = await fetch(TG_FN_URL + '?action=refresh');
+    const data = await res.json().catch(()=>({}));
+    if(data && data.ok){
+      let changed = false;
+      if(typeof data.telegramLinks === 'object' && data.telegramLinks !== null){
+        info.telegramLinks = data.telegramLinks;
+        changed = true;
+      } else if(data.telegramLinks && info.telegramLinks !== data.telegramLinks){
+        info.telegramLinks = data.telegramLinks;
+        changed = true;
+      }
+      if(changed) persist();
+      const nowLinked = !!getTelegramChatId(me.id);
+      if(info._tgStatusShown !== nowLinked){
+        info._tgStatusShown = nowLinked;
+        persist();
+        renderContent();
       }
     }
-    if(updates.length) persist();
   } catch(e){
-    console.warn('Telegram poll gagal:', e);
+    console.warn('Telegram refresh gagal:', e);
   }
 }
 let _tgPollTimer = null;
@@ -1387,6 +1391,33 @@ function scheduleTgPoll(){
     if(cfg.enabled && getSession() && document.visibilityState !== 'hidden') pollTelegramLinks();
   }, 20000);
   pollTelegramLinks();
+}
+async function setupWebhookUI(){
+  const el = document.getElementById('tg-webhook-result');
+  if(el) el.innerHTML = '<span style="color:var(--muted);">Menyiapkan webhook...</span>';
+  const r = await setupTelegramWebhook();
+  if(el){
+    const ok = r && r.ok && r.data && r.data.telegram && r.data.telegram.ok;
+    if(ok){
+      el.innerHTML = '<span style="color:#1B7F3B;">✔ Webhook aktif. Bot siap menerima /start.</span>';
+      bigSuccess('Webhook Telegram aktif');
+    } else {
+      const detail = (r && r.data && r.data.telegram && r.data.telegram.description) || (r && r.msg) || 'Periksa apakah Edge Function telegram sudah di-deploy.';
+      el.innerHTML = '<span style="color:var(--danger);">✘ Gagal aktifkan webhook: '+detail+'</span>';
+      toast('Gagal aktifkan webhook');
+    }
+  }
+}
+async function setupTelegramWebhook(){
+  const cfg = tgSettings();
+  if(!cfg.enabled) return { ok:false, msg:'Telegram nonaktif' };
+  try {
+    const res = await fetch(TG_FN_URL + '?action=setwebhook');
+    const data = await res.json().catch(()=>({}));
+    return { ok: !!(data && data.ok), data };
+  } catch(e){
+    return { ok:false, msg:'gagal: '+e.message };
+  }
 }
 // ---------- Format pesan WA yang lengkap & formal ----------
 function waHeader(title){
@@ -3645,6 +3676,7 @@ function simpanProfilSaya(){
   u.username = username || u.username;
   if(password) u.password = password;
   u.telegramChatId = tgChat;
+  if(tgChat) setTelegramLink(u.id, tgChat);
   persist();
   addLog('Ubah profil', 'Memperbarui profil sendiri');
   applyKoperasiBranding();
@@ -4934,6 +4966,13 @@ function renderPengaturanWA(){
       <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="tg-enabled" style="width:16px;height:16px;" ${tg.enabled?'checked':''}> Notifikasi Telegram aktif</label></div>
       <span class="hint">Cara bikin Bot Telegram: di aplikasi Telegram, cari <b>@BotFather</b>, ketik <b>/newbot</b>, ikuti petunjuk, lalu salin token-nya ke sini.</span>
       <button class="btn btn-primary btn-block" onclick="savePengaturanWA()" style="margin-top:10px;">Simpan pengaturan Telegram</button>
+      <div style="background:var(--primary-soft);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.5;margin-top:12px;">
+        <b>Webhook Telegram</b> — wajib diaktifkan sekali supaya bot bisa menerima "/start" saat nasabah menghubungkan. Pastikan Edge Function <b>telegram</b> sudah di-deploy di Supabase.
+        <div style="margin-top:8px;">
+          <button class="btn btn-primary" onclick="setupWebhookUI()">Aktifkan Webhook Telegram</button>
+        </div>
+        <div id="tg-webhook-result" style="margin-top:8px;font-size:12.5px;"></div>
+      </div>
     </div>
     <div class="card" style="margin-top:12px;">
       <div class="section-label" style="margin-top:0;">Uji Kirim Telegram</div>
@@ -5024,24 +5063,22 @@ async function testNotifWA(){
 async function testNotifTG(){
   const resultEl = document.getElementById('tg-test-result');
   if(resultEl) resultEl.innerHTML = '';
-  const cfg = DB.koperasi.info.notifTelegram || {};
-  const token = (document.getElementById('tg-token').value.trim()) || cfg.token || '';
-  if(!token){ toast('Isi Token Bot Telegram dulu, lalu simpan'); return; }
-  const chat = (document.getElementById('tg-test-chat').value.trim()) || cfg.adminChatIds[0] || '';
+  const chat = (document.getElementById('tg-test-chat').value.trim()) || '';
   if(!chat){ toast('Isi Chat ID tujuan tes'); return; }
-  if(resultEl){ resultEl.innerHTML = '<span style="color:var(--muted);">Mengirim ke <b>'+chat+'</b>...</span>'; }
+  if(resultEl){ resultEl.innerHTML = '<span style="color:var(--muted);">Mengirim ke <b>'+chat+'</b> (via relay Supabase)...</span>'; }
   try {
-    const res = await fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+    const res = await fetch(TG_FN_URL + '?action=send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: String(chat), text: 'Tes notifikasi Telegram dari koperasi. Berhasil terkirim!' })
+      body: JSON.stringify({ chatId: String(chat), text: 'Tes notifikasi Telegram dari koperasi. Berhasil terkirim!' })
     });
-    const data = await res.json();
-    if(data && data.ok){
+    const data = await res.json().catch(()=>({}));
+    const tg = data && data.telegram;
+    if(data && data.ok && tg && tg.ok){
       if(resultEl) resultEl.innerHTML = '<span style="color:#1B7F3B;">✔ Pesan tes terkirim ke '+chat+'.</span>';
       bigSuccess('Telegram tes terkirim');
     } else {
-      const detail = data && data.description ? data.description : JSON.stringify(data);
+      const detail = (tg && tg.description) || (data && data.msg) || JSON.stringify(data);
       if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+detail+'</span>';
       toast('Gagal kirim Telegram tes');
     }
