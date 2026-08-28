@@ -3740,6 +3740,37 @@ function renderAdminUserMgmt(user){
 function openUserModal(userId, newRole){
   const editing = userId ? userById(userId) : null;
   const role = editing ? editing.role : (newRole || 'nasabah');
+
+  // Alur khusus Tambah Nasabah: pilih kelompok -> daftar nasabah -> search -> nama & password
+  if(!editing && role==='nasabah'){
+    openModal(`
+      <h3>Tambah Nasabah</h3>
+      <input type="hidden" id="um-role" value="nasabah">
+      <input type="hidden" id="um-editing" value="">
+      <p class="hint" style="margin:0 0 12px;">Pilih kelompok, lalu pilih nasabah yang belum punya akun login.</p>
+      <div class="form-row"><label>Pilih Kelompok</label>
+        <select id="um-kelompok" onchange="umLoadMembers()">
+          ${DB.koperasi.kelompok.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row"><label>Pilih Nasabah</label>
+        <div class="search-box" style="margin-bottom:8px;">${ICONS.search}<input id="um-member-search" placeholder="Cari nama nasabah" oninput="umFilterMembers()"></div>
+        <select id="um-member" size="6" style="width:100%;" onchange="umPickMember()"></select>
+        <span class="hint" id="um-member-hint"></span>
+      </div>
+      <div class="form-row"><label>Nama lengkap</label><input type="text" id="um-nama" readonly placeholder="Terisi otomatis dari nasabah"></div>
+      <div class="form-row"><label>Nama pengguna (username)</label><input type="text" id="um-username" placeholder="Username untuk login"></div>
+      <div class="form-row"><label>Kata sandi <span class="hint" style="font-weight:400;">(default: anggota123)</span></label><input type="text" id="um-password" value="anggota123" placeholder="Kata sandi"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+        <button class="btn btn-primary" onclick="submitUser('')">Buat Akun</button>
+      </div>
+    `);
+    umLoadMembers();
+    return;
+  }
+
+  // Ubah pengguna / tambah koordinator & admin
   openModal(`
     <h3>${editing ? 'Ubah Pengguna' : 'Tambah ' + roleLabel(role)}</h3>
     <input type="hidden" id="um-role" value="${role}">
@@ -3750,13 +3781,42 @@ function openUserModal(userId, newRole){
     <div class="form-row" id="um-kelompok-row"><label>Kelompok</label>
       <select id="um-kelompok">${DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${editing&&editing.kelompokId===k.id?'selected':''}>${k.nama}</option>`).join('')}</select>
     </div>
-    <div class="form-row"><label>No. HP (WhatsApp)</label><input type="text" id="um-nohp" value="${editing?editing.noHp||'':''}" placeholder="081234567890"><span class="hint">Dipakai untuk notifikasi WhatsApp (mis. konfirmasi setoran, ACC/tolak pengajuan).</span></div>
-    <div class="form-row"><label>Telegram Chat ID <span class="hint" style="font-weight:400;">(untuk notifikasi Telegram)</span></label><input type="text" id="um-tgchat" value="${editing?editing.telegramChatId||'':''}" placeholder="cth. 123456789"><span class="hint">Dipakai untuk notifikasi Telegram ke pribadi user. Cara dapat Chat ID: kirim pesan ke bot @userinfobot lalu salin angkanya.</span></div>
+    <div class="form-row"><label>No. HP (WhatsApp)</label><input type="text" id="um-nohp" value="${editing?editing.noHp||'':''}" placeholder="081234567890"></div>
+    <div class="form-row"><label>Telegram (opsional)</label><input type="text" id="um-tgchat" value="${editing?editing.telegramChatId||'':''}" placeholder="cth. 123456789"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitUser('${editing?editing.id:''}')">Simpan</button>
     </div>
   `);
+}
+// Muat daftar nasabah (yang belum punya akun login) dari kelompok terpilih
+function umLoadMembers(){
+  const sel = document.getElementById('um-member');
+  if(!sel) return;
+  const kelompokId = document.getElementById('um-kelompok').value;
+  const list = DB.users.filter(u=>u.role==='nasabah' && u._noAkun && u.kelompokId===kelompokId)
+    .sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+  sel.innerHTML = list.length ? list.map(u=>`<option value="${u.id}" data-nama="${u.nama}" data-nohp="${u.noHp||''}" data-rek="${u.noRekening||''}">${u.nama} &middot; ${u.noRekening||'-'}</option>`).join('')
+    : '<option value="">- Tidak ada nasabah tanpa akun di kelompok ini -</option>';
+  const hint = document.getElementById('um-member-hint');
+  if(hint) hint.textContent = list.length ? 'Klik satu nasabah di atas, lalu isi username & kata sandi.' : 'Semua nasabah di kelompok ini sudah punya akun login. Tambah nasabah baru lewat menu Anggota.';
+  document.getElementById('um-member-search').value = '';
+  document.getElementById('um-nama').value = '';
+}
+// Filter daftar nasabah sesuai kata kunci pencarian
+function umFilterMembers(){
+  const q = (document.getElementById('um-member-search').value||'').toLowerCase();
+  [...document.querySelectorAll('#um-member option')].forEach(opt=>{
+    const hide = !opt.value || (q && !((opt.dataset.nama||'').toLowerCase().includes(q)));
+    opt.style.display = hide ? 'none' : '';
+  });
+}
+// Ketika satu nasabah dipilih -> isi otomatis nama lengkap
+function umPickMember(){
+  const sel = document.getElementById('um-member');
+  const opt = sel && sel.selectedOptions && sel.selectedOptions[0];
+  const namaEl = document.getElementById('um-nama');
+  if(namaEl && opt && opt.value) namaEl.value = opt.dataset.nama || '';
 }
 async function syncKoorKelompok(userId, newKelompokId){
   // Lepaskan koordinator dari kelompok lama (jika ada) yang masih menunjuk ke dia
@@ -3779,26 +3839,27 @@ async function submitUser(existingId){
   const kelompokEl = document.getElementById('um-kelompok');
   const kelompokId = kelompokEl ? kelompokEl.value : null;
 
-  // Tambah akun nasabah baru (form sederhana: isi nama, username, password, kelompok, dst)
+  // Tambah akun login untuk nasabah (pilih kelompok -> pilih nasabah di form)
   if(!existingId && role==='nasabah'){
-    const nama = document.getElementById('um-nama').value.trim();
-    if(!nama || !username || !password){ toast('Lengkapi semua data'); return; }
+    const memberId = document.getElementById('um-member') ? document.getElementById('um-member').value : '';
+    const agg = DB.users.find(u=>u.id===memberId && u._noAkun);
+    if(!agg){ toast('Pilih nasabah dari daftar terlebih dahulu'); return; }
+    if(!username || !password){ toast('Lengkapi username & kata sandi'); return; }
     if(DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
-    const noHp = document.getElementById('um-nohp') ? document.getElementById('um-nohp').value.trim() : '';
-    const tgChat = document.getElementById('um-tgchat') ? document.getElementById('um-tgchat').value.trim() : '';
     const newUser = {
-      id: uid('u'), username, password, role: 'nasabah', nama,
-      anggotaId: uid('agg'), kelompokId, noRekening: String(2026 + DB.users.length),
-      noHp, telegramChatId: tgChat || undefined, saham:{s_A:0,s_B:0,s_C:0}, status:'aktif', createdAt: nowISO()
+      id: agg.id, username, password, role: 'nasabah', nama: agg.nama,
+      anggotaId: agg.id, kelompokId: agg.kelompokId, noRekening: agg.noRekening,
+      noHp: agg.noHp || '', telegramChatId: agg.telegramChatId || undefined,
+      saham: agg.saham || {s_A:0,s_B:0,s_C:0}, status: agg.status || 'aktif',
+      createdAt: agg.createdAt || nowISO()
     };
+    DB.users = DB.users.filter(u=>u.id!==agg.id); // ganti entri sementara (_noAkun) jadi akun login resmi
     DB.users.push(newUser);
-    if(tgChat) setTelegramLink(newUser.id, tgChat);
-    addLog('Tambah pengguna', 'Membuat akun login untuk nasabah: ' + nama);
+    addLog('Tambah pengguna', 'Membuat akun login untuk nasabah: ' + agg.nama);
     persist();
     if(SUPABASE_ENABLED){
       upsertToSupabase(TABLES.users, toSnake(newUser)).then(r=>{ if(r.error) console.error('Supabase user err', r.error); });
-      const aggSnake = { id: newUser.anggotaId, nama, no_rekening: newUser.noRekening, kelompok_id: kelompokId, no_hp: noHp || null, status: 'aktif', created_at: newUser.createdAt };
-      upsertToSupabase(TABLES.anggota, aggSnake).then(r=>{ if(r.error) console.error('Supabase anggota err', r.error); });
+      upsertToSupabase(TABLES.anggota, { id: agg.id, nama: agg.nama, no_rekening: agg.noRekening, kelompok_id: agg.kelompokId, no_hp: agg.noHp || null, status: 'aktif' }).then(r=>{ if(r.error) console.error('Supabase anggota err', r.error); });
     }
     bigSuccess('Akun login berhasil dibuat');
     closeModal();
