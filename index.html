@@ -3741,21 +3741,20 @@ function openUserModal(userId, newRole){
   const editing = userId ? userById(userId) : null;
   const role = editing ? editing.role : (newRole || 'nasabah');
 
-  // Alur khusus Tambah Nasabah: pilih kelompok -> daftar nasabah -> search -> nama & password
+  // Alur khusus Tambah/Buat akun nasabah: pilih kelompok -> daftar nasabah -> username & password
   if(!editing && role==='nasabah'){
     openModal(`
-      <h3>Tambah Nasabah</h3>
+      <h3>Buat Akun Nasabah</h3>
       <input type="hidden" id="um-role" value="nasabah">
       <input type="hidden" id="um-editing" value="">
-      <p class="hint" style="margin:0 0 12px;">Pilih kelompok, lalu pilih nasabah yang belum punya akun login.</p>
+      <p class="hint" style="margin:0 0 12px;">Pilih kelompok, lalu pilih nasabah. Untuk nasabah yang sudah punya akun, username & kata sandi-nya akan diperbarui.</p>
       <div class="form-row"><label>Pilih Kelompok</label>
         <select id="um-kelompok" onchange="umLoadMembers()">
           ${DB.koperasi.kelompok.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('')}
         </select>
       </div>
       <div class="form-row"><label>Pilih Nasabah</label>
-        <div class="search-box" style="margin-bottom:8px;">${ICONS.search}<input id="um-member-search" placeholder="Cari nama nasabah" oninput="umFilterMembers()"></div>
-        <select id="um-member" size="6" style="width:100%;" onchange="umPickMember()"></select>
+        <select id="um-member" size="8" style="width:100%;" onchange="umPickMember()"></select>
         <span class="hint" id="um-member-hint"></span>
       </div>
       <div class="form-row"><label>Nama lengkap</label><input type="text" id="um-nama" readonly placeholder="Terisi otomatis dari nasabah"></div>
@@ -3763,7 +3762,7 @@ function openUserModal(userId, newRole){
       <div class="form-row"><label>Kata sandi <span class="hint" style="font-weight:400;">(default: anggota123)</span></label><input type="text" id="um-password" value="anggota123" placeholder="Kata sandi"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" onclick="closeModal()">Batal</button>
-        <button class="btn btn-primary" onclick="submitUser('')">Buat Akun</button>
+        <button class="btn btn-primary" onclick="submitUser('')">Simpan</button>
       </div>
     `);
     umLoadMembers();
@@ -3794,29 +3793,25 @@ function umLoadMembers(){
   const sel = document.getElementById('um-member');
   if(!sel) return;
   const kelompokId = document.getElementById('um-kelompok').value;
-  const list = DB.users.filter(u=>u.role==='nasabah' && u._noAkun && u.kelompokId===kelompokId)
+  const list = DB.users.filter(u=>u.role==='nasabah' && u.kelompokId===kelompokId)
     .sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
-  sel.innerHTML = list.length ? list.map(u=>`<option value="${u.id}" data-nama="${u.nama}" data-nohp="${u.noHp||''}" data-rek="${u.noRekening||''}">${u.nama} &middot; ${u.noRekening||'-'}</option>`).join('')
-    : '<option value="">- Tidak ada nasabah tanpa akun di kelompok ini -</option>';
+  sel.innerHTML = list.length ? list.map(u=>`<option value="${u.id}" data-nama="${u.nama}" data-username="${u.username||''}">${u.nama} &middot; ${u.noRekening||'-'}${!u._noAkun?' &middot; (ada akun)':''}</option>`).join('')
+    : '<option value="">- Tidak ada nasabah di kelompok ini -</option>';
   const hint = document.getElementById('um-member-hint');
-  if(hint) hint.textContent = list.length ? 'Klik satu nasabah di atas, lalu isi username & kata sandi.' : 'Semua nasabah di kelompok ini sudah punya akun login. Tambah nasabah baru lewat menu Anggota.';
-  document.getElementById('um-member-search').value = '';
+  if(hint) hint.textContent = list.length ? 'Klik satu nasabah di atas.' : 'Tidak ada nasabah pada kelompok ini. Tambah nasabah dulu lewat menu Anggota.';
   document.getElementById('um-nama').value = '';
-}
-// Filter daftar nasabah sesuai kata kunci pencarian
-function umFilterMembers(){
-  const q = (document.getElementById('um-member-search').value||'').toLowerCase();
-  [...document.querySelectorAll('#um-member option')].forEach(opt=>{
-    const hide = !opt.value || (q && !((opt.dataset.nama||'').toLowerCase().includes(q)));
-    opt.style.display = hide ? 'none' : '';
-  });
+  document.getElementById('um-username').value = '';
+  document.getElementById('um-password').value = 'anggota123';
 }
 // Ketika satu nasabah dipilih -> isi otomatis nama lengkap
 function umPickMember(){
   const sel = document.getElementById('um-member');
   const opt = sel && sel.selectedOptions && sel.selectedOptions[0];
+  if(!opt || !opt.value) return;
   const namaEl = document.getElementById('um-nama');
-  if(namaEl && opt && opt.value) namaEl.value = opt.dataset.nama || '';
+  if(namaEl) namaEl.value = opt.dataset.nama || '';
+  const unameEl = document.getElementById('um-username');
+  if(unameEl && !unameEl.value) unameEl.value = opt.dataset.username || '';
 }
 async function syncKoorKelompok(userId, newKelompokId){
   // Lepaskan koordinator dari kelompok lama (jika ada) yang masih menunjuk ke dia
@@ -3839,29 +3834,42 @@ async function submitUser(existingId){
   const kelompokEl = document.getElementById('um-kelompok');
   const kelompokId = kelompokEl ? kelompokEl.value : null;
 
-  // Tambah akun login untuk nasabah (pilih kelompok -> pilih nasabah di form)
+  // Buat / perbarui akun login nasabah (pilih kelompok -> pilih nasabah di form)
   if(!existingId && role==='nasabah'){
     const memberId = document.getElementById('um-member') ? document.getElementById('um-member').value : '';
-    const agg = DB.users.find(u=>u.id===memberId && u._noAkun);
-    if(!agg){ toast('Pilih nasabah dari daftar terlebih dahulu'); return; }
+    const target = DB.users.find(u=>u.id===memberId && u.role==='nasabah');
+    if(!target){ toast('Pilih nasabah dari daftar terlebih dahulu'); return; }
     if(!username || !password){ toast('Lengkapi username & kata sandi'); return; }
-    if(DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
-    const newUser = {
-      id: agg.id, username, password, role: 'nasabah', nama: agg.nama,
-      anggotaId: agg.id, kelompokId: agg.kelompokId, noRekening: agg.noRekening,
-      noHp: agg.noHp || '', telegramChatId: agg.telegramChatId || undefined,
-      saham: agg.saham || {s_A:0,s_B:0,s_C:0}, status: agg.status || 'aktif',
-      createdAt: agg.createdAt || nowISO()
-    };
-    DB.users = DB.users.filter(u=>u.id!==agg.id); // ganti entri sementara (_noAkun) jadi akun login resmi
-    DB.users.push(newUser);
-    addLog('Tambah pengguna', 'Membuat akun login untuk nasabah: ' + agg.nama);
-    persist();
-    if(SUPABASE_ENABLED){
-      upsertToSupabase(TABLES.users, toSnake(newUser)).then(r=>{ if(r.error) console.error('Supabase user err', r.error); });
-      upsertToSupabase(TABLES.anggota, { id: agg.id, nama: agg.nama, no_rekening: agg.noRekening, kelompok_id: agg.kelompokId, no_hp: agg.noHp || null, status: 'aktif' }).then(r=>{ if(r.error) console.error('Supabase anggota err', r.error); });
+    if(DB.users.some(u=>u.username===username && u.id!==target.id)){ toast('Nama pengguna sudah dipakai'); return; }
+    // Kasus 1: nasabah belum punya akun login (_noAkun) -> buat akun baru resmi
+    if(target._noAkun){
+      const newId = uid('u');
+      const newUser = {
+        id: newId, username, password, role: 'nasabah', nama: target.nama,
+        anggotaId: target.id, kelompokId: target.kelompokId, noRekening: target.noRekening,
+        noHp: target.noHp || '', saham: target.saham || {s_A:0,s_B:0,s_C:0},
+        status: target.status || 'aktif', createdAt: nowISO()
+      };
+      DB.users = DB.users.filter(u=>u.id!==target.id); // ganti entri sementara (_noAkun), hubungi anggota lama
+      DB.users.push(newUser);
+      if(SUPABASE_ENABLED){
+        upsertToSupabase(TABLES.users, toSnake(newUser)).then(r=>{ if(r.error) console.error('Supabase user err', r.error); });
+        upsertToSupabase(TABLES.anggota, { id: target.id, nama: target.nama, no_rekening: target.noRekening, kelompok_id: target.kelompokId, no_hp: target.noHp || null, status: 'aktif' }).then(r=>{ if(r.error) console.error('Supabase anggota err', r.error); });
+      }
+      addLog('Tambah pengguna', 'Membuat akun login untuk nasabah: ' + target.nama);
+      bigSuccess('Akun login untuk ' + target.nama + ' berhasil dibuat');
     }
-    bigSuccess('Akun login berhasil dibuat');
+    // Kasus 2: nasabah sudah punya akun -> perbarui username & kata sandi
+    else {
+      const prevUn = target.username;
+      target.username = username; target.password = password;
+      if(SUPABASE_ENABLED){
+        upsertToSupabase(TABLES.users, { id: target.id, username, password }).then(r=>{ if(r.error) console.error('Supabase user err', r.error); });
+      }
+      addLog('Ubah pengguna', 'Memperbarui akun login nasabah: ' + target.nama + (prevUn!==username?' (username ' + prevUn + ' -> ' + username + ')':''));
+      bigSuccess('Akun login untuk ' + target.nama + ' telah diperbarui');
+    }
+    persist();
     closeModal();
     renderContent();
     return;
