@@ -3023,9 +3023,7 @@ function renderAdminTabunganDetail(user, userId){
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
       <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening}</div>
-    </div>
-    <div class="stat-grid" style="margin-bottom:14px;">
-      ${accs.length ? accs.map(({j,acc})=>`<div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(acc.saldo)}</div><div class="l">${j.nama}<br><span style="font-size:9px;color:var(--muted);">${acc.noRekening||'-'}</span></div></div>`).join('') : `<div class="hint">Belum ada rekening tabungan.</div>`}
+      ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12.5px;color:var(--muted);">${j.nama}<br><span style="font-size:9.5px;">${acc.noRekening||'-'}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:16px;">
       <button class="btn btn-primary" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','setor')">${ICONS.down} Setor</button>
@@ -6325,9 +6323,7 @@ function renderKoorTabunganDetail(user, userId){
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
       <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening}</div>
-    </div>
-    <div class="stat-grid" style="margin-bottom:14px;">
-      ${accs.length ? accs.map(({j,acc})=>`<div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(acc.saldo)}</div><div class="l">${j.nama}<br><span style="font-size:9px;color:var(--muted);">${acc.noRekening||'-'}</span></div></div>`).join('') : `<div class="hint">Belum ada rekening tabungan.</div>`}
+      ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12.5px;color:var(--muted);">${j.nama}<br><span style="font-size:9.5px;">${acc.noRekening||'-'}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:16px;">
       <button class="btn btn-primary" style="flex:1;" onclick="openSetorTarikModal('${nas.id}','setor')">${ICONS.down} Setor</button>
