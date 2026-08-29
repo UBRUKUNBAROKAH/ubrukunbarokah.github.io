@@ -274,21 +274,20 @@ input,select{font-family:inherit;}
 .btn-danger:active{box-shadow:var(--shadow-neu-in);}
 .btn-block{width:100%;}
 .btn-sm{padding:8px 12px;font-size:12.5px;border-radius:8px;}
-.tx-action-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.tx-action-row{display:flex;justify-content:center;gap:36px;margin-bottom:16px;padding:4px 0;}
 .tx-action-btn{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  padding:15px 10px;border:1px solid var(--border-neu);border-radius:var(--radius-md);cursor:pointer;
-  background:var(--bg);box-shadow:var(--shadow-neu-sm);
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  border:none;background:transparent;cursor:pointer;padding:2px;
+}
+.tx-action-btn .tx-action-ic{
+  width:50px;height:50px;border-radius:15px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-neu-sm);
   transition:box-shadow .12s, transform .12s;
 }
-.tx-action-btn:active{transform:translateY(1px);box-shadow:var(--shadow-neu-in);}
-.tx-action-btn .tx-action-ic{
-  width:32px;height:32px;border-radius:9px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  box-shadow:var(--shadow-neu-xs);
-}
-.tx-action-btn .tx-action-ic svg{width:15px;height:15px;}
-.tx-action-btn .tx-action-label{font-size:13.5px;font-weight:700;color:var(--text);}
+.tx-action-btn:active .tx-action-ic{transform:translateY(1px);box-shadow:var(--shadow-neu-in);}
+.tx-action-btn .tx-action-ic svg{width:19px;height:19px;}
+.tx-action-btn .tx-action-label{font-size:12.5px;font-weight:700;color:var(--text);}
 .tx-action-btn.setor .tx-action-ic{background:var(--primary);color:#fff;}
 .tx-action-btn.tarik .tx-action-ic{background:var(--danger-soft);color:var(--danger);}
 .icon-btn-sm{width:32px;height:32px;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;box-shadow:var(--shadow-neu-xs);transition:box-shadow .12s;}
@@ -3042,7 +3041,7 @@ function renderAdminTabunganDetail(user, userId){
       <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening}</div>
       ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12.5px;color:var(--muted);">${j.nama}<br><span style="font-size:9.5px;">${acc.noRekening||'-'}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
     </div>
-    <div class="tx-action-row" style="margin-bottom:16px;">
+    <div class="tx-action-row">
       <button class="tx-action-btn setor" onclick="openSetorTarikModal('${nas.id}','setor')"><span class="tx-action-ic">${ICONS.down}</span><span class="tx-action-label">Setor</span></button>
       <button class="tx-action-btn tarik" onclick="openSetorTarikModal('${nas.id}','tarik')"><span class="tx-action-ic">${ICONS.up}</span><span class="tx-action-label">Tarik</span></button>
     </div>
@@ -6342,7 +6341,7 @@ function renderKoorTabunganDetail(user, userId){
       <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening}</div>
       ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12.5px;color:var(--muted);">${j.nama}<br><span style="font-size:9.5px;">${acc.noRekening||'-'}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
     </div>
-    <div class="tx-action-row" style="margin-bottom:16px;">
+    <div class="tx-action-row">
       <button class="tx-action-btn setor" onclick="openSetorTarikModal('${nas.id}','setor')"><span class="tx-action-ic">${ICONS.down}</span><span class="tx-action-label">Setor</span></button>
       <button class="tx-action-btn tarik" onclick="openSetorTarikModal('${nas.id}','tarik')"><span class="tx-action-ic">${ICONS.up}</span><span class="tx-action-label">Tarik</span></button>
     </div>
