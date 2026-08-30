@@ -1196,8 +1196,9 @@ async function syncAllToSupabase() {
   await safeUpsert(TABLES.jenis_saham, toSnake(DB.koperasi?.saham?.jenis));
   // Sync kepemilikan saham
   await safeUpsert(TABLES.kepemilikan_saham, toSnake(DB.kepemilikanSaham));
-  // Sync setoran
-  await safeUpsert(TABLES.setoran, toSnake(DB.setoran), 'setoran');
+  // Sync setoran (hanya record tabungan ber-jenisId; setoran angsuran punya properti jenis/pembiayaanId yang tidak ada sebagai kolom di tabel setoran Supabase)
+  const setoranSync = (DB.setoran||[]).filter(s => s.jenisId && !s.jenis).map(toSnake);
+  await safeUpsert(TABLES.setoran, setoranSync, 'setoran');
   // Sync kas penarikan koordinator (penarikan yang mengurangi dana yang dipegang koordinator)
   await safeUpsert(TABLES.kas_penarikan_koor, toSnake(DB.kasPenarikan), 'kas_penarikan_koor');
   // Sync hutang admin ke koordinator (kekurangan kas saat penarikan melebihi dana yang dipegang koordinator)
@@ -2019,8 +2020,10 @@ async function confirmSetoran(setoranId){
   st.dikonfirmasiOleh = s.userId;
   st.waktuKonfirmasi = nowISO();
   if(SUPABASE_ENABLED){
-    const { error } = await upsertToSupabase(TABLES.setoran, toSnake(st));
-    if(error) console.error('Gagal konfirmasi setoran di Supabase:', error);
+    if(st.jenisId && !st.jenis){
+      const { error } = await upsertToSupabase(TABLES.setoran, toSnake(st));
+      if(error) console.error('Gagal konfirmasi setoran di Supabase:', error);
+    }
   }
   persist();
   if(st.jenis==='angsuran'){
