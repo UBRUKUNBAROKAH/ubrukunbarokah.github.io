@@ -6558,6 +6558,8 @@ function suratSPReadSettings(){
     namaLembaga: val('ssp-nama'), alamatLembaga: val('ssp-alamat'), kota: val('ssp-kota'),
     tanggalSurat: val('ssp-tgl'), nomorAwal: parseInt(val('ssp-nomor-awal'))||1, batasHari: parseInt(val('ssp-batas'))||7,
     formatNomor: val('ssp-format') || '{urut}/SP/UB-RB/{bulan_romawi}/{tahun}',
+    logo: val('ssp-logo') || '',
+    tampilLogo: (document.getElementById('ssp-tampil-logo') ? document.getElementById('ssp-tampil-logo').checked : true),
     ttdList: ttds.length?ttds:[{jabatan:'',nama:''}],
     tplPembuka: val('ssp-pembuka'), tplIsi: val('ssp-isi'), tplPenutup: val('ssp-penutup')
   };
