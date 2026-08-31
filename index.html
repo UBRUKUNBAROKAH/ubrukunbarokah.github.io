@@ -3045,16 +3045,17 @@ function renderAdminTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;flex:1;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span><button class="btn btn-outline btn-compact" onclick="downloadTabunganPDF('${nas.id}')" title="Download PDF Buku Tabungan">${ICONS.download} PDF</button></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
       <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening}</div>
       ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12.5px;color:var(--muted);">${j.nama}<br><span style="font-size:9.5px;">${acc.noRekening||'-'}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
       <button class="btn btn-primary" onclick="openSetorTarikModal('${nas.id}','setor')">Setor</button>
       <button class="btn btn-danger" onclick="openSetorTarikModal('${nas.id}','tarik')">Tarik</button>
+      <button class="btn btn-outline" onclick="downloadTabunganPDF('${nas.id}')" title="Download PDF Buku Tabungan">${ICONS.download} PDF</button>
     </div>
     <div class="section-label">Riwayat transaksi</div>
     <div class="ledger">
@@ -3078,17 +3079,33 @@ function downloadTabunganPDF(userId){
   doc.setFontSize(13);
   doc.text(orgName, 14, 16);
   doc.setFontSize(10.5);
-  doc.text('Buku Tabungan \u2014 ' + nas.nama, 14, 23);
+  doc.text('Buku Tabungan', 14, 23);
   doc.setFontSize(8.5);
   doc.setTextColor(120);
-  doc.text('Kelompok ' + kelompokName(nas.kelompokId) + ' \u00b7 NO. REK ' + (nas.noRekening||'-') + ' \u00b7 Dicetak: ' + tgl, 14, 28.5);
+  doc.text('Dicetak: ' + tgl, 14, 28.5);
   doc.setTextColor(0);
-  let y = 34;
+  doc.autoTable({
+    head:[['Identitas Nasabah','']],
+    body:[
+      ['Nama', nas.nama || '-'],
+      ['Kelompok', kelompokName(nas.kelompokId)],
+      ['No. Rekening', nas.noRekening || '-'],
+    ],
+    startY: 33,
+    styles:{ fontSize:8, cellPadding:2.5 },
+    headStyles:{ fillColor:[11,61,46], textColor:255 },
+    columnStyles:{ 0:{cellWidth:34, fontStyle:'bold'}, 1:{cellWidth:70} },
+    margin:{right:14,left:14}
+  });
+  let y = doc.lastAutoTable.finalY + 6;
   if(accs.length){
+    doc.setFontSize(10.5);
+    doc.setTextColor(0);
+    doc.text('Rekening / Saldo', 14, y);
     doc.autoTable({
       head:[['Jenis Simpanan','No. Rekening','Saldo Akhir']],
       body: accs.map(({j,acc})=>[j.nama || '-', acc.noRekening||'-', rupiah(acc.saldo||0)]),
-      startY: y,
+      startY: y+4,
       styles:{ fontSize:8, cellPadding:2.5 },
       headStyles:{ fillColor:[11,61,46], textColor:255 },
       alternateRowStyles:{ fillColor:[244,248,244] },
@@ -3096,9 +3113,6 @@ function downloadTabunganPDF(userId){
       columnStyles:{ 2:{halign:'right'} }
     });
     y = doc.lastAutoTable.finalY + 6;
-  } else {
-    doc.setFontSize(9);
-    doc.text('Belum ada rekening tabungan.', 14, y+6);
   }
   doc.setFontSize(10.5);
   doc.setTextColor(0);
@@ -3538,7 +3552,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
   const progres = totalKew>0 ? ((totalDibayar/totalKew)*100).toFixed(0) : 0;
   const isActive = p.statusPengajuan==='approved' && p.status!=='lunas';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;flex:1;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span>${backPage==='admin_pembiayaan' ? `<button class="btn btn-outline btn-compact" onclick="downloadAngsuranPDF('${p.id}')" title="Download PDF Buku Angsuran">${ICONS.download} PDF</button>` : ''}</div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span></div>
     <div class="card balance-card">
       <div class="label">${nas.nama}</div>
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
@@ -3552,6 +3566,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
     <div class="bar-row"><div class="lbl"><span>Progres pembayaran</span><span>${rupiah(totalDibayar)} / ${rupiah(totalKew)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${progres}%"></div></div></div>
     <div style="display:flex;gap:10px;margin-bottom:16px;margin-top:10px;">
       ${isActive ? `<button class="btn btn-gold" style="flex:1;" onclick="bayarAngsuranPrompt('${p.id}')">${ICONS.down} Bayar angsuran</button>` : ''}
+      ${backPage==='admin_pembiayaan' ? `<button class="btn btn-outline" style="flex:1;" onclick="downloadAngsuranPDF('${p.id}')" title="Download PDF Buku Angsuran">${ICONS.download} PDF</button>` : ''}
       <button class="btn btn-outline" style="flex:1;" onclick="detailPengajuanModal('${p.id}')">Detail pengajuan</button>
     </div>
     <div class="section-label">Riwayat Angsuran</div>
@@ -3581,21 +3596,42 @@ function downloadAngsuranPDF(pembId){
   doc.setFontSize(13);
   doc.text(orgName, 14, 16);
   doc.setFontSize(10.5);
-  doc.text('Buku Angsuran Pembiayaan \u2014 ' + nas.nama, 14, 23);
+  doc.text('Buku Angsuran Pembiayaan', 14, 23);
   doc.setFontSize(8.5);
   doc.setTextColor(120);
-  doc.text('Kelompok ' + kelompokName(nas.kelompokId) + ' \u00b7 POKOK ' + rupiah(p.jumlahPinjaman) + ' \u00b7 Tenor ' + p.tenor + ' bln \u00b7 Dicetak: ' + tgl, 14, 28.5);
+  doc.text('Dicetak: ' + tgl, 14, 28.5);
   doc.setTextColor(0);
+  doc.autoTable({
+    head:[['Identitas Nasabah','']],
+    body:[
+      ['Nama', nas.nama || '-'],
+      ['Kelompok', kelompokName(nas.kelompokId)],
+      ['No. Rekening', nas.noRekening || '-'],
+      ['Pokok Pinjaman', rupiah(p.jumlahPinjaman)],
+      ['Jangka Waktu', (p.tenor||0) + ' bulan'],
+      ['Keuntungan', rupiah(marginNominalOf(p))],
+      ['Angsuran / Bulan', rupiah(p.angsuranPerBulan)],
+    ],
+    startY: 33,
+    styles:{ fontSize:8, cellPadding:2.5 },
+    headStyles:{ fillColor:[11,61,46], textColor:255 },
+    columnStyles:{ 0:{cellWidth:38, fontStyle:'bold'}, 1:{cellWidth:66} },
+    margin:{right:14,left:14}
+  });
+  let y = doc.lastAutoTable.finalY + 6;
+  doc.setFontSize(10.5);
+  doc.setTextColor(0);
+  doc.text('Rekapitulasi', 14, y);
   doc.autoTable({
     head:[['Total Kewajiban','Total Dibayar','Sisa Tagihan']],
     body:[[rupiah(totalKew), rupiah(totalDibayar), rupiah(sisaTagihan)]],
-    startY: 33,
+    startY: y+4,
     styles:{ fontSize:8, cellPadding:3, halign:'center' },
     headStyles:{ fillColor:[11,61,46], textColor:255 },
     alternateRowStyles:{ fillColor:[244,248,244] },
     margin:{right:14,left:14}
   });
-  const y = doc.lastAutoTable.finalY + 6;
+  y = doc.lastAutoTable.finalY + 6;
   doc.setFontSize(10.5);
   doc.setTextColor(0);
   doc.text('Riwayat Angsuran (' + riwayat.length + ')', 14, y);
