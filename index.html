@@ -783,6 +783,22 @@ const NAV_ICONS = {
 ========================================================= */
 const SESSION_KEY = 'ub_rukun_barokah_session_v1';
 
+// Ambil SEMUA baris tabel (Supabase default cuma 1000 baris; tabel besar perlu dipaginasi)
+async function fetchAllRows(table, select = '*') {
+  const pageSize = 1000;
+  const out = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabaseClient.from(table).select(select).range(from, from + pageSize - 1);
+    if (error) throw error;
+    const rows = data || [];
+    out.push(...rows);
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+  return { data: out, error: null };
+}
+
 function uid(prefix){ return (prefix||'id') + '_' + Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function rupiah(n){ n = Math.round(Number(n)||0); return 'Rp' + n.toLocaleString('id-ID'); }
@@ -871,21 +887,21 @@ async function initSupabaseDB() {
       pembiayaan, angsuran, jenisSaham, kepemilikanSaham,
       pengaturan, setoran, logs, kasPenarikanKoor, hutangKoordinator
     ] = await Promise.all([
-      supabaseClient.from(TABLES.users).select('*'),
-      supabaseClient.from(TABLES.anggota).select('*'),
-      supabaseClient.from(TABLES.kelompok).select('*'),
-      supabaseClient.from(TABLES.jenis_tabungan).select('*'),
-      supabaseClient.from(TABLES.tabungan_accounts).select('*'),
-      supabaseClient.from(TABLES.tabungan_tx).select('*'),
-      supabaseClient.from(TABLES.pembiayaan).select('*'),
-      supabaseClient.from(TABLES.angsuran).select('*'),
-      supabaseClient.from(TABLES.jenis_saham).select('*'),
-      supabaseClient.from(TABLES.kepemilikan_saham).select('*'),
+      fetchAllRows(TABLES.users),
+      fetchAllRows(TABLES.anggota),
+      fetchAllRows(TABLES.kelompok),
+      fetchAllRows(TABLES.jenis_tabungan),
+      fetchAllRows(TABLES.tabungan_accounts),
+      fetchAllRows(TABLES.tabungan_tx),
+      fetchAllRows(TABLES.pembiayaan),
+      fetchAllRows(TABLES.angsuran),
+      fetchAllRows(TABLES.jenis_saham),
+      fetchAllRows(TABLES.kepemilikan_saham),
       supabaseClient.from(TABLES.pengaturan_koperasi).select('*').eq('id', 'koperasi').single(),
-      supabaseClient.from(TABLES.setoran).select('*'),
+      fetchAllRows(TABLES.setoran),
       supabaseClient.from(TABLES.logs).select('*').order('created_at', {ascending: false}).limit(100),
-      supabaseClient.from(TABLES.kas_penarikan_koor).select('*'),
-      supabaseClient.from(TABLES.hutang_koordinator).select('*')
+      fetchAllRows(TABLES.kas_penarikan_koor),
+      fetchAllRows(TABLES.hutang_koordinator)
     ]);
 
     // Transform to camelCase
