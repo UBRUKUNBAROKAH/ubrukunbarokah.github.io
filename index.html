@@ -3003,7 +3003,7 @@ function renderAdminTabungan(user){
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
     <div class="stat-grid" style="margin-bottom:14px;">
-      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan${kelFilter?' <span style="font-size:9px;color:var(--muted);">('+kelompokName(kelFilter)+')</span>':''}</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
     </div>
     <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
@@ -3330,7 +3330,7 @@ function renderAdminPembiayaan(user){
   return `
     <div class="page-title">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
     <div class="stat-grid" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr);">
-      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan${kelFilter?' <span style="font-size:9px;color:var(--muted);">('+kelompokName(kelFilter)+')</span>':''}</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSisa)}</div><div class="l">Total Sisa Pembiayaan</div></div>
       <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
     </div>
