@@ -3045,7 +3045,7 @@ function renderAdminTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;flex:1;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span><button class="btn btn-outline btn-compact" onclick="downloadTabunganPDF('${nas.id}')" title="Download PDF Buku Tabungan">${ICONS.download} PDF</button></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
@@ -3064,6 +3064,57 @@ function renderAdminTabunganDetail(user, userId){
       ).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada transaksi</div>`}
     </div>
   `;
+}
+
+function downloadTabunganPDF(userId){
+  const nas = userById(userId);
+  const accs = userAccounts(userId);
+  const allTx = txForUser(userId);
+  if(!accs.length){ toast('Belum ada rekening tabungan'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'UB Rukun Barokah';
+  const tgl = new Date().toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  doc.setFontSize(13);
+  doc.text(orgName, 14, 16);
+  doc.setFontSize(10.5);
+  doc.text('Buku Tabungan \u2014 ' + nas.nama, 14, 23);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Kelompok ' + kelompokName(nas.kelompokId) + ' \u00b7 NO. REK ' + (nas.noRekening||'-') + ' \u00b7 Dicetak: ' + tgl, 14, 28.5);
+  doc.setTextColor(0);
+  let y = 34;
+  if(accs.length){
+    doc.autoTable({
+      head:[['Jenis Simpanan','No. Rekening','Saldo Akhir']],
+      body: accs.map(({j,acc})=>[j.nama || '-', acc.noRekening||'-', rupiah(acc.saldo||0)]),
+      startY: y,
+      styles:{ fontSize:8, cellPadding:2.5 },
+      headStyles:{ fillColor:[11,61,46], textColor:255 },
+      alternateRowStyles:{ fillColor:[244,248,244] },
+      margin:{right:14,left:14},
+      columnStyles:{ 2:{halign:'right'} }
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  } else {
+    doc.setFontSize(9);
+    doc.text('Belum ada rekening tabungan.', 14, y+6);
+  }
+  doc.setFontSize(10.5);
+  doc.setTextColor(0);
+  doc.text('Riwayat Transaksi (' + allTx.length + ')', 14, y);
+  doc.autoTable({
+    head:[['No','Tanggal','Jenis','Tipe','Keterangan','Jumlah']],
+    body: allTx.map((t,i)=>[String(i+1), fmtDateShort(t.tanggal), jenisName(t.jenisId), t.tipe==='setor'?'SETOR':'TARIK', t.keterangan||'-', (t.tipe==='setor'?'+':'-')+rupiah(t.jumlah)]),
+    startY: y+4,
+    styles:{ fontSize:8, cellPadding:2.5 },
+    headStyles:{ fillColor:[11,61,46], textColor:255 },
+    alternateRowStyles:{ fillColor:[244,248,244] },
+    columnStyles:{ 5:{halign:'right'} },
+    margin:{right:14,left:14}
+  });
+  doc.save(sanitizeFileName('Buku Tabungan ' + nas.nama) + '.pdf');
+  toast('PDF Buku Tabungan berhasil diunduh');
 }
 
 function openSetorTarikModal(prefUserId, defaultTipe){
@@ -3487,7 +3538,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
   const progres = totalKew>0 ? ((totalDibayar/totalKew)*100).toFixed(0) : 0;
   const isActive = p.statusPengajuan==='approved' && p.status!=='lunas';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;flex:1;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span>${backPage==='admin_pembiayaan' ? `<button class="btn btn-outline btn-compact" onclick="downloadAngsuranPDF('${p.id}')" title="Download PDF Buku Angsuran">${ICONS.download} PDF</button>` : ''}</div>
     <div class="card balance-card">
       <div class="label">${nas.nama}</div>
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
@@ -3514,6 +3565,52 @@ function renderPembiayaanDetailPage(pembId, backPage){
     <div class="hint" style="text-align:center;margin-top:10px;">${p.statusPengajuan==='pending'?'Pengajuan menunggu ACC admin':'Pengajuan ditolak'}</div>`}
     ${backPage==='admin_pembiayaan' ? `<button class="btn btn-danger btn-block" style="margin-top:16px;" onclick="hapusPembiayaan('${p.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg> Hapus pembiayaan ini</button>` : ''}
   `;
+}
+function downloadAngsuranPDF(pembId){
+  const p = DB.pembiayaan.find(p=>p.id===pembId);
+  if(!p) return;
+  const nas = userById(p.userId);
+  const totalKew = (p.jumlahPinjaman||0) + marginNominalOf(p);
+  const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
+  const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
+  const riwayat = (p.riwayatAngsuran || []).slice().reverse();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'UB Rukun Barokah';
+  const tgl = new Date().toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  doc.setFontSize(13);
+  doc.text(orgName, 14, 16);
+  doc.setFontSize(10.5);
+  doc.text('Buku Angsuran Pembiayaan \u2014 ' + nas.nama, 14, 23);
+  doc.setFontSize(8.5);
+  doc.setTextColor(120);
+  doc.text('Kelompok ' + kelompokName(nas.kelompokId) + ' \u00b7 POKOK ' + rupiah(p.jumlahPinjaman) + ' \u00b7 Tenor ' + p.tenor + ' bln \u00b7 Dicetak: ' + tgl, 14, 28.5);
+  doc.setTextColor(0);
+  doc.autoTable({
+    head:[['Total Kewajiban','Total Dibayar','Sisa Tagihan']],
+    body:[[rupiah(totalKew), rupiah(totalDibayar), rupiah(sisaTagihan)]],
+    startY: 33,
+    styles:{ fontSize:8, cellPadding:3, halign:'center' },
+    headStyles:{ fillColor:[11,61,46], textColor:255 },
+    alternateRowStyles:{ fillColor:[244,248,244] },
+    margin:{right:14,left:14}
+  });
+  const y = doc.lastAutoTable.finalY + 6;
+  doc.setFontSize(10.5);
+  doc.setTextColor(0);
+  doc.text('Riwayat Angsuran (' + riwayat.length + ')', 14, y);
+  doc.autoTable({
+    head:[['No','Tanggal','Angsuran ke','Jumlah']],
+    body: riwayat.map((a,i)=>[String(i+1), fmtDateShort(a.tanggal), 'Ke-' + a.angsuranKe, rupiah(a.jumlah)]),
+    startY: y+4,
+    styles:{ fontSize:8, cellPadding:2.5 },
+    headStyles:{ fillColor:[11,61,46], textColor:255 },
+    alternateRowStyles:{ fillColor:[244,248,244] },
+    columnStyles:{ 3:{halign:'right'} },
+    margin:{right:14,left:14}
+  });
+  doc.save(sanitizeFileName('Buku Angsuran ' + nas.nama) + '.pdf');
+  toast('PDF Buku Angsuran berhasil diunduh');
 }
 function openPengajuanModal(prefUserId){
   const nasabah = DB.users.filter(u=>u.role==='nasabah');
