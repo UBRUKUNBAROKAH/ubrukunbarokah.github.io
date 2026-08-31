@@ -3566,8 +3566,8 @@ function renderPembiayaanDetailPage(pembId, backPage){
     <div class="bar-row"><div class="lbl"><span>Progres pembayaran</span><span>${rupiah(totalDibayar)} / ${rupiah(totalKew)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${progres}%"></div></div></div>
     <div style="display:flex;gap:10px;margin-bottom:16px;margin-top:10px;">
       ${isActive ? `<button class="btn btn-gold" style="flex:1;" onclick="bayarAngsuranPrompt('${p.id}')">${ICONS.down} Bayar angsuran</button>` : ''}
-      ${backPage==='admin_pembiayaan' ? `<button class="btn btn-outline" style="flex:1;" onclick="downloadAngsuranPDF('${p.id}')" title="Download PDF Buku Angsuran">${ICONS.download} PDF</button>` : ''}
       <button class="btn btn-outline" style="flex:1;" onclick="detailPengajuanModal('${p.id}')">Detail pengajuan</button>
+      ${backPage==='admin_pembiayaan' ? `<button class="btn btn-outline" style="flex:0 0 auto;" onclick="downloadAngsuranPDF('${p.id}')" title="Download PDF Buku Angsuran">${ICONS.download} PDF</button>` : ''}
     </div>
     <div class="section-label">Riwayat Angsuran</div>
     <div class="ledger">
