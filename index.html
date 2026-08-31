@@ -6327,6 +6327,7 @@ function escapeHtml(str){
 }
 const SURAT_SP_LS_KEY = 'ub_surat_sp_settings_v2';
 let suratSPSelected = [];
+let suratSPLogo = (function(){ try{ const s=JSON.parse(localStorage.getItem(SURAT_SP_LS_KEY)||'null'); return (s&&s.logo)||''; }catch(e){ return ''; } })();
 const SURAT_SP_MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 const SURAT_SP_ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
 function suratSPDefSettings(){
@@ -6558,7 +6559,7 @@ function suratSPReadSettings(){
     namaLembaga: val('ssp-nama'), alamatLembaga: val('ssp-alamat'), kota: val('ssp-kota'),
     tanggalSurat: val('ssp-tgl'), nomorAwal: parseInt(val('ssp-nomor-awal'))||1, batasHari: parseInt(val('ssp-batas'))||7,
     formatNomor: val('ssp-format') || '{urut}/SP/UB-RB/{bulan_romawi}/{tahun}',
-    logo: val('ssp-logo') || '',
+    logo: suratSPLogo || val('ssp-logo') || '',
     tampilLogo: (document.getElementById('ssp-tampil-logo') ? document.getElementById('ssp-tampil-logo').checked : true),
     ttdList: ttds.length?ttds:[{jabatan:'',nama:''}],
     tplPembuka: val('ssp-pembuka'), tplIsi: val('ssp-isi'), tplPenutup: val('ssp-penutup')
@@ -6640,6 +6641,7 @@ function val(id){ const el = document.getElementById(id); return el ? el.value :
 
 function suratSPUseKoperasiLogo(){
   const logo = (DB.koperasi && DB.koperasi.iconImage) || '';
+  suratSPLogo = logo;
   const hid = document.getElementById('ssp-logo');
   const prev = document.getElementById('ssp-logo-prev');
   if(hid) hid.value = logo;
@@ -6647,9 +6649,10 @@ function suratSPUseKoperasiLogo(){
     if(logo){ prev.innerHTML = '<img src="'+logo+'" alt="logo">'; }
     else { prev.innerHTML = '<span style="font-size:11px;color:var(--muted);">Belum ada logo</span>'; }
   }
-  toast('Logo dari aplikasi dipakai. Klik Simpan Pengaturan.');
+  toast(logo ? 'Logo dari aplikasi dipakai. Klik Simpan Pengaturan.' : 'Belum ada logo aplikasi, gunakan Pilih File.');
 }
 function suratSPClearLogo(){
+  suratSPLogo = '';
   const hid = document.getElementById('ssp-logo');
   const prev = document.getElementById('ssp-logo-prev');
   if(hid) hid.value = '';
@@ -6664,6 +6667,7 @@ function suratSPLoadLogoFile(input){
   const reader = new FileReader();
   reader.onload = function(e){
     const logo = e.target.result;
+    suratSPLogo = logo;
     const hid = document.getElementById('ssp-logo');
     const prev = document.getElementById('ssp-logo-prev');
     if(hid) hid.value = logo;
