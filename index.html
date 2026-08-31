@@ -6423,7 +6423,7 @@ function renderAdminSuratSP(user){
       /* Surat preview + print */
       .ssp-page{background:#fff;width:210mm;min-height:297mm;max-width:210mm;margin:0 auto 22px;padding:16mm 15mm;border:1px solid var(--border);border-radius:2px;box-shadow:0 2px 8px rgba(0,0,0,.06);font-family:'Times New Roman',Times,serif;color:#111;font-size:12pt;line-height:1.45;box-sizing:border-box;}
       .ssp-kop{display:flex;align-items:center;justify-content:center;gap:14px;border-bottom:3px double #111;padding-bottom:8px;margin-bottom:14px;}
-      .ssp-kop img{width:72px;height:72px;object-fit:contain;flex:0 0 auto;}
+      .ssp-kop img{width:104px;height:104px;object-fit:contain;flex:0 0 auto;}
       .ssp-kop .nm{font-size:16pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase;text-align:center;}
       .ssp-kop .al{font-size:10.5pt;text-align:center;margin-top:2px;}
       .ssp-meta{display:flex;justify-content:space-between;margin-bottom:12px;font-size:12pt;}
@@ -6440,7 +6440,8 @@ function renderAdminSuratSP(user){
       .ssp-space{height:64px;}
       @page{size:A4;margin:0;}
       @media print{
-        .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print,.ssp-toolbar{display:none!important;}
+        .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}
+        #content > *:not(#ssp-preview){display:none!important;}
         #content{overflow:visible!important;}
         .ssp-page{border:none;box-shadow:none;margin:0;width:210mm;min-height:297mm;page-break-after:always;}
         .ssp-page:last-child{page-break-after:auto;}
