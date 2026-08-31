@@ -2988,19 +2988,33 @@ function exportToXLS(type, kelompokId){
 ========================================================= */
 function renderAdminTabungan(user){
   const allNasabah = DB.users.filter(u=>u.role==='nasabah');
+  const kelFilter = currentSubState.kelFilter || '';
   const q = (currentSubState.q||'').toLowerCase();
   let nasabah = allNasabah.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id));
+  if(kelFilter) nasabah = nasabah.filter(u=>u.kelompokId===kelFilter);
   if(q) nasabah = nasabah.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
   const groups = groupByKelompok(nasabah, u=>u.id);
   let i = 0;
-  const pending = pendingSetoranNetAll();
-  const totalRekening = DB.tabunganAccounts.length;
-  const totalSaldo = DB.tabunganAccounts.reduce((s,a)=>s+(a.saldo||0),0);
+  const pending = pendingSetoranNetAll().filter(s=>kelFilter ? userById(s.userId).kelompokId===kelFilter : true);
+  const filteredAccounts = DB.tabunganAccounts.filter(a=>kelFilter ? userById(a.userId).kelompokId===kelFilter : true);
+  const totalRekening = filteredAccounts.length;
+  const totalSaldo = filteredAccounts.reduce((s,a)=>s+(a.saldo||0),0);
+  const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   return `
     <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
     <div class="stat-grid" style="margin-bottom:14px;">
-      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan${kelFilter?' <span style="font-size:9px;color:var(--muted);">('+kelompokName(kelFilter)+')</span>':''}</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
+    </div>
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
+      <select onchange="currentSubState.kelFilter=this.value; delete currentSubState.q; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
+        <option value="">Semua kelompok</option>
+        ${kelompokOptions}
+      </select>
+      <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download} Export</button>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">${ICONS.upload}</button>
+      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
     ${pending.length ? `
     <div class="section-label">Setoran pending dari koordinator</div>
@@ -3012,12 +3026,6 @@ function renderAdminTabungan(user){
         </div>
       `).join('')}
     </div>` : ''}
-    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
-      <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-      <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download} Export</button>
-      <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">${ICONS.upload}</button>
-      <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
-    </div>
     ${nasabah.length ? groups.map(g=>`
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
       <div class="card" style="padding:6px 18px;margin-bottom:14px;">
@@ -3306,24 +3314,31 @@ function submitTambahRekening(){
 ========================================================= */
 function renderAdminPembiayaan(user){
   const q = (currentSubState.q||'').toLowerCase();
+  const kelFilter = currentSubState.kelFilter || '';
   let list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
+  if(kelFilter) list = list.filter(p=>userById(p.userId).kelompokId===kelFilter);
   if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q));
   const pending = list.filter(p=>p.statusPengajuan==='pending');
   const groups = groupByKelompok(list, p=>p.userId);
   let i = 0;
-  const totalPembiayaan = DB.pembiayaan.length;
-  const totalSisa = DB.pembiayaan.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
-  const belumLunas = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
+  const totalPembiayaan = list.length;
+  const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  const belumLunas = list.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
   const totalBelumLunas = belumLunas.length;
   const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   return `
-    <div class="page-title">Pembiayaan<span class="sub">${DB.pembiayaan.length} pengajuan tercatat</span></div>
+    <div class="page-title">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
     <div class="stat-grid" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr);">
-      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan${kelFilter?' <span style="font-size:9px;color:var(--muted);">('+kelompokName(kelFilter)+')</span>':''}</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSisa)}</div><div class="l">Total Sisa Pembiayaan</div></div>
       <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
     </div>
     <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
+      <select onchange="currentSubState.kelFilter=this.value; delete currentSubState.q; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
+        <option value="">Semua kelompok</option>
+        ${kelompokOptions}
+      </select>
       <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download} Export</button>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">${ICONS.upload}</button>
