@@ -6335,6 +6335,7 @@ function suratSPDefSettings(){
     namaLembaga: (DB.koperasi && DB.koperasi.nama) || '',
     alamatLembaga: (DB.koperasi && DB.koperasi.alamat) || '',
     kota: '', tanggalSurat: t.toISOString().slice(0,10),
+    logo: '', tampilLogo: true,
     ttdList: [{jabatan:'', nama:''}],
     nomorAwal: 1, formatNomor: '{urut}/SP/UB-RB/{bulan_romawi}/{tahun}',
     batasHari: 7,
@@ -6402,6 +6403,13 @@ function renderAdminSuratSP(user){
       .ssp-signer{display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;}
       .ssp-signer .fields{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
       .ssp-signer .rm{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--danger);font-size:16px;font-weight:700;cursor:pointer;}
+      .ssp-logo-pick{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px;background:var(--bg);border:1px dashed var(--border);border-radius:10px;}
+      .ssp-logo-pick img{width:56px;height:56px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--border);}
+      .ssp-logo-pick .btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+      .ssp-logo-btns{display:flex;gap:6px;flex-wrap:wrap;}
+      .ssp-logo-btns .btn{padding:7px 12px;font-size:12px;}
+      .ssp-sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;}
+      .ssp-sw input{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;}
       .ssp-over{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
       .ssp-table{width:100%;border-collapse:collapse;font-size:12.5px;}
       .ssp-table th{text-align:left;background:var(--bg);border-bottom:1px solid var(--border);padding:9px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
@@ -6414,6 +6422,7 @@ function renderAdminSuratSP(user){
       /* Surat preview + print */
       .ssp-page{background:#fff;width:210mm;min-height:297mm;max-width:210mm;margin:0 auto 22px;padding:16mm 15mm;border:1px solid var(--border);border-radius:2px;box-shadow:0 2px 8px rgba(0,0,0,.06);font-family:'Times New Roman',Times,serif;color:#111;font-size:12pt;line-height:1.45;box-sizing:border-box;}
       .ssp-kop{display:flex;align-items:center;justify-content:center;gap:14px;border-bottom:3px double #111;padding-bottom:8px;margin-bottom:14px;}
+      .ssp-kop img{width:72px;height:72px;object-fit:contain;flex:0 0 auto;}
       .ssp-kop .nm{font-size:16pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase;text-align:center;}
       .ssp-kop .al{font-size:10.5pt;text-align:center;margin-top:2px;}
       .ssp-meta{display:flex;justify-content:space-between;margin-bottom:12px;font-size:12pt;}
@@ -6447,6 +6456,18 @@ function renderAdminSuratSP(user){
       <h2>Pengaturan Surat</h2>
       <label class="ssp-label">Nama Lembaga</label><input class="ssp-input" id="ssp-nama" value="${escapeHtml(s.namaLembaga)}">
       <label class="ssp-label">Alamat Lembaga</label><input class="ssp-input" id="ssp-alamat" value="${escapeHtml(s.alamatLembaga)}">
+      <label class="ssp-label">Logo Kop Surat</label>
+      <input type="hidden" id="ssp-logo" value="${escapeHtml(s.logo||'')}">
+      <div class="ssp-logo-pick">
+        <span id="ssp-logo-prev">${s.logo?('<img src="'+s.logo+'" alt="logo">'):'<span style="font-size:11px;color:var(--muted);">Belum ada logo</span>'}</span>
+        <div class="ssp-logo-btns">
+          <button type="button" class="btn btn-outline btn-compact" onclick="document.getElementById('ssp-logo-file').click()">⬆️ Pilih File</button>
+          ${DB.koperasi && DB.koperasi.iconImage ? '<button type="button" class="btn btn-outline btn-compact" onclick="suratSPUseKoperasiLogo()">Gunakan Logo Aplikasi</button>' : ''}
+          ${s.logo? '<button type="button" class="btn btn-outline btn-compact" onclick="suratSPClearLogo()">Hapus</button>' : ''}
+          <input type="file" id="ssp-logo-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="suratSPLoadLogoFile(this)">
+        </div>
+      </div>
+      <label class="ssp-sw" style="margin-top:10px;"><input type="checkbox" id="ssp-tampil-logo" ${s.tampilLogo?'checked':''}> Tampilkan logo di kop surat</label>
       <div class="ssp-row2">
         <div><label class="ssp-label">Kota (untuk tanggal surat)</label><input class="ssp-input" id="ssp-kota" value="${escapeHtml(s.kota)}"></div>
         <div><label class="ssp-label">Tanggal Surat</label><input class="ssp-input" type="date" id="ssp-tgl" value="${s.tanggalSurat}"></div>
@@ -6573,12 +6594,15 @@ function suratSPBuatPage(d, s, urut){
   const isi = suratSPFill(s.tplIsi, d, s, nomorSurat, batas);
   const penutup = suratSPFill(s.tplPenutup, d, s, nomorSurat, batas).split('\n\n').map(p=>'<p>'+escapeHtml(p).replace(/\n/g,'<br>')+'</p>').join('');
   const ttds = (s.ttdList && s.ttdList.length ? s.ttdList : [{jabatan:'',nama:''}]);
+  const logoAktif = s.tampilLogo && s.logo;
+  const kopLogo = logoAktif ? '<img src="'+s.logo+'" alt="logo">' : '';
+  const kopCenter = logoAktif ? 'flex:1;text-align:center;' : 'text-align:center;';
   const signers = (ttds.length<=1
     ? '<div class="blok" style="margin-left:auto;"><div>'+escapeHtml(ttds[0].jabatan||'Jabatan')+'</div><div class="ssp-space"></div><div><b><u>'+escapeHtml(ttds[0].nama||'Nama Penandatangan')+'</u></b></div></div>'
     : ttds.map(t=>'<div class="blok"><div>'+escapeHtml(t.jabatan||'Jabatan')+'</div><div class="ssp-space"></div><div><b><u>'+escapeHtml(t.nama||'Nama')+'</u></b></div></div>').join(''));
   return '' +
   '<div class="ssp-page">' +
-    '<div class="ssp-kop"><div><div class="nm">'+escapeHtml(s.namaLembaga||'Nama Lembaga')+'</div><div class="al">'+escapeHtml(s.alamatLembaga||'')+'</div></div></div>' +
+    '<div class="ssp-kop">'+kopLogo+'<div style="'+kopCenter+'"><div class="nm">'+escapeHtml(s.namaLembaga||'Nama Lembaga')+'</div><div class="al">'+escapeHtml(s.alamatLembaga||'')+'</div></div>'+(logoAktif?'<img src="'+s.logo+'" alt="" style="visibility:hidden;">':'')+'</div>' +
     '<div class="ssp-meta">' +
       '<table><tr><td>Nomor</td><td>&nbsp;:&nbsp;</td><td>'+escapeHtml(nomorSurat)+'</td></tr><tr><td>Lampiran</td><td>&nbsp;:&nbsp;</td><td>-</td></tr><tr><td>Perihal</td><td>&nbsp;:&nbsp;</td><td><b>Surat Peringatan Tunggakan Angsuran</b></td></tr></table>' +
       '<div>'+escapeHtml(s.kota||'')+(s.kota?', ':'')+suratSPTanggal(tglSurat)+'</div>' +
@@ -6611,6 +6635,41 @@ function suratSPBuat(){
   toast('Surat berhasil dibuat');
 }
 function val(id){ const el = document.getElementById(id); return el ? el.value : ''; }
+
+function suratSPUseKoperasiLogo(){
+  const logo = (DB.koperasi && DB.koperasi.iconImage) || '';
+  const hid = document.getElementById('ssp-logo');
+  const prev = document.getElementById('ssp-logo-prev');
+  if(hid) hid.value = logo;
+  if(prev){
+    if(logo){ prev.innerHTML = '<img src="'+logo+'" alt="logo">'; }
+    else { prev.innerHTML = '<span style="font-size:11px;color:var(--muted);">Belum ada logo</span>'; }
+  }
+  toast('Logo dari aplikasi dipakai. Klik Simpan Pengaturan.');
+}
+function suratSPClearLogo(){
+  const hid = document.getElementById('ssp-logo');
+  const prev = document.getElementById('ssp-logo-prev');
+  if(hid) hid.value = '';
+  if(prev) prev.innerHTML = '<span style="font-size:11px;color:var(--muted);">Belum ada logo</span>';
+  toast('Logo dihapus. Klik Simpan Pengaturan.');
+}
+function suratSPLoadLogoFile(input){
+  const f = input.files && input.files[0];
+  if(!f){ return; }
+  if(!/image\/(png|jpe?g|webp)/.test(f.type)){ toast('Pilih file gambar (PNG/JPG/WebP)'); return; }
+  if(f.size > 1024*1024){ toast('Ukuran maksimal 1 MB'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const logo = e.target.result;
+    const hid = document.getElementById('ssp-logo');
+    const prev = document.getElementById('ssp-logo-prev');
+    if(hid) hid.value = logo;
+    if(prev) prev.innerHTML = '<img src="'+logo+'" alt="logo">';
+    toast('Logo siap digunakan');
+  };
+  reader.readAsDataURL(f);
+}
 
 /* =========================================================
    ADMIN: LOG TRANSAKSI
