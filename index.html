@@ -1711,6 +1711,7 @@ const ADMIN_MORE_ITEMS = [
   {p:'admin_shu', ic:'percent', label:'SHU'},
   {p:'admin_laporan', ic:'report', label:'Laporan'},
   {p:'admin_laporan_ringkas', ic:'ringkas', label:'Laporan Ringkas'},
+  {p:'admin_suratsp', ic:'report', label:'Surat SP'},
   {p:'admin_pengaturan', ic:'settings', label:'Pengaturan'},
   {p:'admin_log', ic:'log', label:'Log Transaksi'}
 ];
@@ -2286,6 +2287,7 @@ function renderContent(){
     admin_laporan: renderAdminLaporan,
     admin_laporan_ringkas: renderAdminLaporanRingkas,
     admin_shu: renderAdminSHU,
+    admin_suratsp: renderAdminSuratSP,
     admin_pengaturan: renderAdminPengaturan,
     admin_log: renderAdminLog,
     koor_beranda: renderKoorBeranda,
@@ -6313,6 +6315,302 @@ function hapusKepemilikanSaham(nama){
     renderContent();
   });
 }
+
+/* =========================================================
+   ADMIN: SURAT SP (generator surat peringatan tunggakan)
+   Data diambil otomatis dari pembiayaan yang telat bayar.
+========================================================= */
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+const SURAT_SP_LS_KEY = 'ub_surat_sp_settings_v2';
+let suratSPSelected = [];
+const SURAT_SP_MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const SURAT_SP_ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+function suratSPDefSettings(){
+  const t = new Date();
+  return {
+    namaLembaga: (DB.koperasi && DB.koperasi.nama) || '',
+    alamatLembaga: (DB.koperasi && DB.koperasi.alamat) || '',
+    kota: '', tanggalSurat: t.toISOString().slice(0,10),
+    ttdList: [{jabatan:'', nama:''}],
+    nomorAwal: 1, formatNomor: '{urut}/SP/UB-RB/{bulan_romawi}/{tahun}',
+    batasHari: 7,
+    tplPembuka: "Sehubungan dengan pinjaman/pembiayaan yang telah Bapak/Ibu {nama} terima melalui akad nomor {nomor_akad} tertanggal {tgl_akad}, kami sampaikan bahwa angsuran atas pinjaman tersebut telah melewati jatuh tempo pada tanggal {jatuh_tempo} atau telah menunggak selama {hari_telat} hari.",
+    tplIsi: "Berdasarkan catatan kami, rincian pinjaman Bapak/Ibu adalah sebagai berikut: pokok pinjaman sebesar {pokok}, jasa/laba sebesar {laba}, dengan total kewajiban {jumlah}. Dari jumlah tersebut, telah diangsur sebesar {sudah_diangsur}, sehingga sisa kewajiban yang belum diselesaikan adalah sebesar {sisa_angsuran}.",
+    tplPenutup: "Sehubungan hal tersebut, kami memohon perhatian dan kesediaan Bapak/Ibu untuk segera menyelesaikan kewajiban angsuran dimaksud paling lambat tanggal {tanggal_batas} atau selambat-lambatnya {batas_hari} hari sejak surat ini diterbitkan. Apabila hingga batas waktu tersebut kewajiban belum diselesaikan, kami akan mempertimbangkan langkah penagihan lebih lanjut sesuai dengan ketentuan yang berlaku.\n\nDemikian surat peringatan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih."
+  };
+}
+function suratSPRupiah(n){ n = Number(n)||0; return 'Rp ' + n.toLocaleString('id-ID',{maximumFractionDigits:0}); }
+function suratSPTanggal(d){
+  if(!d) return '-';
+  if(!(d instanceof Date)) { var x=new Date(d); if(isNaN(x)) return '-'; d=x; }
+  return d.getDate() + ' ' + SURAT_SP_MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+}
+function suratSPLoad(){
+  let s = suratSPDefSettings();
+  try{ const saved = JSON.parse(localStorage.getItem(SURAT_SP_LS_KEY)||'null'); if(saved) s = Object.assign(s, saved); }catch(e){}
+  return s;
+}
+function suratSPSave(obj){
+  try{ localStorage.setItem(SURAT_SP_LS_KEY, JSON.stringify(obj)); }catch(e){}
+}
+function suratSPOverdue(){
+  return computeOverdueLoans().map(o=>{
+    const u = userById(o.p.userId);
+    const pokok = o.p.jumlahPinjaman||0;
+    const laba = marginNominalOf(o.p);
+    const jumlah = pokok + laba;
+    const sudah = (o.p.riwayatAngsuran||[]).reduce((s,a)=>s+(a.jumlah||0),0);
+    return {
+      pembId: o.p.id,
+      nama: u.nama || '-',
+      alamat: u.alamat || '',
+      kelompok: u.kelompokId ? kelompokName(u.kelompokId) : '-',
+      nomorAkad: u.noRekening || '-',
+      tglAkad: o.p.mulai,
+      jatuhTempo: o.tglJatuh,
+      hariTelat: o.telat,
+      pokok, laba, jumlah, sudahDiangsur: sudah,
+      sisaKewajiban: Math.max(jumlah - sudah, 0),
+      angsuranPerBulan: o.p.angsuranPerBulan||0
+    };
+  }).sort((a,b)=> b.hariTelat - a.hariTelat);
+}
+function renderAdminSuratSP(user){
+  const s = suratSPLoad();
+  const q = (currentSubState.q||'').toLowerCase();
+  const kel = currentSubState.kel || '';
+  let list = suratSPOverdue();
+  if(kel) list = list.filter(x=>x.kelompok===kel);
+  if(q) list = list.filter(x=>x.nama.toLowerCase().includes(q));
+  const kelGroups = Array.from(new Set(suratSPOverdue().map(x=>x.kelompok))).sort();
+  const kelOpts = kelGroups.map(k=>`<option value="${escapeHtml(k)}" ${kel===k?'selected':''}>${escapeHtml(k)}</option>`).join('');
+  const all = suratSPOverdue();
+  const selectedCount = suratSPSelected.length;
+  const sisaTotal = all.reduce((s2,d)=>s2+d.sisaKewajiban,0);
+  return `
+    <style>
+      .ssp-input, .ssp-select, .ssp-textarea{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:13.5px;font-family:inherit;background:var(--surface);color:inherit;box-sizing:border-box;}
+      .ssp-textarea{resize:vertical;line-height:1.5;}
+      .ssp-label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px;}
+      .ssp-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+      .ssp-tag{font-size:11px;color:var(--muted);background:var(--primary-soft);padding:6px 10px;border-radius:8px;margin-top:6px;}
+      .ssp-tag code{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:0 4px;font-size:10.5px;}
+      .ssp-signer{display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;}
+      .ssp-signer .fields{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+      .ssp-signer .rm{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--danger);font-size:16px;font-weight:700;cursor:pointer;}
+      .ssp-over{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+      .ssp-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+      .ssp-table th{text-align:left;background:var(--bg);border-bottom:1px solid var(--border);padding:9px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
+      .ssp-table td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
+      .ssp-table tr:hover td{background:var(--bg);}
+      .ssp-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;}
+      .ssp-badge.d1{background:#fdf1e0;color:#b5731a;}
+      .ssp-badge.d2{background:#fbe8e5;color:#7a2331;}
+      .ssp-badge.d3{background:#f7dede;color:#a11;}
+      /* Surat preview + print */
+      .ssp-page{background:#fff;width:210mm;min-height:297mm;max-width:210mm;margin:0 auto 22px;padding:16mm 15mm;border:1px solid var(--border);border-radius:2px;box-shadow:0 2px 8px rgba(0,0,0,.06);font-family:'Times New Roman',Times,serif;color:#111;font-size:12pt;line-height:1.45;box-sizing:border-box;}
+      .ssp-kop{display:flex;align-items:center;justify-content:center;gap:14px;border-bottom:3px double #111;padding-bottom:8px;margin-bottom:14px;}
+      .ssp-kop .nm{font-size:16pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase;text-align:center;}
+      .ssp-kop .al{font-size:10.5pt;text-align:center;margin-top:2px;}
+      .ssp-meta{display:flex;justify-content:space-between;margin-bottom:12px;font-size:12pt;}
+      .ssp-meta table{border-collapse:collapse;}
+      .ssp-meta td{padding:0 4px 0 0;vertical-align:top;}
+      .ssp-judul{text-align:center;margin:4px 0 14px;font-weight:700;text-decoration:underline;font-size:13pt;letter-spacing:.5px;}
+      .ssp-isi p{margin:0 0 8px;text-align:justify;}
+      .ssp-rincian{width:100%;border-collapse:collapse;margin:10px 0;font-size:11pt;}
+      .ssp-rincian th,.ssp-rincian td{border:1px solid #333;padding:4px 8px;}
+      .ssp-rincian th{background:#eee;}
+      .ssp-rincian td.num{text-align:right;}
+      .ssp-ttd{margin-top:28px;display:flex;justify-content:flex-end;gap:60px;}
+      .ssp-ttd .blok{text-align:center;width:200px;font-size:12pt;}
+      .ssp-space{height:64px;}
+      @page{size:A4;margin:0;}
+      @media print{
+        .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print,.ssp-toolbar{display:none!important;}
+        #content{overflow:visible!important;}
+        .ssp-page{border:none;box-shadow:none;margin:0;width:210mm;min-height:297mm;page-break-after:always;}
+        .ssp-page:last-child{page-break-after:auto;}
+      }
+    </style>
+    <div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>
+    <div class="stat-grid" style="margin-bottom:14px;">
+      <div class="stat-box"><div class="n mono" style="font-size:16px;">${all.length}</div><div class="l">Nasabah telat</div></div>
+      <div class="stat-box stat-danger"><div class="n mono" style="font-size:16px;">${rupiah(sisaTotal)}</div><div class="l">Total sisa tunggakan</div></div>
+      <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${selectedCount}</div><div class="l">Dipilih</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Pengaturan Surat</h2>
+      <label class="ssp-label">Nama Lembaga</label><input class="ssp-input" id="ssp-nama" value="${escapeHtml(s.namaLembaga)}">
+      <label class="ssp-label">Alamat Lembaga</label><input class="ssp-input" id="ssp-alamat" value="${escapeHtml(s.alamatLembaga)}">
+      <div class="ssp-row2">
+        <div><label class="ssp-label">Kota (untuk tanggal surat)</label><input class="ssp-input" id="ssp-kota" value="${escapeHtml(s.kota)}"></div>
+        <div><label class="ssp-label">Tanggal Surat</label><input class="ssp-input" type="date" id="ssp-tgl" value="${s.tanggalSurat}"></div>
+      </div>
+      <div class="ssp-row2">
+        <div><label class="ssp-label">Nomor Surat Awal</label><input class="ssp-input" type="number" id="ssp-nomor-awal" value="${s.nomorAwal}"></div>
+        <div><label class="ssp-label">Batas Waktu Pelunasan (hari)</label><input class="ssp-input" type="number" id="ssp-batas" value="${s.batasHari}"></div>
+      </div>
+      <label class="ssp-label">Format Nomor Surat</label><input class="ssp-input" id="ssp-format" value="${escapeHtml(s.formatNomor)}">
+      <div class="ssp-tag">Tag nomor: <code>{urut}</code> <code>{bulan_romawi}</code> <code>{bulan}</code> <code>{tahun}</code></div>
+      <label class="ssp-label">Penandatangan</label>
+      <div id="ssp-ttd-list">${s.ttdList.map((t,i)=>`
+        <div class="ssp-signer">
+          <div class="fields">
+            <input class="ssp-input" placeholder="Jabatan" id="ssp-ttd-j${i}" value="${escapeHtml(t.jabatan)}">
+            <input class="ssp-input" placeholder="Nama" id="ssp-ttd-n${i}" value="${escapeHtml(t.nama)}">
+          </div>
+          ${s.ttdList.length>1?`<button class="rm" onclick="suratSPRemoveTtd(${i})">&times;</button>`:''}
+        </div>`).join('')}
+      </div>
+      <button type="button" class="btn btn-outline btn-compact" style="margin-top:6px;" onclick="suratSPAddTtd()">+ Tambah Penandatangan</button>
+      <label class="ssp-label">Paragraf Pembuka</label><textarea class="ssp-textarea" rows="2" id="ssp-pembuka">${escapeHtml(s.tplPembuka)}</textarea>
+      <label class="ssp-label">Paragraf Isi</label><textarea class="ssp-textarea" rows="3" id="ssp-isi">${escapeHtml(s.tplIsi)}</textarea>
+      <label class="ssp-label">Paragraf Penutup</label><textarea class="ssp-textarea" rows="3" id="ssp-penutup">${escapeHtml(s.tplPenutup)}</textarea>
+      <div class="ssp-tag">Tag isi: <code>{nama}</code> <code>{alamat}</code> <code>{kelompok}</code> <code>{nomor_akad}</code> <code>{tgl_akad}</code> <code>{jatuh_tempo}</code> <code>{pokok}</code> <code>{laba}</code> <code>{jumlah}</code> <code>{sudah_diangsur}</code> <code>{sisa_angsuran}</code> <code>{hari_telat}</code> <code>{batas_hari}</code> <code>{tanggal_batas}</code></div>
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="suratSPSaveSettings()">Simpan Pengaturan</button>
+    </div>
+
+    <div class="card">
+      <h2>Daftar Tunggakan</h2>
+      <div class="toolbar-row" style="margin-bottom:12px;">
+        <select class="ssp-input" style="flex:1;min-width:120px;" onchange="currentSubState.kel=this.value; delete currentSubState.q; renderContent()"><option value="">Semua Kelompok</option>${kelOpts}</select>
+        <div class="search-box">${ICONS.search}<input id="ssp-cari" placeholder="Cari nama..." value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      </div>
+      <div class="ssp-over">
+        <table class="ssp-table">
+          <thead><tr><th style="width:30px;"><input type="checkbox" id="ssp-all" onchange="suratSPToggleAll(this.checked)"></th><th>Nama</th><th>Kelompok</th><th>Jatuh Tempo</th><th>Telat</th><th>Sisa</th></tr></thead>
+          <tbody>
+            ${list.length ? list.map(d=>`
+              <tr>
+                <td><input type="checkbox" class="ssp-row" value="${d.pembId}" ${suratSPSelected.includes(d.pembId)?'checked':''} onchange="suratSPToggleRow('${d.pembId}',this.checked);${suratSPSyncAllScript()}"></td>
+                <td><b>${escapeHtml(d.nama)}</b>${d.alamat?`<br><span style="color:var(--muted);font-size:11px;">${escapeHtml(d.alamat)}</span>`:''}</td>
+                <td>${escapeHtml(d.kelompok)}</td>
+                <td>${suratSPTanggal(d.jatuhTempo)}</td>
+                <td><span class="ssp-badge ${d.hariTelat>=90?'d3':(d.hariTelat>=30?'d2':'d1')}">${d.hariTelat} × </span></td>
+                <td>${rupiah(d.sisaKewajiban)}</td>
+              </tr>`).join('') : `<tr><td colspan="6"><div style="padding:26px;text-align:center;color:var(--muted);font-size:13px;">Tidak ada nasabah yang telat${q||kel?' sesuai filter':''}.</div></td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="suratSPBuat()">✉️ Buat Surat ${selectedCount?('('+selectedCount+')'):''}</button>
+    </div>
+
+    <div id="ssp-preview"></div>
+  `;
+}
+function suratSPAddTtd(){
+  const list = document.getElementById('ssp-ttd-list');
+  if(!list) return;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = '<div class="ssp-signer"><div class="fields"><input class="ssp-input" placeholder="Jabatan" value=""><input class="ssp-input" placeholder="Nama" value=""></div><button type="button" class="rm" onclick="suratSPRemoveTtd(this)">&times;</button></div>';
+  list.appendChild(wrap.firstChild);
+}
+function suratSPRemoveTtd(btn){
+  const row = btn ? btn.closest('.ssp-signer') : null;
+  if(row) row.remove();
+}
+function suratSPSyncAllScript(){ return "var_all=true;var_rows=document.querySelectorAll('.ssp-row');var_rows.forEach(function(r){if(!r.checked)var_all=false;});var_a=document.getElementById('ssp-all');if(var_a)var_a.checked=var_all;"; }
+function suratSPToggleAll(checked){
+  suratSPSelected = (checked ? suratSPOverdue().map(d=>d.pembId) : []);
+  renderContent();
+}
+function suratSPToggleRow(id, checked){
+  if(checked){ if(!suratSPSelected.includes(id)) suratSPSelected.push(id); }
+  else { suratSPSelected = suratSPSelected.filter(x=>x!==id); }
+}
+function suratSPReadSettings(){
+  const ttds = [];
+  const listEl = document.getElementById('ssp-ttd-list');
+  if(listEl){
+    listEl.querySelectorAll('.ssp-signer').forEach(row=>{
+      const j = row.querySelector('input[placeholder="Jabatan"]');
+      const n = row.querySelector('input[placeholder="Nama"]');
+      ttds.push({jabatan: j?j.value:'', nama: n?n.value:''});
+    });
+  }
+  const obj = {
+    namaLembaga: val('ssp-nama'), alamatLembaga: val('ssp-alamat'), kota: val('ssp-kota'),
+    tanggalSurat: val('ssp-tgl'), nomorAwal: parseInt(val('ssp-nomor-awal'))||1, batasHari: parseInt(val('ssp-batas'))||7,
+    formatNomor: val('ssp-format') || '{urut}/SP/UB-RB/{bulan_romawi}/{tahun}',
+    ttdList: ttds.length?ttds:[{jabatan:'',nama:''}],
+    tplPembuka: val('ssp-pembuka'), tplIsi: val('ssp-isi'), tplPenutup: val('ssp-penutup')
+  };
+  return obj;
+}
+function suratSPSaveSettings(){
+  suratSPSave(suratSPReadSettings());
+  toast('Pengaturan surat tersimpan');
+}
+function suratSPFill(tpl, d, s, nomorSurat, tanggalBatas){
+  return tpl
+    .replaceAll('{nama}', d.nama).replaceAll('{alamat}', d.alamat||'-').replaceAll('{kelompok}', d.kelompok)
+    .replaceAll('{nomor_akad}', d.nomorAkad).replaceAll('{tgl_akad}', suratSPTanggal(d.tglAkad))
+    .replaceAll('{jatuh_tempo}', suratSPTanggal(d.jatuhTempo))
+    .replaceAll('{pokok}', suratSPRupiah(d.pokok)).replaceAll('{laba}', suratSPRupiah(d.laba))
+    .replaceAll('{jumlah}', suratSPRupiah(d.jumlah)).replaceAll('{sudah_diangsur}', suratSPRupiah(d.sudahDiangsur))
+    .replaceAll('{sisa_angsuran}', suratSPRupiah(d.sisaKewajiban))
+    .replaceAll('{hari_telat}', String(d.hariTelat)).replaceAll('{batas_hari}', String(s.batasHari))
+    .replaceAll('{tanggal_batas}', suratSPTanggal(tanggalBatas));
+}
+function suratSPBuildNomor(s, urut){
+  const t = s.tanggalSurat ? new Date(s.tanggalSurat) : new Date();
+  return s.formatNomor
+    .replaceAll('{urut}', String(urut).padStart(3,'0'))
+    .replaceAll('{bulan_romawi}', SURAT_SP_ROMAN[t.getMonth()])
+    .replaceAll('{bulan}', String(t.getMonth()+1).padStart(2,'0'))
+    .replaceAll('{tahun}', String(t.getFullYear()));
+}
+function suratSPBuatPage(d, s, urut){
+  const tglSurat = s.tanggalSurat ? new Date(s.tanggalSurat) : new Date();
+  const batas = new Date(tglSurat); batas.setDate(batas.getDate() + s.batasHari);
+  const nomorSurat = suratSPBuildNomor(s, urut);
+  const pembuka = suratSPFill(s.tplPembuka, d, s, nomorSurat, batas);
+  const isi = suratSPFill(s.tplIsi, d, s, nomorSurat, batas);
+  const penutup = suratSPFill(s.tplPenutup, d, s, nomorSurat, batas).split('\n\n').map(p=>'<p>'+escapeHtml(p).replace(/\n/g,'<br>')+'</p>').join('');
+  const ttds = (s.ttdList && s.ttdList.length ? s.ttdList : [{jabatan:'',nama:''}]);
+  const signers = (ttds.length<=1
+    ? '<div class="blok" style="margin-left:auto;"><div>'+escapeHtml(ttds[0].jabatan||'Jabatan')+'</div><div class="ssp-space"></div><div><b><u>'+escapeHtml(ttds[0].nama||'Nama Penandatangan')+'</u></b></div></div>'
+    : ttds.map(t=>'<div class="blok"><div>'+escapeHtml(t.jabatan||'Jabatan')+'</div><div class="ssp-space"></div><div><b><u>'+escapeHtml(t.nama||'Nama')+'</u></b></div></div>').join(''));
+  return '' +
+  '<div class="ssp-page">' +
+    '<div class="ssp-kop"><div><div class="nm">'+escapeHtml(s.namaLembaga||'Nama Lembaga')+'</div><div class="al">'+escapeHtml(s.alamatLembaga||'')+'</div></div></div>' +
+    '<div class="ssp-meta">' +
+      '<table><tr><td>Nomor</td><td>&nbsp;:&nbsp;</td><td>'+escapeHtml(nomorSurat)+'</td></tr><tr><td>Lampiran</td><td>&nbsp;:&nbsp;</td><td>-</td></tr><tr><td>Perihal</td><td>&nbsp;:&nbsp;</td><td><b>Surat Peringatan Tunggakan Angsuran</b></td></tr></table>' +
+      '<div>'+escapeHtml(s.kota||'')+(s.kota?', ':'')+suratSPTanggal(tglSurat)+'</div>' +
+    '</div>' +
+    '<div style="margin-bottom:14px;">Kepada Yth.<br><b>'+escapeHtml(d.nama)+'</b><br>di '+escapeHtml(d.alamat||'Tempat')+'</div>' +
+    '<div class="ssp-judul">SURAT PERINGATAN</div>' +
+    '<div class="ssp-isi"><p>Dengan hormat,</p><p>'+escapeHtml(pembuka)+'</p><p>'+escapeHtml(isi)+'</p>' +
+      '<table class="ssp-rincian"><tr><th>Uraian</th><th>Jumlah</th></tr>' +
+        '<tr><td>Pokok Pinjaman</td><td class="num">'+suratSPRupiah(d.pokok)+'</td></tr>' +
+        '<tr><td>Jasa / Laba</td><td class="num">'+suratSPRupiah(d.laba)+'</td></tr>' +
+        '<tr><td>Total Kewajiban</td><td class="num">'+suratSPRupiah(d.jumlah)+'</td></tr>' +
+        '<tr><td>Sudah Diangsur</td><td class="num">'+suratSPRupiah(d.sudahDiangsur)+'</td></tr>' +
+        '<tr><td><b>Sisa Kewajiban</b></td><td class="num"><b>'+suratSPRupiah(d.sisaKewajiban)+'</b></td></tr>' +
+      '</table>' + penutup + '</div>' +
+    '<div class="ssp-ttd">'+signers+'</div>' +
+  '</div>';
+}
+function suratSPBuat(){
+  if(!suratSPSelected.length){ toast('Pilih nasabah dulu'); return; }
+  const s = suratSPReadSettings();
+  suratSPSave(s);
+  const chosen = suratSPOverdue().filter(d=>suratSPSelected.includes(d.pembId)).sort((a,b)=>b.hariTelat-a.hariTelat);
+  let html = '<div class="ssp-toolbar no-print" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;">' +
+    '<div style="font-size:13px;color:var(--muted);">'+chosen.length+' surat siap</div>' +
+    '<button class="btn btn-primary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button></div>';
+  let urut = s.nomorAwal;
+  chosen.forEach(d=>{ html += suratSPBuatPage(d, s, urut); urut++; });
+  document.getElementById('ssp-preview').innerHTML = html;
+  document.getElementById('ssp-preview').scrollIntoView({behavior:'smooth'});
+  toast('Surat berhasil dibuat');
+}
+function val(id){ const el = document.getElementById(id); return el ? el.value : ''; }
 
 /* =========================================================
    ADMIN: LOG TRANSAKSI
