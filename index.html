@@ -2303,6 +2303,7 @@ function renderContent(){
   };
   const fn = routes[currentPage] || routes[defaultPageFor(user.role)];
   el.innerHTML = fn(user);
+  if(currentPage==='admin_saham_certificate'){ requestAnimationFrame(fitSertifikatPreview); }
   if(activeId){
     const toFocus = document.getElementById(activeId);
     if(toFocus){
@@ -6192,18 +6193,35 @@ function renderSahamCertificate(nama){
   return `
     <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevronLeft}</button>Sertifikat Saham</span></div>
     <button class="btn btn-primary btn-block" style="margin-bottom:12px;" onclick="cetakSertifikatSaham('${nama}')">${ICONS.pdf||'📄'} Unduh PDF Sertifikat</button>
-    <div class="sertifikat-wrapper" style="display:flex;justify-content:center;padding:10px 0;">
+    <div class="sertifikat-wrapper" style="display:flex;justify-content:center;padding:10px 0;overflow:hidden;">
       <div id="sertifikat-saham" style="width:210mm;min-height:297mm;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
         ${cert.inner}
       </div>
     </div>
   `;
 }
+function fitSertifikatPreview(){
+  const el = document.getElementById('sertifikat-saham');
+  if(!el) return;
+  const wrap = el.parentElement;
+  const baseW = 794;
+  const availW = (wrap ? wrap.clientWidth : window.innerWidth) - 2;
+  const scale = Math.min(1, availW / baseW);
+  el.style.transformOrigin = 'top center';
+  el.style.transform = 'scale(' + scale + ')';
+  if(wrap){ wrap.style.height = Math.ceil(el.offsetHeight * scale) + 'px'; }
+  setTimeout(function(){ if(wrap) wrap.style.height = Math.ceil(el.offsetHeight * scale) + 'px'; }, 120);
+}
 function cetakSertifikatSaham(nama){
   const el = document.getElementById('sertifikat-saham');
   if(!el){ toast('Sertifikat tidak ditemukan'); return; }
+  const wrap = el.parentElement;
+  const prevTransform = el.style.transform;
+  const prevWrapHeight = wrap ? wrap.style.height : '';
+  el.style.transform = '';
+  if(wrap){ wrap.style.overflow = ''; wrap.style.height = ''; }
   toast('Menyiapkan file PDF...');
-  html2canvas(el, { scale:2.5, useCORS:true, backgroundColor:'#ffffff' }).then(function(canvas){
+  html2canvas(el, { scale:2.5, useCORS:true, backgroundColor:'#ffffff', windowWidth:el.offsetWidth }).then(function(canvas){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
     const pageW = doc.internal.pageSize.getWidth();
@@ -6214,11 +6232,17 @@ function cetakSertifikatSaham(nama){
     const y = imgH < pageH ? (pageH - imgH) / 2 : 0;
     doc.addImage(imgData, 'JPEG', 0, y, imgW, Math.min(imgH, pageH));
     doc.save(sanitizeFileName('Sertifikat Saham ' + nama) + '.pdf');
+    restoreCert();
     bigSuccess('File PDF berhasil diunduh');
   }).catch(function(err){
     console.error(err);
+    restoreCert();
     toast('Gagal membuat file PDF');
   });
+  function restoreCert(){
+    el.style.transform = prevTransform;
+    if(wrap){ wrap.style.overflow = 'hidden'; wrap.style.height = prevWrapHeight; }
+  }
 }
 function editKepemilikanSaham(nama){
   const holdings = (DB.kepemilikanSaham||[]).filter(k=>k.nama===nama);
