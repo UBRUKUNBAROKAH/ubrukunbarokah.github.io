@@ -7422,6 +7422,7 @@ renderContent = function(){
   if(_routerExtras[currentPage]){
     el.innerHTML = _routerExtras[currentPage](user);
     el.scrollTop = 0;
+    if(currentPage==='admin_saham_certificate'){ requestAnimationFrame(fitSertifikatPreview); }
     return;
   }
   _origRouter();
