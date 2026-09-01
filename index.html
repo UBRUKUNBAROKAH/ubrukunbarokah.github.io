@@ -399,8 +399,8 @@ input,select{font-family:inherit;}
 
 .search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border-neu);border-radius:12px;padding:9px 12px;margin-bottom:14px;flex:1;min-width:0;box-shadow:var(--shadow-neu-in);}
 .search-box input{border:none;outline:none;background:transparent;flex:1;font-size:13.5px;min-width:0;}
-.toolbar-row{display:flex;gap:8px;align-items:center;margin-bottom:0;}
-.toolbar-row .search-box{margin-bottom:0;}
+.toolbar-row{display:flex;gap:8px;align-items:center;margin-bottom:0;flex-wrap:wrap;}
+.toolbar-row .search-box{margin-bottom:0;flex:1 1 140px;}
 .toolbar-sticky{position:sticky;top:var(--header-h, 76px);z-index:6;background:var(--bg);padding:10px 0;margin:-10px 0 4px;transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;}
 .btn-compact{padding:9px 14px;font-size:12.5px;white-space:nowrap;flex-shrink:0;border-radius:10px;}
 
@@ -6412,6 +6412,7 @@ function renderAdminSuratSP(user){
       .ssp-sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;}
       .ssp-sw input{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;}
       .ssp-over{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+      #ssp-preview{overflow-x:auto;}
       .ssp-table{width:100%;border-collapse:collapse;font-size:12.5px;}
       .ssp-table th{text-align:left;background:var(--bg);border-bottom:1px solid var(--border);padding:9px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
       .ssp-table td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
