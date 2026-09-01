@@ -3395,12 +3395,19 @@ function renderAdminPembiayaan(user){
   const totalBelumLunas = belumLunas.length;
   const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
+  const lunas = list.filter(p=>p.status==='lunas');
+  const totalLunas = lunas.length;
+  const totalLunasNilai = lunas.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
   return `
     <div class="page-title">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
-    <div class="stat-grid" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr);">
+    <div class="stat-grid" style="margin-bottom:14px;grid-template-columns:repeat(2,1fr);">
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSisa)}</div><div class="l">Total Sisa Pembiayaan</div></div>
       <div class="stat-box stat-gold"><div class="n mono" style="font-size:16px;">${totalBelumLunas}</div><div class="l">Belum Lunas &middot; sisa ${rupiah(sisaBelumLunas)}</div></div>
+      <div class="stat-box stat-gold" style="cursor:pointer;" onclick="go('admin_pembiayaan_lunas')" title="Klik untuk melihat daftar nasabah lunas">
+        <div class="n mono" style="font-size:16px;color:var(--ok);">${totalLunas}</div>
+        <div class="l">Lunas &middot; ${rupiah(totalLunasNilai)}</div>
+      </div>
     </div>
     <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
       <select onchange="currentSubState.kelFilter=this.value; delete currentSubState.q; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
@@ -3543,6 +3550,39 @@ function detailPengajuanModal(pembId){
       <button class="btn btn-outline" style="border-color:var(--danger);color:var(--danger);padding:8px 10px;" onclick="closeModal();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
     </div>
   `);
+}
+function renderAdminPembiayaanLunas(user){
+  const q = (currentSubState.q||'').toLowerCase();
+  const kelFilter = currentSubState.kelFilter || '';
+  let list = DB.pembiayaan.filter(p=>p.status==='lunas').slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
+  if(kelFilter) list = list.filter(p=>userById(p.userId).kelompokId===kelFilter);
+  if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q));
+  const groups = groupByKelompok(list, p=>p.userId);
+  const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
+  const totalNilai = list.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
+  let i = 0;
+  return `
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_pembiayaan')">${ICONS.chevronLeft}</button>Pembiayaan Lunas</span><span class="sub">${list.length} pengajuan lunas &middot; total ${rupiah(totalNilai)}</span></div>
+    <div class="toolbar-row" style="margin-bottom:14px;">
+      <select onchange="currentSubState.kelFilter=this.value; delete currentSubState.q; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
+        <option value="">Semua kelompok</option>
+        ${kelompokOptions}
+      </select>
+      <div class="search-box">${ICONS.search}<input placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+    </div>
+    ${list.length ? groups.map(g=>`
+      <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
+      <div class="card" style="padding:6px 18px;margin-bottom:14px;">
+        ${g.items.map(p=>{ i++; return `
+        <div class="list-row">
+          <div class="row-num">${i}</div>
+          <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan</div></div>
+          <span class="badge badge-green">Lunas</span>
+        </div>
+      `; }).join('')}
+      </div>
+    `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">Belum ada pembiayaan lunas${q?' untuk kata kunci tersebut':''}</div></div></div>`}
+  `;
 }
 function renderPembiayaanDetailPage(pembId, backPage){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
@@ -7359,6 +7399,7 @@ const _routerExtras = {
   admin_anggota_detail: (u)=>renderAdminAnggotaDetail(u, currentSubState.userId),
   admin_tabungan_detail: (u)=>renderAdminTabunganDetail(u, currentSubState.userId),
   admin_pembiayaan_detail: (u)=>renderPembiayaanDetailPage(currentSubState.pembId, 'admin_pembiayaan'),
+  admin_pembiayaan_lunas: (u)=>renderAdminPembiayaanLunas(u),
   admin_saham_certificate: (u)=>renderSahamCertificate(currentSubState.namaSaham),
   koor_anggota_detail: (u)=>renderKoorAnggotaDetail(u, currentSubState.userId),
   koor_tabungan_detail: (u)=>renderKoorTabunganDetail(u, currentSubState.userId),
