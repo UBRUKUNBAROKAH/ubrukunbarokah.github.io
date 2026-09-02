@@ -6235,7 +6235,7 @@ function renderSahamCertificate(nama){
     <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevronLeft}</button>Sertifikat Saham</span></div>
     <button class="btn btn-primary btn-block" style="margin-bottom:12px;" onclick="cetakSertifikatSaham('${nama}')">${ICONS.pdf||'📄'} Unduh PDF Sertifikat</button>
     <div class="sertifikat-wrapper" style="position:relative;overflow:hidden;padding:10px 0;">
-      <div id="sertifikat-saham" style="position:absolute;left:50%;top:10px;width:210mm;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
+      <div id="sertifikat-saham" style="position:absolute;left:50%;top:10px;width:794px;height:1123px;overflow:hidden;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
         ${cert.inner}
       </div>
     </div>
@@ -6271,16 +6271,15 @@ function cetakSertifikatSaham(nama){
   el.style.transform = 'translateX(-50%)';
   if(wrap){ wrap.style.overflow = ''; wrap.style.height = ''; }
   toast('Menyiapkan file PDF...');
-  html2canvas(el, { scale:2.5, useCORS:true, backgroundColor:'#ffffff', windowWidth:el.offsetWidth }).then(function(canvas){
+  html2canvas(el, { scale:2.5, useCORS:true, backgroundColor:'#ffffff', windowWidth:el.offsetWidth, windowHeight:el.offsetHeight }).then(function(canvas){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     const imgW = pageW;
-    const imgH = canvas.height * imgW / canvas.width;
+    const imgH = pageH;
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const y = imgH < pageH ? (pageH - imgH) / 2 : 0;
-    doc.addImage(imgData, 'JPEG', 0, y, imgW, Math.min(imgH, pageH));
+    doc.addImage(imgData, 'JPEG', 0, 0, imgW, imgH);
     doc.save(sanitizeFileName('Sertifikat Saham ' + nama) + '.pdf');
     restoreCert();
     bigSuccess('File PDF berhasil diunduh');
