@@ -6234,8 +6234,8 @@ function renderSahamCertificate(nama){
   return `
     <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevronLeft}</button>Sertifikat Saham</span></div>
     <button class="btn btn-primary btn-block" style="margin-bottom:12px;" onclick="cetakSertifikatSaham('${nama}')">${ICONS.pdf||'📄'} Unduh PDF Sertifikat</button>
-    <div class="sertifikat-wrapper" style="overflow:hidden;padding:10px 0;">
-      <div id="sertifikat-saham" style="width:210mm;min-height:297mm;padding:16px;margin:0 auto;${cert.bgStyle}text-align:center;box-sizing:border-box;">
+    <div class="sertifikat-wrapper" style="position:relative;overflow:hidden;padding:10px 0;">
+      <div id="sertifikat-saham" style="position:absolute;left:50%;top:10px;width:210mm;min-height:297mm;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
         ${cert.inner}
       </div>
     </div>
@@ -6249,11 +6249,11 @@ function fitSertifikatPreview(){
   const availW = (wrap ? wrap.clientWidth : window.innerWidth) - 2;
   const scale = Math.min(1, Math.max(availW, 0) / baseW) || 1;
   el.style.transformOrigin = 'top center';
-  el.style.transform = 'scale(' + scale + ')';
+  el.style.transform = 'translateX(-50%) scale(' + scale + ')';
   const applyHeight = function(){
     const el2 = document.getElementById('sertifikat-saham');
     const wrap2 = el2 ? el2.parentElement : null;
-    if(el2 && wrap2){ wrap2.style.height = Math.ceil(el2.offsetHeight * scale + 20) + 'px'; }
+    if(el2 && wrap2){ wrap2.style.height = Math.ceil(el2.offsetHeight * scale + 30) + 'px'; }
   };
   applyHeight();
   setTimeout(applyHeight, 150);
@@ -6268,7 +6268,7 @@ function cetakSertifikatSaham(nama){
   const wrap = el.parentElement;
   const prevTransform = el.style.transform;
   const prevWrapHeight = wrap ? wrap.style.height : '';
-  el.style.transform = '';
+  el.style.transform = 'translateX(-50%)';
   if(wrap){ wrap.style.overflow = ''; wrap.style.height = ''; }
   toast('Menyiapkan file PDF...');
   html2canvas(el, { scale:2.5, useCORS:true, backgroundColor:'#ffffff', windowWidth:el.offsetWidth }).then(function(canvas){
