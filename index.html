@@ -6235,7 +6235,7 @@ function renderSahamCertificate(nama){
     <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_saham')">${ICONS.chevronLeft}</button>Sertifikat Saham</span></div>
     <button class="btn btn-primary btn-block" style="margin-bottom:12px;" onclick="cetakSertifikatSaham('${nama}')">${ICONS.pdf||'📄'} Unduh PDF Sertifikat</button>
     <div class="sertifikat-wrapper" style="position:relative;overflow:hidden;padding:10px 0;">
-      <div id="sertifikat-saham" style="position:absolute;left:50%;top:10px;width:210mm;min-height:297mm;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
+      <div id="sertifikat-saham" style="position:absolute;left:50%;top:10px;width:210mm;padding:16px;${cert.bgStyle}text-align:center;box-sizing:border-box;">
         ${cert.inner}
       </div>
     </div>
