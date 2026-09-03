@@ -4169,7 +4169,15 @@ function formatWaNumber(noHp){
 }
 function waInfoAkunTemplate(u){
   var kop = DB.koperasi ? DB.koperasi.nama : 'Koperasi';
-  return 'Assalamu\'alaikum Wr. Wb.\n\nYth. Bapak/Ibu '+u.nama+',\n\nBerikut informasi akun login Anda di '+kop+':\n\nUsername : '+u.username+'\nPassword : '+u.password+'\n\nSilakan login melalui aplikasi '+kop+'.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu\'alaikum Wr. Wb.';
+  var tpl = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.waInfoTemplate) ? DB.koperasi.info.waInfoTemplate : '';
+  if(!tpl){
+    tpl = 'Assalamu\'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu\'alaikum Wr. Wb.';
+  }
+  return tpl
+    .split('{nama}').join(u.nama)
+    .split('{koperasi}').join(kop)
+    .split('{username}').join(u.username)
+    .split('{password}').join(u.password);
 }
 function kirimInfoAkun(userId){
   var u = userById(userId);
@@ -5297,6 +5305,7 @@ function renderPengaturanProfil(){
       <div class="form-row"><label>Visi</label><textarea id="set-visi" rows="2">${info.visi||''}</textarea></div>
       <div class="form-row"><label>Misi</label><textarea id="set-misi" rows="2">${info.misi||''}</textarea></div>
       <div class="form-row"><label>Tentang koperasi</label><textarea id="set-tentang" rows="3">${info.tentang||''}</textarea></div>
+      <div class="form-row"><label>Templat pesan WhatsApp Info Akun</label><textarea id="set-wa-template" rows="6" style="font-size:12px;">${info.waInfoTemplate || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Isi pesan yang dikirim ke nasabah. Kode otomatis: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b></span></div>
       <div class="form-row">
         <label>Ikon aplikasi</label>
         <div style="display:flex;align-items:center;gap:12px;">
@@ -5533,6 +5542,7 @@ function saveProfilKoperasi(){
   DB.koperasi.info.visi = document.getElementById('set-visi').value.trim();
   DB.koperasi.info.misi = document.getElementById('set-misi').value.trim();
   DB.koperasi.info.tentang = document.getElementById('set-tentang').value.trim();
+  DB.koperasi.info.waInfoTemplate = document.getElementById('set-wa-template') ? document.getElementById('set-wa-template').value : '';
   if(_pendingIconImage){
     DB.koperasi.iconImage = _pendingIconImage;
     _pendingIconImage = null;
