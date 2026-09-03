@@ -5291,7 +5291,7 @@ function renderAdminPengaturan(user){
 function renderPengaturanWA(){
   const cfg = waSettings();
   const tg = tgSettings();
-  const sub = currentSubState.notifSub || 'wa';
+  const sub = currentSubState.notifSub || '';
   const testDefault = (cfg.adminNumbers||[])[0] || '';
   const tgTestDefault = (tg.adminChatIds||[])[0] || '';
   const waContent = `
