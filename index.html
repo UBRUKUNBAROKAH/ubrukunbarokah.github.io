@@ -2822,7 +2822,7 @@ function renderAdminAnggota(user){
             <button class="icon-btn-sm ${u.status==='aktif'?'ic-primary':'ic-danger'}" onclick="event.stopPropagation();${u.status==='nonaktif'?'aktifkanAnggota':'nonaktifkanAnggota'}('${u.id}')" title="${u.status==='nonaktif'?'Aktifkan':'Nonaktifkan'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7"/><circle cx="8" cy="12" r="2.5"/></svg></button>
             ${(!u._noAkun && u.noHp) ? (u.waInfoSentAt
               ? '<span style="color:var(--ok);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;width:28px;height:28px;" title="Info akun sudah dikirim">✓</span>'
-              : `<button class="icon-btn-sm" style="background:var(--ok);color:#fff;flex-shrink:0;" title="Kirim info akun (username & password) via WhatsApp" onclick="event.stopPropagation();kirimInfoAkun('${u.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-8 18-2.5-7.5L3 11z"/><path d="M11 18l2-4 2-2"/></svg></button>`
+              : `<button class="btn btn-sm" style="background:var(--ok);color:#fff;white-space:nowrap;" title="Kirim info akun (username & password) via WhatsApp" onclick="event.stopPropagation();kirimInfoAkun('${u.id}')">Kirim Info Akun</button>`
             ) : ''}
             <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusAnggota('${u.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
           </div>
@@ -6888,7 +6888,7 @@ function renderKoorAnggota(user){
           <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">No. Rek ${u.noRekening}</div></div></div>
           ${(!u._noAkun && u.noHp && u.username) ? (u.waInfoSentAt
             ? '<span style="color:var(--ok);font-size:13px;font-weight:800;" title="Info akun sudah dikirim">✓</span>'
-            : `<button class="icon-btn-sm" style="background:var(--ok);color:#fff;flex-shrink:0;margin-right:6px;" title="Kirim info akun (username & password) via WhatsApp" onclick="event.stopPropagation();kirimInfoAkun('${u.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-8 18-2.5-7.5L3 11z"/><path d="M11 18l2-4 2-2"/></svg></button>`
+            : `<button class="btn btn-sm" style="background:var(--ok);color:#fff;white-space:nowrap;flex-shrink:0;" title="Kirim info akun (username & password) via WhatsApp" onclick="event.stopPropagation();kirimInfoAkun('${u.id}')">Kirim Info Akun</button>`
           ) : ''}
           <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
         </div>
@@ -6920,7 +6920,7 @@ function renderKoorUserMgmt(user){
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
             ${(!u._noAkun && u.noHp) ? (u.waInfoSentAt
               ? '<span style="color:var(--ok);font-size:13px;font-weight:800;" title="Info akun sudah dikirim">✓</span>'
-              : `<button class="icon-btn-sm" style="background:var(--ok);color:#fff;" title="Kirim info akun via WhatsApp" onclick="kirimInfoAkun('${u.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-8 18-2.5-7.5L3 11z"/><path d="M11 18l2-4 2-2"/></svg></button>`
+              : `<button class="btn btn-sm" style="background:var(--ok);color:#fff;white-space:nowrap;" title="Kirim info akun via WhatsApp" onclick="kirimInfoAkun('${u.id}')">Kirim Info Akun</button>`
             ) : ''}
             ${u._noAkun
               ? `<button class="btn btn-outline btn-sm" onclick="openUserModal(null,'nasabah','${user.kelompokId}')">Buat Akun</button>`
