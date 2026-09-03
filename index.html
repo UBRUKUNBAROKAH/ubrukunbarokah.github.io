@@ -355,6 +355,11 @@ input,select{font-family:inherit;}
 .due-banner .ic{width:32px;height:32px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 6px rgba(138,106,31,.4), -1px -1px 4px rgba(255,255,255,.4);}
 .due-banner .t{font-size:12.5px;font-weight:700;color:#5c4413;}
 .due-banner .s{font-size:11px;color:#7a5c22;margin-top:1px;}
+.ubr-marquee{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--primary),#165e48);color:#fff;border-radius:var(--radius-md);padding:12px 0;margin-bottom:16px;box-shadow:var(--shadow-neu-sm);}
+.ubr-marquee .ubr-track{display:inline-block;white-space:nowrap;padding-left:100%;padding-right:100%;animation:ubr-scroll 28s linear infinite;}
+.ubr-marquee .ubr-track span{display:inline-block;margin:0 26px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.3px;opacity:.95;}
+.ubr-marquee.dim .ubr-track{animation-duration:40s;}
+@keyframes ubr-scroll{from{transform:translateX(0);}to{transform:translateX(-100%);}}
 
 .portfolio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
 .portfolio-box{background:var(--bg);border:1px solid var(--border-neu);border-radius:var(--radius-md);padding:12px 10px;text-align:center;box-shadow:var(--shadow-neu-sm);}
@@ -5237,6 +5242,7 @@ function renderPengaturanProfil(){
   return `
     <div class="card">
       <div class="form-row"><label>Nama koperasi</label><input type="text" id="set-nama" value="${DB.koperasi.nama}"></div>
+      <div class="form-row"><label>Slogan / motto <span class="hint" style="font-weight:400;">(tampil sebagai teks berjalan di Beranda nasabah)</span></label><input type="text" id="set-slogan" value="${info.slogan||''}" placeholder="cth. Simpan pinjam, menyejahterakan anggota"></div>
       <div class="form-row"><label>Alamat</label><textarea id="set-alamat" rows="2">${info.alamat||''}</textarea></div>
       <div class="form-row"><label>Telepon / HP</label><input type="text" id="set-telepon" value="${info.telepon||''}"></div>
       <div class="form-row"><label>Email</label><input type="email" id="set-email" value="${info.email||''}"></div>
@@ -5472,6 +5478,7 @@ function syncBagiHasilSaham(v){
 function saveProfilKoperasi(){
   DB.koperasi.nama = document.getElementById('set-nama').value.trim() || DB.koperasi.nama;
   DB.koperasi.info = DB.koperasi.info || {};
+  DB.koperasi.info.slogan = document.getElementById('set-slogan').value.trim();
   DB.koperasi.info.alamat = document.getElementById('set-alamat').value.trim();
   DB.koperasi.info.telepon = document.getElementById('set-telepon').value.trim();
   DB.koperasi.info.email = document.getElementById('set-email').value.trim();
@@ -7203,9 +7210,14 @@ function renderNasBeranda(user){
     return s + Math.max(totalKew - totalDibayar, 0);
   },0);
   const isiAwal = (user.nama||' ').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const _sl = (DB.koperasi.info && DB.koperasi.info.slogan) ? DB.koperasi.info.slogan.trim() : '';
+  const _msgs = _sl ? [DB.koperasi.nama+' &middot; '+_sl, _sl, 'Tabungan, pembiayaan & saham syariah', 'Menuju mandiri bersama '+DB.koperasi.nama]
+                    : [DB.koperasi.nama, 'Simpan pinjam menyejahterakan anggota', 'Tabungan & pembiayaan syariah', 'Wujudkan masa depan bersama '+DB.koperasi.nama];
+  const marquee = `<div class="ubr-marquee"><div class="ubr-track">${_msgs.map(m=>`<span>${m}</span>`).join('')}</div></div>`;
   const chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   return `
     <div class="page-title">Beranda<span class="sub">${DB.koperasi.nama}</span></div>
+    ${marquee}
 
     <div class="card" style="cursor:pointer;padding:18px;display:flex;align-items:center;gap:14px;" onclick="go('profil_saya')">
       <div style="width:52px;height:52px;flex-shrink:0;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:18px;">${isiAwal}</div>
