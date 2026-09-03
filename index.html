@@ -5256,6 +5256,7 @@ function renderPengaturanWA(){
       <div class="form-row"><label>Token API Fonnte</label><input type="text" id="wa-token" value="${cfg.token||''}" placeholder="Token dari dashboard fonnte.com"></div>
       <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${(cfg.adminNumbers||[]).join(', ')}" placeholder="081234567890, 082198765432"><span class="hint">Pisahkan dengan koma jika lebih dari satu.</span></div>
       <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" ${cfg.enabled?'checked':''}> Notifikasi WhatsApp aktif</label></div>
+      <div class="form-row" style="margin-top:14px;"><label>Templat pesan Info Akun (dikirim saat klik "Kirim Info Akun")</label><textarea id="set-wa-template" rows="6" style="font-size:12px;">${(DB.koperasi.info&&DB.koperasi.info.waInfoTemplate) || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Kode otomatis yang diganti saat dikirim: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b></span></div>
       <button class="btn btn-primary btn-block" onclick="savePengaturanWA()">Simpan pengaturan WhatsApp</button>
     </div>
     <div class="card" style="margin-top:12px;">
@@ -5305,7 +5306,6 @@ function renderPengaturanProfil(){
       <div class="form-row"><label>Visi</label><textarea id="set-visi" rows="2">${info.visi||''}</textarea></div>
       <div class="form-row"><label>Misi</label><textarea id="set-misi" rows="2">${info.misi||''}</textarea></div>
       <div class="form-row"><label>Tentang koperasi</label><textarea id="set-tentang" rows="3">${info.tentang||''}</textarea></div>
-      <div class="form-row"><label>Templat pesan WhatsApp Info Akun</label><textarea id="set-wa-template" rows="6" style="font-size:12px;">${info.waInfoTemplate || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Isi pesan yang dikirim ke nasabah. Kode otomatis: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b></span></div>
       <div class="form-row">
         <label>Ikon aplikasi</label>
         <div style="display:flex;align-items:center;gap:12px;">
@@ -5329,6 +5329,8 @@ function savePengaturanWA(){
   cfg.adminNumbers = document.getElementById('wa-admin-numbers').value.split(',').map(s=>s.trim()).filter(Boolean);
   cfg.enabled = document.getElementById('wa-enabled').checked;
   DB.koperasi.info.notifWA = cfg;
+  DB.koperasi.info = DB.koperasi.info || {};
+  DB.koperasi.info.waInfoTemplate = document.getElementById('set-wa-template') ? document.getElementById('set-wa-template').value : '';
   const tg = DB.koperasi.info.notifTelegram || {};
   tg.token = document.getElementById('tg-token').value.trim();
   tg.adminChatIds = document.getElementById('tg-admin-chats').value.split(',').map(s=>s.trim()).filter(Boolean);
@@ -5542,7 +5544,6 @@ function saveProfilKoperasi(){
   DB.koperasi.info.visi = document.getElementById('set-visi').value.trim();
   DB.koperasi.info.misi = document.getElementById('set-misi').value.trim();
   DB.koperasi.info.tentang = document.getElementById('set-tentang').value.trim();
-  DB.koperasi.info.waInfoTemplate = document.getElementById('set-wa-template') ? document.getElementById('set-wa-template').value : '';
   if(_pendingIconImage){
     DB.koperasi.iconImage = _pendingIconImage;
     _pendingIconImage = null;
