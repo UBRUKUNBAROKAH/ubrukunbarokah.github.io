@@ -1750,6 +1750,9 @@ function renderNav(){
       {p:'koor_pembiayaan', ic:'finance', label:'Pembiayaan'},
       {p:'koor_saham', ic:'coin', label:'Saham'}
     ];
+    moreItems = [
+      {p:'koor_usermgmt', ic:'user_cog', label:'Management Akun'}
+    ];
   } else {
     items = [
       {p:'nas_beranda', ic:'home', label:'Beranda'},
@@ -1775,7 +1778,8 @@ function renderNav(){
   sidebar.innerHTML = items.concat(moreItems).map(it=>renderBtn(it, currentPage===it.p)).join('');
 }
 function openMoreMenu(){
-  const items = ADMIN_MORE_ITEMS;
+  const u = currentUser();
+  const items = (u && u.role==='koordinator') ? [{p:'koor_usermgmt', ic:'user_cog', label:'Management Akun'}] : ADMIN_MORE_ITEMS;
   openModal(`
     <h3 style="margin-bottom:12px;">Menu lain</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -2301,6 +2305,7 @@ function renderContent(){
     admin_log: renderAdminLog,
     koor_beranda: renderKoorBeranda,
     koor_anggota: renderKoorAnggota,
+    koor_usermgmt: renderKoorUserMgmt,
     koor_tabungan: renderKoorTabungan,
     koor_pembiayaan: renderKoorPembiayaan,
     koor_saham: renderKoorSaham,
@@ -2815,6 +2820,10 @@ function renderAdminAnggota(user){
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0;">
             <button class="icon-btn-sm ${u.status==='aktif'?'ic-primary':'ic-danger'}" onclick="event.stopPropagation();${u.status==='nonaktif'?'aktifkanAnggota':'nonaktifkanAnggota'}('${u.id}')" title="${u.status==='nonaktif'?'Aktifkan':'Nonaktifkan'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7"/><circle cx="8" cy="12" r="2.5"/></svg></button>
+            ${(!u._noAkun && u.noHp) ? (u.waInfoSentAt
+              ? '<span style="color:var(--ok);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;width:28px;height:28px;" title="Info akun sudah dikirim">✓</span>'
+              : `<button class="icon-btn-sm" style="background:var(--ok);color:#fff;flex-shrink:0;" title="Kirim info akun (username & password) via WhatsApp" onclick="event.stopPropagation();kirimInfoAkun('${u.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-8 18-2.5-7.5L3 11z"/><path d="M11 18l2-4 2-2"/></svg></button>`
+            ) : ''}
             <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusAnggota('${u.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
           </div>
         </div>
@@ -3954,7 +3963,7 @@ function renderAdminUserMgmt(user){
     }
   `;
 }
-function openUserModal(userId, newRole){
+function openUserModal(userId, newRole, fixedKelompokId){
   const editing = userId ? userById(userId) : null;
   const role = editing ? editing.role : (newRole || 'nasabah');
 
@@ -3964,10 +3973,12 @@ function openUserModal(userId, newRole){
       <h3>Buat Akun Nasabah</h3>
       <input type="hidden" id="um-role" value="nasabah">
       <input type="hidden" id="um-editing" value="">
-      <p class="hint" style="margin:0 0 12px;">Pilih kelompok, lalu pilih nasabah. Untuk nasabah yang sudah punya akun, username & kata sandi-nya akan diperbarui.</p>
+      <p class="hint" style="margin:0 0 12px;">${fixedKelompokId?'Pilih nasabah dari kelompok Anda, lalu buatkan username & kata sandi-nya.':'Pilih kelompok, lalu pilih nasabah. Untuk nasabah yang sudah punya akun, username & kata sandi-nya akan diperbarui.'}</p>
       <div class="form-row"><label>Pilih Kelompok</label>
-        <select id="um-kelompok" onchange="umClearSearch();umLoadMembers()">
-          ${DB.koperasi.kelompok.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('')}
+        <select id="um-kelompok" onchange="umClearSearch();umLoadMembers()" ${fixedKelompokId?'disabled':''}>
+          ${fixedKelompokId
+            ? (()=>{ const kk=DB.koperasi.kelompok.find(k=>k.id===fixedKelompokId); return `<option value="${fixedKelompokId}">${kk?kk.nama:'Kelompok'}</option>`; })()
+            : DB.koperasi.kelompok.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('')}
         </select>
       </div>
       <div class="form-row"><label>Pilih Nasabah</label>
@@ -3995,9 +4006,11 @@ function openUserModal(userId, newRole){
     <div class="form-row"><label>Nama lengkap</label><input type="text" id="um-nama" value="${editing?editing.nama:''}" placeholder="Nama lengkap"></div>
     <div class="form-row"><label>Nama pengguna (username)</label><input type="text" id="um-username" value="${editing?editing.username:''}" placeholder="Username untuk login" ${editing && editing.id==='u_admin'?'disabled':''}></div>
     <div class="form-row"><label>Kata sandi ${!editing?'<span class="hint" style="font-weight:400;">(default: anggota123)</span>':''}</label><input type="text" id="um-password" value="${editing?editing.password:'anggota123'}" placeholder="Kata sandi"></div>
-    <div class="form-row" id="um-kelompok-row"><label>Kelompok</label>
-      <select id="um-kelompok">${DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${editing&&editing.kelompokId===k.id?'selected':''}>${k.nama}</option>`).join('')}</select>
-    </div>
+   <div class="form-row" id="um-kelompok-row"><label>Kelompok</label>
+     <select id="um-kelompok" ${fixedKelompokId?'disabled':''}>${fixedKelompokId
+       ? (()=>{ const kk=DB.koperasi.kelompok.find(k=>k.id===fixedKelompokId); return `<option value="${fixedKelompokId}" selected>${kk?kk.nama:'Kelompok'}</option>`; })()
+       : DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${editing&&editing.kelompokId===k.id?'selected':''}>${k.nama}</option>`).join('')}</select>
+   </div>
     <div class="form-row"><label>No. HP (WhatsApp)</label><input type="text" id="um-nohp" value="${editing?editing.noHp||'':''}" placeholder="081234567890"></div>
     <div class="form-row"><label>Telegram (opsional)</label><input type="text" id="um-tgchat" value="${editing?editing.telegramChatId||'':''}" placeholder="cth. 123456789"></div>
     <div class="modal-actions">
@@ -4145,6 +4158,34 @@ async function submitUser(existingId){
   bigSuccess('Data pengguna disimpan');
   closeModal();
   renderContent();
+}
+/* WA Info Akun helpers */
+function formatWaNumber(noHp){
+  if(!noHp) return '';
+  var n = String(noHp).replace(/[^0-9]/g, '');
+  if(n.startsWith('0')) n = '62' + n.slice(1);
+  else if(!n.startsWith('62')) n = '62' + n;
+  return n;
+}
+function waInfoAkunTemplate(u){
+  var kop = DB.koperasi ? DB.koperasi.nama : 'Koperasi';
+  return 'Assalamu\'alaikum Wr. Wb.\n\nYth. Bapak/Ibu '+u.nama+',\n\nBerikut informasi akun login Anda di '+kop+':\n\nUsername : '+u.username+'\nPassword : '+u.password+'\n\nSilakan login melalui aplikasi '+kop+'.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu\'alaikum Wr. Wb.';
+}
+function kirimInfoAkun(userId){
+  var u = userById(userId);
+  if(!u || !u.username){ toast('Akun tidak ditemukan'); return; }
+  if(!u.noHp){ toast('Nomor HP belum terdaftar di '+u.nama); return; }
+  var msg = waInfoAkunTemplate(u);
+  var waNum = formatWaNumber(u.noHp);
+  if(!waNum){ toast('Nomor HP tidak valid'); return; }
+  u.waInfoSentAt = nowISO();
+  if(SUPABASE_ENABLED){
+    upsertToSupabase(TABLES.users, {id:u.id, wa_info_sent_at:u.waInfoSentAt}).then(function(r){ if(r.error) console.error('Supabase waInfoSent err',r.error); });
+  }
+  persist();
+  renderContent();
+  window.open('https://wa.me/'+waNum+'?text='+encodeURIComponent(msg),'_blank');
+  toast('Membuka WhatsApp untuk '+u.nama);
 }
 function deleteUser(userId){
   const u = userById(userId);
@@ -6845,6 +6886,10 @@ function renderKoorAnggota(user){
       ${anggota.length ? anggota.map((u,i)=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_anggota_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">No. Rek ${u.noRekening}</div></div></div>
+          ${(!u._noAkun && u.noHp && u.username) ? (u.waInfoSentAt
+            ? '<span style="color:var(--ok);font-size:13px;font-weight:800;" title="Info akun sudah dikirim">✓</span>'
+            : `<button class="icon-btn-sm" style="background:var(--ok);color:#fff;flex-shrink:0;margin-right:6px;" title="Kirim info akun (username & password) via WhatsApp" onclick="event.stopPropagation();kirimInfoAkun('${u.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-8 18-2.5-7.5L3 11z"/><path d="M11 18l2-4 2-2"/></svg></button>`
+          ) : ''}
           <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
         </div>
       `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota aktif di kelompok ini'}</div></div>`}
@@ -6855,6 +6900,37 @@ function renderKoorAnggotaDetail(user, userId){
   const nas = userById(userId);
   if(!nas || nas.kelompokId !== user.kelompokId) return `<div class="empty-state">Anggota tidak ditemukan</div>`;
   return renderMemberDetail(nas, 'koor_anggota');
+}
+function renderKoorUserMgmt(user){
+  const q = (currentSubState.umQ||'').toLowerCase();
+  const anggota = nasabahOfKelompok(user.kelompokId).slice().sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+  const filtered = q ? anggota.filter(u=>(u.nama||'').toLowerCase().includes(q) || (u.noRekening||'').includes(q)) : anggota;
+  return `
+    <div class="page-title">Management Akun<span class="sub">${kelompokName(user.kelompokId)} &middot; ${anggota.length} nasabah</span></div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openUserModal(null,'nasabah','${user.kelompokId}')">${ICONS.plus} Buat Akun Nasabah</button>
+    <div class="search-box" style="margin-bottom:14px;">${ICONS.search}<input id="search-koor-um" placeholder="Cari nama atau no. rekening" value="${currentSubState.umQ||''}" oninput="currentSubState.umQ=this.value; renderContent()"></div>
+    <div class="card" style="padding:6px 18px;">
+      ${filtered.length ? filtered.map((u,i)=>`
+        <div class="list-row">
+          <div class="row-num">${i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${u.nama}${u._noAkun?'<span class="badge badge-red" style="font-size:9px;">Belum ada akun</span>':''}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">${u._noAkun?'-':('@'+u.username)+' &middot; '+u.noRekening}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            ${(!u._noAkun && u.noHp) ? (u.waInfoSentAt
+              ? '<span style="color:var(--ok);font-size:13px;font-weight:800;" title="Info akun sudah dikirim">✓</span>'
+              : `<button class="icon-btn-sm" style="background:var(--ok);color:#fff;" title="Kirim info akun via WhatsApp" onclick="kirimInfoAkun('${u.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-8 18-2.5-7.5L3 11z"/><path d="M11 18l2-4 2-2"/></svg></button>`
+            ) : ''}
+            ${u._noAkun
+              ? `<button class="btn btn-outline btn-sm" onclick="openUserModal(null,'nasabah','${user.kelompokId}')">Buat Akun</button>`
+              : `<button class="btn btn-outline btn-sm" onclick="openUserModal('${u.id}',null,'${user.kelompokId}')">Ubah</button>`}
+          </div>
+        </div>
+      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota di kelompok ini'}</div></div>`}
+    </div>
+    <div class="hint" style="text-align:center;margin-top:12px;">Koordinator hanya dapat mengelola akun anggota kelompoknya sendiri.</div>
+  `;
 }
 function renderKoorSaham(user){
   const jns = DB.koperasi.saham.jenis||[];
