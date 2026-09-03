@@ -355,11 +355,17 @@ input,select{font-family:inherit;}
 .due-banner .ic{width:32px;height:32px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 6px rgba(138,106,31,.4), -1px -1px 4px rgba(255,255,255,.4);}
 .due-banner .t{font-size:12.5px;font-weight:700;color:#5c4413;}
 .due-banner .s{font-size:11px;color:#7a5c22;margin-top:1px;}
-.ubr-marquee{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--primary),#165e48);color:#fff;border-radius:var(--radius-md);padding:12px 0;margin-bottom:16px;box-shadow:var(--shadow-neu-sm);}
-.ubr-marquee .ubr-track{display:inline-block;white-space:nowrap;padding-left:100%;padding-right:100%;animation:ubr-scroll 28s linear infinite;}
-.ubr-marquee .ubr-track span{display:inline-block;margin:0 26px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.3px;opacity:.95;}
-.ubr-marquee.dim .ubr-track{animation-duration:40s;}
+.ubr-marquee{position:relative;overflow:hidden;background:linear-gradient(120deg,#0f4d3a 0%,#1b7758 45%,#0f4d3a 80%,#8a6d1f 120%);color:#fff;border-radius:var(--radius-md);padding:13px 0;margin-bottom:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(0,0,0,.18), 0 6px 18px rgba(15,77,58,.28);border:1px solid rgba(212,175,55,.45);}
+.ubr-marquee:before{content:'';position:absolute;inset:0;background:radial-gradient(120% 120% at 15% 0%,rgba(215,190,90,.35),transparent 55%);pointer-events:none;}
+.ubr-marquee .ubr-shine{position:absolute;top:-60%;left:0;width:90px;height:220%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:ubr-shine 6s ease-in-out infinite;pointer-events:none;}
+.ubr-marquee .ubr-track{display:inline-block;white-space:nowrap;padding-left:100%;padding-right:100%;animation:ubr-scroll 30s linear infinite;}
+.ubr-marquee .ubr-track span{display:inline-flex;align-items:center;gap:8px;margin:0 30px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;letter-spacing:.4px;text-shadow:0 1px 3px rgba(0,0,0,.35);}
+.ubr-marquee .ubr-track span b{color:#f6e27a;font-weight:800;text-shadow:0 0 12px rgba(246,226,122,.55);}
+.ubr-marquee .ubr-track .u-i{width:14px;height:14px;flex-shrink:0;color:#f6e27a;filter:drop-shadow(0 0 6px rgba(246,226,122,.7));animation:ubr-spin 4s linear infinite;}
+.ubr-marquee.dim .ubr-track{animation-duration:45s;}
 @keyframes ubr-scroll{from{transform:translateX(0);}to{transform:translateX(-100%);}}
+@keyframes ubr-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes ubr-shine{0%{left:-15%;}55%{left:110%;}100%{left:110%;}}
 
 .portfolio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
 .portfolio-box{background:var(--bg);border:1px solid var(--border-neu);border-radius:var(--radius-md);padding:12px 10px;text-align:center;box-shadow:var(--shadow-neu-sm);}
@@ -7213,7 +7219,8 @@ function renderNasBeranda(user){
   const _sl = (DB.koperasi.info && DB.koperasi.info.slogan) ? DB.koperasi.info.slogan.trim() : '';
   const _msgs = _sl ? [DB.koperasi.nama+' &middot; '+_sl, _sl, 'Tabungan, pembiayaan & saham syariah', 'Menuju mandiri bersama '+DB.koperasi.nama]
                     : [DB.koperasi.nama, 'Simpan pinjam menyejahterakan anggota', 'Tabungan & pembiayaan syariah', 'Wujudkan masa depan bersama '+DB.koperasi.nama];
-  const marquee = `<div class="ubr-marquee"><div class="ubr-track">${_msgs.map(m=>`<span>${m}</span>`).join('')}</div></div>`;
+  const _orn = '<span class="u-i">✦</span>';
+  const marquee = `<div class="ubr-marquee"><span class="ubr-shine"></span><div class="ubr-track">${_msgs.map(m=>`<span>${_orn}${m}</span>`).join('')}</div></div>`;
   const chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   return `
     <div class="page-title">Beranda<span class="sub">${DB.koperasi.nama}</span></div>
