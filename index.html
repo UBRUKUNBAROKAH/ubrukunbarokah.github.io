@@ -6976,10 +6976,12 @@ function renderKoorAnggotaDetail(user, userId){
 }
 function renderKoorUserMgmt(user){
   const q = (currentSubState.umQ||'').toLowerCase();
-  const anggota = nasabahOfKelompok(user.kelompokId).slice().sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+  const semua = nasabahOfKelompok(user.kelompokId);
+  const anggota = semua.filter(u=>!u._noAkun).slice().sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+  const belum = semua.filter(u=>u._noAkun).length;
   const filtered = q ? anggota.filter(u=>(u.nama||'').toLowerCase().includes(q) || (u.noRekening||'').includes(q)) : anggota;
   return `
-    <div class="page-title">Management Akun<span class="sub">${kelompokName(user.kelompokId)} &middot; ${anggota.length} nasabah</span></div>
+    <div class="page-title">Management Akun<span class="sub">${kelompokName(user.kelompokId)} &middot; ${anggota.length} akun</span></div>
     <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openUserModal(null,'nasabah','${user.kelompokId}')">${ICONS.plus} Buat Akun Nasabah</button>
     <div class="search-box" style="margin-bottom:14px;">${ICONS.search}<input id="search-koor-um" placeholder="Cari nama atau no. rekening" value="${currentSubState.umQ||''}" oninput="currentSubState.umQ=this.value; renderContent()"></div>
     <div class="card" style="padding:6px 18px;">
@@ -6987,21 +6989,20 @@ function renderKoorUserMgmt(user){
         <div class="list-row">
           <div class="row-num">${i+1}</div>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${u.nama}${u._noAkun?'<span class="badge badge-red" style="font-size:9px;">Belum ada akun</span>':''}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">${u._noAkun?'-':('@'+u.username)+' &middot; '+u.noRekening}</div>
+            <div style="font-weight:600;font-size:14px;">${u.nama}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">@${u.username} &middot; ${u.noRekening}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-            ${(!u._noAkun && u.noHp) ? (u.waInfoSentAt
+            ${u.noHp ? (u.waInfoSentAt
               ? '<span style="color:var(--ok);font-size:13px;font-weight:800;" title="Info akun sudah dikirim">✓</span>'
               : `<button class="btn btn-sm" style="background:var(--ok);color:#fff;white-space:nowrap;" title="Kirim info akun via WhatsApp" onclick="kirimInfoAkun('${u.id}')">Kirim Info Akun</button>`
             ) : ''}
-            ${u._noAkun
-              ? `<button class="btn btn-outline btn-sm" onclick="openUserModal(null,'nasabah','${user.kelompokId}')">Buat Akun</button>`
-              : `<button class="btn btn-outline btn-sm" onclick="openUserModal('${u.id}',null,'${user.kelompokId}')">Ubah</button>`}
+            <button class="btn btn-outline btn-sm" onclick="openUserModal('${u.id}',null,'${user.kelompokId}')">Ubah</button>
           </div>
         </div>
-      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota di kelompok ini'}</div></div>`}
+      `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">${q?'Tidak ditemukan':'Belum ada akun'}</div><div class="d">${q?'Coba kata kunci lain':'Klik "Buat Akun Nasabah" di atas untuk membuat akun anggota'}</div></div>`}
     </div>
+    ${belum ? `<div class="hint" style="text-align:center;margin-top:12px;">${belum} anggota belum punya akun. Gunakan tombol "Buat Akun Nasabah" di atas untuk membuatkannya.</div>` : ''}
     <div class="hint" style="text-align:center;margin-top:12px;">Koordinator hanya dapat mengelola akun anggota kelompoknya sendiri.</div>
   `;
 }
