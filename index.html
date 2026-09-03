@@ -3958,11 +3958,12 @@ function openUserModal(userId, newRole){
       <input type="hidden" id="um-editing" value="">
       <p class="hint" style="margin:0 0 12px;">Pilih kelompok, lalu pilih nasabah. Untuk nasabah yang sudah punya akun, username & kata sandi-nya akan diperbarui.</p>
       <div class="form-row"><label>Pilih Kelompok</label>
-        <select id="um-kelompok" onchange="umLoadMembers()">
+        <select id="um-kelompok" onchange="umClearSearch();umLoadMembers()">
           ${DB.koperasi.kelompok.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('')}
         </select>
       </div>
       <div class="form-row"><label>Pilih Nasabah</label>
+        <div class="search-box" style="margin-bottom:8px;">${ICONS.search}<input id="um-search" placeholder="Cari nama nasabah / no. rekening" oninput="umFilterMembers()"></div>
         <select id="um-member" size="8" style="width:100%;" onchange="umPickMember()"></select>
         <span class="hint" id="um-member-hint"></span>
       </div>
@@ -4002,16 +4003,20 @@ function umLoadMembers(){
   const sel = document.getElementById('um-member');
   if(!sel) return;
   const kelompokId = document.getElementById('um-kelompok').value;
-  const list = DB.users.filter(u=>u.role==='nasabah' && u.kelompokId===kelompokId)
+  const base = DB.users.filter(u=>u.role==='nasabah' && u.kelompokId===kelompokId)
     .sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+  const q = (document.getElementById('um-search') ? document.getElementById('um-search').value : '').toLowerCase().trim();
+  const list = q ? base.filter(u=>(u.nama||'').toLowerCase().includes(q) || (u.noRekening||'').includes(q)) : base;
   sel.innerHTML = list.length ? list.map(u=>`<option value="${u.id}" data-nama="${u.nama}" data-username="${u.username||''}">${u.nama} &middot; ${u.noRekening||'-'}${!u._noAkun?' &middot; (ada akun)':''}</option>`).join('')
-    : '<option value="">- Tidak ada nasabah di kelompok ini -</option>';
+    : '<option value="">- Tidak ada nasabah yang cocok -</option>';
   const hint = document.getElementById('um-member-hint');
-  if(hint) hint.textContent = list.length ? 'Klik satu nasabah di atas.' : 'Tidak ada nasabah pada kelompok ini. Tambah nasabah dulu lewat menu Anggota.';
+  if(hint) hint.textContent = list.length ? 'Menampilkan ' + list.length + ' nasabah. Klik salah satu.' : (q ? 'Tidak ada nasabah yang cocok dengan kata kunci.' : 'Tidak ada nasabah pada kelompok ini. Tambah nasabah dulu lewat menu Anggota.');
   document.getElementById('um-nama').value = '';
   document.getElementById('um-username').value = '';
   document.getElementById('um-password').value = 'anggota123';
 }
+function umFilterMembers(){ umLoadMembers(); }
+function umClearSearch(){ const sEl = document.getElementById('um-search'); if(sEl) sEl.value = ''; }
 // Ketika satu nasabah dipilih -> isi otomatis nama lengkap
 function umPickMember(){
   const sel = document.getElementById('um-member');
