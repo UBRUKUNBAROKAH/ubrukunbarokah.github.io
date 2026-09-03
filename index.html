@@ -5278,7 +5278,7 @@ function renderAdminPengaturan(user){
       <button class="${tab==='kelompok'?'active':''}" onclick="setPengaturanTab('kelompok')">Kelompok</button>
       <button class="${tab==='saham'?'active':''}" onclick="setPengaturanTab('saham')">Saham</button>
       <button class="${tab==='keuangan'?'active':''}" onclick="setPengaturanTab('keuangan')">Aturan Keuangan</button>
-      <button class="${tab==='wa'?'active':''}" onclick="setPengaturanTab('wa')">WhatsApp</button>
+      <button class="${tab==='wa'?'active':''}" onclick="setPengaturanTab('wa')">Notifikasi</button>
     </div>
     ${tab==='profil' ? renderPengaturanProfil() : ''}
     ${tab==='tabungan' ? renderPengaturanJenisTabungan() : ''}
@@ -5291,49 +5291,69 @@ function renderAdminPengaturan(user){
 function renderPengaturanWA(){
   const cfg = waSettings();
   const tg = tgSettings();
+  const sub = currentSubState.notifSub || 'wa';
   const testDefault = (cfg.adminNumbers||[])[0] || '';
   const tgTestDefault = (tg.adminChatIds||[])[0] || '';
-  return `
-    <div class="card">
-      <div class="section-label" style="margin-top:0;">Pengaturan WhatsApp (Fonnte)</div>
-      <div class="hint" style="margin-bottom:10px;">Notifikasi otomatis dikirim ke admin & koordinator saat setoran, konfirmasi, pengajuan pinjaman, dan penarikan.</div>
-      <div class="form-row"><label>Token API Fonnte</label><input type="text" id="wa-token" value="${cfg.token||''}" placeholder="Token dari dashboard fonnte.com"></div>
-      <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${(cfg.adminNumbers||[]).join(', ')}" placeholder="081234567890, 082198765432"><span class="hint">Pisahkan dengan koma jika lebih dari satu.</span></div>
-      <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" ${cfg.enabled?'checked':''}> Notifikasi WhatsApp aktif</label></div>
-      <div class="form-row" style="margin-top:14px;"><label>Templat pesan Info Akun (dikirim saat klik "Kirim Info Akun")</label><textarea id="set-wa-template" rows="6" style="font-size:12px;">${(DB.koperasi.info&&DB.koperasi.info.waInfoTemplate) || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Kode otomatis yang diganti saat dikirim: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b></span></div>
-      <button class="btn btn-primary btn-block" onclick="savePengaturanWA()">Simpan pengaturan WhatsApp</button>
-    </div>
-    <div class="card" style="margin-top:12px;">
-      <div class="section-label" style="margin-top:0;">Uji Kirim WA</div>
+  const waContent = `
+    <div class="hint" style="margin-bottom:10px;">Notifikasi otomatis dikirim ke admin & koordinator saat setoran, konfirmasi, pengajuan pinjaman, dan penarikan.</div>
+    <div class="form-row"><label>Token API Fonnte</label><input type="text" id="wa-token" value="${cfg.token||''}" placeholder="Token dari dashboard fonnte.com"></div>
+    <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${(cfg.adminNumbers||[]).join(', ')}" placeholder="081234567890, 082198765432"><span class="hint">Pisahkan dengan koma jika lebih dari satu.</span></div>
+    <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" ${cfg.enabled?'checked':''}> Notifikasi WhatsApp aktif</label></div>
+    <button class="btn btn-primary btn-block" onclick="savePengaturanWA()">Simpan pengaturan WhatsApp</button>
+    <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">
+      <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Uji Kirim WA</div>
       <div class="hint" style="margin-bottom:10px;">Kirim pesan tes untuk memastikan token & koneksi ke Fonnte berfungsi sebelum dipakai notifikasi asli.</div>
       <div class="form-row"><label>Nomor tujuan tes</label><input type="text" id="wa-test-number" value="${testDefault}" placeholder="081234567890"></div>
       <button class="btn btn-primary btn-block" onclick="testNotifWA()">Kirim WA Tes</button>
       <div id="wa-test-result" style="margin-top:10px;font-size:13px;"></div>
+    </div>`;
+  const tgContent = `
+    <div class="hint" style="margin-bottom:10px;">Notifikasi juga bisa dikirim lewat Telegram (bot pribadi) tanpa biaya. Aktifkan kalau ingin memakainya sebagai tambahan atau pengganti WA.</div>
+    <div class="form-row"><label>Token Bot Telegram</label><input type="text" id="tg-token" value="${tg.token||''}" placeholder="cth. 123456789:ABCdef..."></div>
+    <div class="form-row"><label>Chat ID Admin</label><input type="text" id="tg-admin-chats" value="${(tg.adminChatIds||[]).join(', ')}" placeholder="123456789, 987654321"><span class="hint">Pisahkan dengan koma jika lebih dari satu. Cara dapat Chat ID: kirim pesan ke bot @userinfobot lalu salin angkanya.</span></div>
+    <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="tg-enabled" style="width:16px;height:16px;" ${tg.enabled?'checked':''}> Notifikasi Telegram aktif</label></div>
+    <span class="hint">Cara bikin Bot Telegram: di aplikasi Telegram, cari <b>@BotFather</b>, ketik <b>/newbot</b>, ikuti petunjuk, lalu salin token-nya ke sini.</span>
+    <button class="btn btn-primary btn-block" onclick="savePengaturanWA()" style="margin-top:10px;">Simpan pengaturan Telegram</button>
+    <div style="background:var(--primary-soft);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.5;margin-top:12px;">
+      <b>Webhook Telegram</b> — wajib diaktifkan sekali supaya bot bisa menerima "/start" saat nasabah menghubungkan. Pastikan Edge Function <b>telegram</b> sudah di-deploy di Supabase.
+      <div style="margin-top:8px;"><button class="btn btn-primary" onclick="setupWebhookUI()">Aktifkan Webhook Telegram</button></div>
+      <div id="tg-webhook-result" style="margin-top:8px;font-size:12.5px;"></div>
     </div>
-    <div class="card" style="margin-top:12px;">
-      <div class="section-label" style="margin-top:0;">Pengaturan Telegram (gratis)</div>
-      <div class="hint" style="margin-bottom:10px;">Notifikasi juga bisa dikirim lewat Telegram (bot pribadi) tanpa biaya & tanpa tanda iar. Aktifkan kalau ingin memakainya sebagai tambahan atau pengganti WA.</div>
-            <div class="form-row"><label>Token Bot Telegram</label><input type="text" id="tg-token" value="${tg.token||''}" placeholder="cth. 123456789:ABCdef..."></div></div>
-      <div class="form-row"><label>Chat ID Admin</label><input type="text" id="tg-admin-chats" value="${(tg.adminChatIds||[]).join(', ')}" placeholder="123456789, 987654321"><span class="hint">Pisahkan dengan koma jika lebih dari satu. Cara dapat Chat ID: kirim pesan ke bot @userinfobot lalu salin angkanya.</span></div>
-      <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="tg-enabled" style="width:16px;height:16px;" ${tg.enabled?'checked':''}> Notifikasi Telegram aktif</label></div>
-      <span class="hint">Cara bikin Bot Telegram: di aplikasi Telegram, cari <b>@BotFather</b>, ketik <b>/newbot</b>, ikuti petunjuk, lalu salin token-nya ke sini.</span>
-      <button class="btn btn-primary btn-block" onclick="savePengaturanWA()" style="margin-top:10px;">Simpan pengaturan Telegram</button>
-      <div style="background:var(--primary-soft);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.5;margin-top:12px;">
-        <b>Webhook Telegram</b> — wajib diaktifkan sekali supaya bot bisa menerima "/start" saat nasabah menghubungkan. Pastikan Edge Function <b>telegram</b> sudah di-deploy di Supabase.
-        <div style="margin-top:8px;">
-          <button class="btn btn-primary" onclick="setupWebhookUI()">Aktifkan Webhook Telegram</button>
-        </div>
-        <div id="tg-webhook-result" style="margin-top:8px;font-size:12.5px;"></div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:12px;">
-      <div class="section-label" style="margin-top:0;">Uji Kirim Telegram</div>
+    <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">
+      <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Uji Kirim Telegram</div>
       <div class="hint" style="margin-bottom:10px;">Kirim pesan tes untuk memastikan token & Chat ID berfungsi.</div>
       <div class="form-row"><label>Chat ID tujuan tes</label><input type="text" id="tg-test-chat" value="${tgTestDefault}" placeholder="123456789"></div>
       <button class="btn btn-primary btn-block" onclick="testNotifTG()">Kirim Telegram Tes</button>
       <div id="tg-test-result" style="margin-top:10px;font-size:13px;"></div>
+    </div>`;
+  const tplContent = `
+    <div class="hint" style="margin-bottom:10px;">Template pesan WhatsApp yang dikirim ke nasabah saat tombol "Kirim Info Akun" diklik.</div>
+    <div class="form-row"><label>Templat pesan Info Akun</label><textarea id="set-wa-template" rows="8" style="font-size:12px;">${(DB.koperasi.info&&DB.koperasi.info.waInfoTemplate) || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Kode otomatis yang diganti saat dikirim: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b></span></div>
+    <button class="btn btn-primary btn-block" onclick="saveTemplateWA()">Simpan Templat</button>`;
+  const accordion = (id,label,desc,open,content) => `
+    <div class="card" style="padding:0;overflow:hidden;${open?'border-color:var(--primary);':''}">
+      <button onclick="setNotifSub('${id}')" style="display:flex;align-items:center;gap:12px;width:100%;padding:16px;background:none;border:none;text-align:left;cursor:pointer;">
+        <div style="flex:1;"><div style="font-weight:700;font-size:14.5px;">${label}</div><div style="font-size:12.5px;color:var(--muted);margin-top:2px;">${desc}</div></div>
+        <span style="color:var(--muted);transition:transform .2s;display:inline-block;${open?'transform:rotate(90deg);':''}">${ICONS.chevronRight||'›'}</span>
+      </button>
+      ${open?`<div style="border-top:1px solid var(--border);padding:16px;">${content}</div>`:''}
+    </div>`;
+  return `
+    <div>
+      ${accordion('wa','Pengaturan WhatsApp Admin','Token Fonnte, nomor admin, & uji kirim WA', sub==='wa', waContent)}
+      <div style="height:12px;"></div>
+      ${accordion('tg','Pengaturan ID Telegram Admin','Token bot, Chat ID admin, & uji kirim Telegram', sub==='tg', tgContent)}
+      <div style="height:12px;"></div>
+      ${accordion('tpl','Templat Notifikasi','Isi pesan Info Akun yang dikirim ke nasabah via WhatsApp', sub==='tpl', tplContent)}
     </div>
   `;
+}
+function setNotifSub(s){ currentSubState.notifSub = s; renderContent(); }
+function saveTemplateWA(){
+  DB.koperasi.info.waInfoTemplate = document.getElementById('set-wa-template') ? document.getElementById('set-wa-template').value : '';
+  persist();
+  toast('Templat notifikasi disimpan');
+  renderContent();
 }
 function setPengaturanTab(t){ currentSubState.setTab = t; renderContent(); }
 function renderPengaturanProfil(){
@@ -5373,8 +5393,6 @@ function savePengaturanWA(){
   cfg.adminNumbers = document.getElementById('wa-admin-numbers').value.split(',').map(s=>s.trim()).filter(Boolean);
   cfg.enabled = document.getElementById('wa-enabled').checked;
   DB.koperasi.info.notifWA = cfg;
-  DB.koperasi.info = DB.koperasi.info || {};
-  DB.koperasi.info.waInfoTemplate = document.getElementById('set-wa-template') ? document.getElementById('set-wa-template').value : '';
   const tg = DB.koperasi.info.notifTelegram || {};
   tg.token = document.getElementById('tg-token').value.trim();
   tg.adminChatIds = document.getElementById('tg-admin-chats').value.split(',').map(s=>s.trim()).filter(Boolean);
