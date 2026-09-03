@@ -1720,9 +1720,6 @@ const ADMIN_MORE_ITEMS = [
 function renderNav(){
   const user = currentUser();
   if(!user) return;
-  const hasMyTab = user.role==='admin'||user.role==='koordinator' ? true : DB.tabunganAccounts.some(a=>a.userId===user.id);
-  const hasMyPem = user.role==='admin'||user.role==='koordinator' ? true : DB.pembiayaan.some(p=>p.userId===user.id);
-  const hasMySah = user.role==='admin'||user.role==='koordinator' ? true : DB.kepemilikanSaham.some(k=>k.userId===user.id);
   let items = [];
   let moreItems = [];
   if(user.role==='admin'){
@@ -1745,10 +1742,10 @@ function renderNav(){
   } else {
     items = [
       {p:'nas_beranda', ic:'home', label:'Beranda'},
-      {p:'nas_info', ic:'report', label:'Info Koperasi'}
+      {p:'nas_tabungan', ic:'wallet', label:'Tabungan'},
+      {p:'nas_pembiayaan', ic:'finance', label:'Pembiayaan'},
+      {p:'nas_info', ic:'report', label:'Info'}
     ];
-    if(hasMyTab) items.push({p:'nas_tabungan', ic:'wallet', label:'Tabungan'});
-    if(hasMyPem) items.push({p:'nas_pembiayaan', ic:'finance', label:'Pembiayaan'});
   }
   const renderBtn = (it, active) => {
     const ic = NAV_ICONS[it.ic] || ICONS[it.ic] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>';
@@ -7199,58 +7196,51 @@ async function confirmBayarAngsuran(pembId){
 ========================================================= */
 function renderNasBeranda(user){
   const totalTab = totalSaldoUser(user.id);
-  const totalSaham = (typeof totalNilaiSaham === 'function') ? totalNilaiSaham(user) : 0;
   const pembAktif = pembiayaanForUser(user.id).filter(p=>p.statusPengajuan==='approved' && p.status!=='lunas');
   const totalSisaPemb = pembAktif.reduce((s,p)=>{
     const totalKew = p.jumlahPinjaman + marginNominalOf(p);
     const totalDibayar = (p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);
     return s + Math.max(totalKew - totalDibayar, 0);
   },0);
-  const nextDue = pembAktif[0] || null;
-  const tx = txForUser(user.id).slice(0,4);
-  const firstName = (user.nama||'').split(' ')[0];
-  const profileIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  const isiAwal = (user.nama||' ').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   return `
     <div class="page-title">Beranda<span class="sub">${DB.koperasi.nama}</span></div>
-    <div class="hero-balance">
-      <div class="greet">Halo, <b>${firstName}</b> 👋</div>
-      <div class="amount">${rupiah(totalTab)}</div>
-      <div class="rekening">NO. REK ${user.noRekening || '-'}</div>
-      <div class="quick-actions">
-        <button onclick="go('nas_tabungan')"><span class="qa-ic">${ICONS.wallet}</span>Tabungan</button>
-        <button onclick="go('nas_pembiayaan')"><span class="qa-ic">${ICONS.finance}</span>Pembiayaan</button>
-        <button onclick="go('nas_info')"><span class="qa-ic">${ICONS.report}</span>Info</button>
-        <button onclick="go('profil_saya')"><span class="qa-ic">${profileIcon}</span>Profil</button>
+
+    <div class="card" style="cursor:pointer;padding:18px;display:flex;align-items:center;gap:14px;" onclick="go('profil_saya')">
+      <div style="width:52px;height:52px;flex-shrink:0;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:18px;">${isiAwal}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${user.nama}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">NO. REK ${user.noRekening || '-'}</div>
+      </div>
+      <div style="color:var(--primary);flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;">Info <span>${chev}</span></div>
+    </div>
+
+    <div class="card" style="cursor:pointer;" onclick="go('nas_tabungan')">
+      <div class="flex-between">
+        <div style="display:flex;align-items:center;gap:13px;">
+          <div style="width:40px;height:40px;flex-shrink:0;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;">${ICONS.wallet}</div>
+          <div>
+            <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.4px;">TOTAL TABUNGAN</div>
+            <div style="font-family:'Sora',sans-serif;font-weight:800;font-size:22px;color:var(--primary);margin-top:2px;">${rupiah(totalTab)}</div>
+          </div>
+        </div>
+        <div style="color:var(--primary);font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:3px;">Buku <span>${chev}</span></div>
       </div>
     </div>
 
-    ${nextDue ? `
-    <div class="due-banner" onclick="go('nas_pembiayaan')">
-      <div class="ic">${ICONS.finance}</div>
-      <div style="flex:1;">
-        <div class="t">Angsuran ke-${nextDue.tenor - nextDue.sisaAngsuran + 1} akan jatuh tempo</div>
-        <div class="s">${rupiah(nextDue.angsuranPerBulan)} / bulan &middot; ketuk untuk detail</div>
+    <div class="card" style="cursor:pointer;" onclick="go('nas_pembiayaan')">
+      <div class="flex-between">
+        <div style="display:flex;align-items:center;gap:13px;">
+          <div style="width:40px;height:40px;flex-shrink:0;border-radius:12px;background:var(--gold-soft);color:var(--gold);display:flex;align-items:center;justify-content:center;">${ICONS.finance}</div>
+          <div>
+            <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.4px;">SISA PEMBIAYAAN${pembAktif.length ? ' ('+pembAktif.length+' aktif)' : ''}</div>
+            <div style="font-family:'Sora',sans-serif;font-weight:800;font-size:22px;color:var(--gold);margin-top:2px;">${rupiah(totalSisaPemb)}</div>
+          </div>
+        </div>
+        <div style="color:var(--primary);font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:3px;">Tagihan <span>${chev}</span></div>
       </div>
-    </div>` : ''}
-
-    <div class="section-label" style="margin-top:0;">Ringkasan portofolio</div>
-    <div class="portfolio-grid">
-      <div class="portfolio-box"><div class="ic" style="background:var(--primary-soft);color:var(--primary);">${ICONS.wallet}</div><div class="v">${rupiah(totalTab)}</div><div class="l">Tabungan</div></div>
-      <div class="portfolio-box"><div class="ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.coin}</div><div class="v">${rupiah(totalSaham)}</div><div class="l">Saham</div></div>
-      <div class="portfolio-box"><div class="ic" style="background:var(--info-soft);color:var(--info);">${ICONS.finance}</div><div class="v">${rupiah(totalSisaPemb)}</div><div class="l">Sisa Pembiayaan</div></div>
     </div>
-
-    <div class="section-head">
-      <div class="section-label">Transaksi terakhir</div>
-      ${tx.length ? '<div class="see-all" onclick="go(\'nas_tabungan\')">Lihat semua</div>' : ''}
-    </div>
-    ${tx.length ? `<div class="card" style="padding:2px 16px;">${tx.map(t=>`
-      <div class="tx-list-item">
-        <div class="tx-ic ${t.tipe==='setor'?'in':'out'}">${t.tipe==='setor'?ICONS.down:ICONS.up}</div>
-        <div class="tx-info"><div class="t">${jenisName(t.jenisId)}</div><div class="s">${fmtDateShort(t.tanggal)}</div></div>
-        <div class="tx-amt ${t.tipe==='setor'?'plus':'minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div>
-      </div>
-    `).join('')}</div>` : `<div class="card hint" style="text-align:center;">Belum ada transaksi</div>`}
   `;
 }
 
