@@ -6615,6 +6615,9 @@ function renderAdminSuratSP(user){
       .ssp-sw input{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;}
       .ssp-over{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
       #ssp-preview{overflow-x:auto;}
+      .ssp-layout{display:grid;grid-template-columns:minmax(0,460px) 1fr;gap:18px;align-items:start;}
+      .ssp-left,.ssp-right{min-width:0;display:grid;gap:14px;align-items:start;}
+      @media (max-width:1020px){.ssp-layout{grid-template-columns:1fr;}}
       .ssp-table{width:100%;border-collapse:collapse;font-size:12.5px;}
       .ssp-table th{text-align:left;background:var(--bg);border-bottom:1px solid var(--border);padding:9px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
       .ssp-table td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
@@ -6644,13 +6647,17 @@ function renderAdminSuratSP(user){
       @page{size:A4;margin:0;}
       @media print{
         .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}
-        #content > *:not(#ssp-preview){display:none!important;}
+        #content > *{display:none!important;}
+        .ssp-layout{display:block!important;}.ssp-right{display:block!important;}#ssp-preview{display:block!important;}
+        .ssp-left{display:none!important;}
         #content{overflow:visible!important;}
         .ssp-page{border:none;box-shadow:none;margin:0;width:210mm;min-height:297mm;page-break-after:always;}
         .ssp-page:last-child{page-break-after:auto;}
       }
     </style>
     <div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>
+    <div class="ssp-layout">
+    <div class="ssp-left">
     <div class="stat-grid" style="margin-bottom:14px;">
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${all.length}</div><div class="l">Nasabah telat</div></div>
       <div class="stat-box stat-danger"><div class="n mono" style="font-size:16px;">${rupiah(sisaTotal)}</div><div class="l">Total sisa tunggakan</div></div>
@@ -6725,8 +6732,13 @@ function renderAdminSuratSP(user){
       </div>
       <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="suratSPBuat()">✉️ Buat Surat ${selectedCount?('('+selectedCount+')'):''}</button>
     </div>
+    </div>
 
-    <div id="ssp-preview"></div>
+    <div class="ssp-right">
+      <div class="page-title" style="display:flex;align-items:center;gap:10px;"><span>Tampilan Surat</span><button class="btn btn-outline btn-compact no-print" onclick="window.print()">🖨️ Cetak</button></div>
+      <div id="ssp-preview"><div class="card"><div class="empty-state"><div class="d" style="color:var(--muted);">Pilih nasabah di daftar (kiri), lalu klik "Buat Surat" — pratinjau surat akan tampil di sini.</div></div></div></div>
+    </div>
+    </div>
   `;
 }
 function suratSPAddTtd(){
