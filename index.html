@@ -6655,7 +6655,7 @@ function renderAdminSuratSP(user){
       @page{size:A4;margin:0;}
       @media print{
         .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}
-        #content > *{display:none!important;}
+        #content > *:not(.ssp-preview-wrap){display:none!important;}
         .ssp-preview-wrap{display:block!important;}#ssp-preview{display:block!important;}
         .ssp-preview-head{display:none!important;}
         .ssp-preview-wrap>.card{padding:0!important;border:none!important;box-shadow:none!important;background:transparent!important;}
