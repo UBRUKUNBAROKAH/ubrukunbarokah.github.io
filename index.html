@@ -6615,9 +6615,17 @@ function renderAdminSuratSP(user){
       .ssp-sw input{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;}
       .ssp-over{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
       #ssp-preview{overflow-x:auto;}
-      .ssp-layout{display:grid;grid-template-columns:minmax(0,460px) 1fr;gap:18px;align-items:start;}
-      .ssp-left,.ssp-right{min-width:0;display:grid;gap:14px;align-items:start;}
-      @media (max-width:1020px){.ssp-layout{grid-template-columns:1fr;}}
+      .ssp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+      @media (max-width:640px){.ssp-stats{grid-template-columns:1fr 1fr;}}
+      .ssp-adv{border:1px solid var(--border);border-radius:10px;margin-top:12px;overflow:hidden;}
+      .ssp-adv summary{cursor:pointer;padding:10px 12px;font-size:13px;font-weight:700;color:var(--primary);list-style:none;display:flex;align-items:center;gap:6px;user-select:none;}
+      .ssp-adv summary::-webkit-details-marker{display:none;}
+      .ssp-adv summary::before{content:'▸';font-size:11px;transition:transform .15s;}
+      .ssp-adv[open] summary::before{transform:rotate(90deg);}
+      .ssp-adv-body{padding:0 12px 14px;border-top:1px solid var(--border);}
+      .ssp-preview-wrap{margin-top:14px;}
+      .ssp-preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+      .ssp-preview-head h2{margin:0;}
       .ssp-table{width:100%;border-collapse:collapse;font-size:12.5px;}
       .ssp-table th{text-align:left;background:var(--bg);border-bottom:1px solid var(--border);padding:9px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
       .ssp-table td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
@@ -6648,48 +6656,27 @@ function renderAdminSuratSP(user){
       @media print{
         .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}
         #content > *{display:none!important;}
-        .ssp-layout{display:block!important;}.ssp-right{display:block!important;}#ssp-preview{display:block!important;}
-        .ssp-left{display:none!important;}
+        .ssp-preview-wrap{display:block!important;}#ssp-preview{display:block!important;}
+        .ssp-preview-head{display:none!important;}
+        .ssp-preview-wrap>.card{padding:0!important;border:none!important;box-shadow:none!important;background:transparent!important;}
         #content{overflow:visible!important;}
         .ssp-page{border:none;box-shadow:none;margin:0;width:210mm;min-height:297mm;page-break-after:always;}
         .ssp-page:last-child{page-break-after:auto;}
       }
     </style>
     <div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>
-    <div class="ssp-layout">
-    <div class="ssp-left">
-    <div class="stat-grid" style="margin-bottom:14px;">
+    <div class="ssp-stats">
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${all.length}</div><div class="l">Nasabah telat</div></div>
       <div class="stat-box stat-danger"><div class="n mono" style="font-size:16px;">${rupiah(sisaTotal)}</div><div class="l">Total sisa tunggakan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${selectedCount}</div><div class="l">Dipilih</div></div>
     </div>
-
     <div class="card">
       <h2>Pengaturan Surat</h2>
       <label class="ssp-label">Nama Lembaga</label><input class="ssp-input" id="ssp-nama" value="${escapeHtml(s.namaLembaga)}">
-      <label class="ssp-label">Alamat Lembaga</label><input class="ssp-input" id="ssp-alamat" value="${escapeHtml(s.alamatLembaga)}">
-      <label class="ssp-label">Logo Kop Surat</label>
-      <input type="hidden" id="ssp-logo" value="${escapeHtml(s.logo||'')}">
-      <div class="ssp-logo-pick">
-        <span id="ssp-logo-prev">${s.logo?('<img src="'+s.logo+'" alt="logo">'):'<span style="font-size:11px;color:var(--muted);">Belum ada logo</span>'}</span>
-        <div class="ssp-logo-btns">
-          <button type="button" class="btn btn-outline btn-compact" onclick="document.getElementById('ssp-logo-file').click()">⬆️ Pilih File</button>
-          ${DB.koperasi && DB.koperasi.iconImage ? '<button type="button" class="btn btn-outline btn-compact" onclick="suratSPUseKoperasiLogo()">Gunakan Logo Aplikasi</button>' : ''}
-          ${s.logo? '<button type="button" class="btn btn-outline btn-compact" onclick="suratSPClearLogo()">Hapus</button>' : ''}
-          <input type="file" id="ssp-logo-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="suratSPLoadLogoFile(this)">
-        </div>
-      </div>
-      <label class="ssp-sw" style="margin-top:10px;"><input type="checkbox" id="ssp-tampil-logo" ${s.tampilLogo?'checked':''}> Tampilkan logo di kop surat</label>
       <div class="ssp-row2">
-        <div><label class="ssp-label">Kota (untuk tanggal surat)</label><input class="ssp-input" id="ssp-kota" value="${escapeHtml(s.kota)}"></div>
+        <div><label class="ssp-label">Batas Waktu Pelunasan (hari)</label><input class="ssp-input" type="number" id="ssp-batas" value="${s.batasHari}"></div>
         <div><label class="ssp-label">Tanggal Surat</label><input class="ssp-input" type="date" id="ssp-tgl" value="${s.tanggalSurat}"></div>
       </div>
-      <div class="ssp-row2">
-        <div><label class="ssp-label">Nomor Surat Awal</label><input class="ssp-input" type="number" id="ssp-nomor-awal" value="${s.nomorAwal}"></div>
-        <div><label class="ssp-label">Batas Waktu Pelunasan (hari)</label><input class="ssp-input" type="number" id="ssp-batas" value="${s.batasHari}"></div>
-      </div>
-      <label class="ssp-label">Format Nomor Surat</label><input class="ssp-input" id="ssp-format" value="${escapeHtml(s.formatNomor)}">
-      <div class="ssp-tag">Tag nomor: <code>{urut}</code> <code>{bulan_romawi}</code> <code>{bulan}</code> <code>{tahun}</code></div>
       <label class="ssp-label">Penandatangan</label>
       <div id="ssp-ttd-list">${s.ttdList.map((t,i)=>`
         <div class="ssp-signer">
@@ -6701,10 +6688,35 @@ function renderAdminSuratSP(user){
         </div>`).join('')}
       </div>
       <button type="button" class="btn btn-outline btn-compact" style="margin-top:6px;" onclick="suratSPAddTtd()">+ Tambah Penandatangan</button>
-      <label class="ssp-label">Paragraf Pembuka</label><textarea class="ssp-textarea" rows="2" id="ssp-pembuka">${escapeHtml(s.tplPembuka)}</textarea>
-      <label class="ssp-label">Paragraf Isi</label><textarea class="ssp-textarea" rows="3" id="ssp-isi">${escapeHtml(s.tplIsi)}</textarea>
-      <label class="ssp-label">Paragraf Penutup</label><textarea class="ssp-textarea" rows="3" id="ssp-penutup">${escapeHtml(s.tplPenutup)}</textarea>
-      <div class="ssp-tag">Tag isi: <code>{nama}</code> <code>{alamat}</code> <code>{kelompok}</code> <code>{nomor_akad}</code> <code>{tgl_akad}</code> <code>{jatuh_tempo}</code> <code>{pokok}</code> <code>{laba}</code> <code>{jumlah}</code> <code>{sudah_diangsur}</code> <code>{sisa_angsuran}</code> <code>{hari_telat}</code> <code>{batas_hari}</code> <code>{tanggal_batas}</code></div>
+
+      <details class="ssp-adv">
+        <summary>Pengaturan Lanjutan (logo, nomor surat, teks surat)</summary>
+        <div class="ssp-adv-body">
+          <label class="ssp-label">Alamat Lembaga</label><input class="ssp-input" id="ssp-alamat" value="${escapeHtml(s.alamatLembaga)}">
+          <label class="ssp-label">Logo Kop Surat</label>
+          <input type="hidden" id="ssp-logo" value="${escapeHtml(s.logo||'')}">
+          <div class="ssp-logo-pick">
+            <span id="ssp-logo-prev">${s.logo?('<img src="'+s.logo+'" alt="logo">'):'<span style="font-size:11px;color:var(--muted);">Belum ada logo</span>'}</span>
+            <div class="ssp-logo-btns">
+              <button type="button" class="btn btn-outline btn-compact" onclick="document.getElementById('ssp-logo-file').click()">⬆️ Pilih File</button>
+              ${DB.koperasi && DB.koperasi.iconImage ? '<button type="button" class="btn btn-outline btn-compact" onclick="suratSPUseKoperasiLogo()">Gunakan Logo Aplikasi</button>' : ''}
+              ${s.logo? '<button type="button" class="btn btn-outline btn-compact" onclick="suratSPClearLogo()">Hapus</button>' : ''}
+              <input type="file" id="ssp-logo-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="suratSPLoadLogoFile(this)">
+            </div>
+          </div>
+          <label class="ssp-sw" style="margin-top:10px;"><input type="checkbox" id="ssp-tampil-logo" ${s.tampilLogo?'checked':''}> Tampilkan logo di kop surat</label>
+          <label class="ssp-label">Kota (untuk tanggal surat)</label><input class="ssp-input" id="ssp-kota" value="${escapeHtml(s.kota)}">
+          <div class="ssp-row2">
+            <div><label class="ssp-label">Nomor Surat Awal</label><input class="ssp-input" type="number" id="ssp-nomor-awal" value="${s.nomorAwal}"></div>
+            <div><label class="ssp-label">Format Nomor Surat</label><input class="ssp-input" id="ssp-format" value="${escapeHtml(s.formatNomor)}"></div>
+          </div>
+          <div class="ssp-tag">Tag nomor: <code>{urut}</code> <code>{bulan_romawi}</code> <code>{bulan}</code> <code>{tahun}</code></div>
+          <label class="ssp-label">Paragraf Pembuka</label><textarea class="ssp-textarea" rows="2" id="ssp-pembuka">${escapeHtml(s.tplPembuka)}</textarea>
+          <label class="ssp-label">Paragraf Isi</label><textarea class="ssp-textarea" rows="3" id="ssp-isi">${escapeHtml(s.tplIsi)}</textarea>
+          <label class="ssp-label">Paragraf Penutup</label><textarea class="ssp-textarea" rows="3" id="ssp-penutup">${escapeHtml(s.tplPenutup)}</textarea>
+          <div class="ssp-tag">Tag isi: <code>{nama}</code> <code>{alamat}</code> <code>{kelompok}</code> <code>{nomor_akad}</code> <code>{tgl_akad}</code> <code>{jatuh_tempo}</code> <code>{pokok}</code> <code>{laba}</code> <code>{jumlah}</code> <code>{sudah_diangsur}</code> <code>{sisa_angsuran}</code> <code>{hari_telat}</code> <code>{batas_hari}</code> <code>{tanggal_batas}</code></div>
+        </div>
+      </details>
       <button class="btn btn-primary" style="margin-top:14px;" onclick="suratSPSaveSettings()">Simpan Pengaturan</button>
     </div>
 
@@ -6732,12 +6744,15 @@ function renderAdminSuratSP(user){
       </div>
       <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="suratSPBuat()">✉️ Buat Surat ${selectedCount?('('+selectedCount+')'):''}</button>
     </div>
-    </div>
 
-    <div class="ssp-right">
-      <div class="page-title" style="display:flex;align-items:center;gap:10px;"><span>Tampilan Surat</span><button class="btn btn-outline btn-compact no-print" onclick="window.print()">🖨️ Cetak</button></div>
-      <div id="ssp-preview"><div class="card"><div class="empty-state"><div class="d" style="color:var(--muted);">Pilih nasabah di daftar (kiri), lalu klik "Buat Surat" — pratinjau surat akan tampil di sini.</div></div></div></div>
-    </div>
+    <div class="ssp-preview-wrap">
+      <div class="card" style="padding:16px 16px 18px;">
+        <div class="ssp-preview-head">
+          <h2 style="font-size:16px;">Tampilan Surat</h2>
+          <button class="btn btn-outline btn-compact no-print" onclick="window.print()">🖨️ Cetak</button>
+        </div>
+        <div id="ssp-preview"><div class="empty-state"><div class="d" style="color:var(--muted);">Pilih nasabah di daftar (kiri), lalu klik "Buat Surat" — pratinjau surat akan tampil di sini.</div></div></div>
+      </div>
     </div>
   `;
 }
