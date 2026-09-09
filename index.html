@@ -518,6 +518,9 @@ input,select{font-family:inherit;}
 .modal-overlay{position:fixed;inset:0;background:rgba(10,25,18,.5);z-index:50;display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.show{display:flex;}
 .modal{background:var(--surface);width:100%;max-width:420px;border-radius:22px;padding:22px 22px 26px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px -12px rgba(0,0,0,.4);animation:modalIn .2s ease;}
+.modal.modal-lg{max-width:820px;width:96%;}
+@media (max-width:720px){.modal.modal-lg{max-width:100%;width:100%;}}
+.modal.modal-lg .ssp-textarea{min-height:120px;}
 @keyframes modalIn{from{transform:scale(.94);opacity:0;}to{transform:scale(1);opacity:1;}}
 .modal h3{margin:0 0 16px;font-size:16px;}
 .modal-close{position:absolute;}
@@ -1841,6 +1844,7 @@ function hideBigSuccess(){
 ========================================================= */
 function openModal(html){
   document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-body').classList.remove('modal-lg');
   document.getElementById('modal-overlay').classList.add('show');
   pushNavHistory(false);
 }
@@ -6719,9 +6723,9 @@ function suratSPOpenSettings(){
           <div><label class="ssp-label">Format Nomor Surat</label><input class="ssp-input" id="ssp-format" value="${escapeHtml(s.formatNomor)}"></div>
         </div>
         <div class="ssp-tag">Tag nomor: <code>{urut}</code> <code>{bulan_romawi}</code> <code>{bulan}</code> <code>{tahun}</code></div>
-        <label class="ssp-label">Paragraf Pembuka</label><textarea class="ssp-textarea" rows="2" id="ssp-pembuka">${escapeHtml(s.tplPembuka)}</textarea>
-        <label class="ssp-label">Paragraf Isi</label><textarea class="ssp-textarea" rows="3" id="ssp-isi">${escapeHtml(s.tplIsi)}</textarea>
-        <label class="ssp-label">Paragraf Penutup</label><textarea class="ssp-textarea" rows="3" id="ssp-penutup">${escapeHtml(s.tplPenutup)}</textarea>
+        <label class="ssp-label">Paragraf Pembuka</label><textarea class="ssp-textarea" rows="3" id="ssp-pembuka">${escapeHtml(s.tplPembuka)}</textarea>
+        <label class="ssp-label">Paragraf Isi</label><textarea class="ssp-textarea" rows="6" id="ssp-isi">${escapeHtml(s.tplIsi)}</textarea>
+        <label class="ssp-label">Paragraf Penutup</label><textarea class="ssp-textarea" rows="4" id="ssp-penutup">${escapeHtml(s.tplPenutup)}</textarea>
         <div class="ssp-tag">Tag isi: <code>{nama}</code> <code>{alamat}</code> <code>{kelompok}</code> <code>{nomor_akad}</code> <code>{tgl_akad}</code> <code>{jatuh_tempo}</code> <code>{pokok}</code> <code>{laba}</code> <code>{jumlah}</code> <code>{sudah_diangsur}</code> <code>{sisa_angsuran}</code> <code>{hari_telat}</code> <code>{batas_hari}</code> <code>{tanggal_batas}</code></div>
       </div>
     </details>
@@ -6730,6 +6734,7 @@ function suratSPOpenSettings(){
       <button class="btn btn-primary" onclick="suratSPSaveSettings()">Simpan Pengaturan</button>
     </div>
   `);
+  document.getElementById('modal-body').classList.add('modal-lg');
 }
 function suratSPOpenPilih(){
   const all = suratSPOverdue();
@@ -6767,6 +6772,7 @@ function suratSPOpenPilih(){
       <button class="btn btn-primary" onclick="closeModal(); suratSPBuat()">✉️ Buat Surat (${suratSPSelected.length})</button>
     </div>
   `);
+  document.getElementById('modal-body').classList.add('modal-lg');
 }
 function suratSPFilterPilih(){
   const q = (currentSubState.q||'').toLowerCase();
