@@ -49,7 +49,9 @@
   --border-neu: rgba(92,110,100,.28);
 }
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;overflow-x:hidden;}
+html,body{margin:0;padding:0;}
+html{overflow-x:clip;}
+body{overflow-x:clip;}
 body{
   font-family:'Plus Jakarta Sans', sans-serif;
   background:var(--bg);
@@ -6680,7 +6682,7 @@ function renderAdminSuratSP(user){
         .ssp-page:last-child{page-break-after:auto;}
       }
     </style>
-    <div style="position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 0 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.2);margin:-4px 0 14px;">
+    <div id="ssp-topbar" style="position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 0 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.2);margin:-4px 0 14px;">
       <div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
@@ -6968,8 +6970,24 @@ function suratSPBuat(){
     '<button class="btn btn-primary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button></div>';
   let urut = s.nomorAwal;
   chosen.forEach(d=>{ html += suratSPBuatPage(d, s, urut); urut++; });
-  document.getElementById('ssp-preview').innerHTML = html;
-  document.getElementById('ssp-preview').scrollIntoView({behavior:'smooth'});
+  const pv = document.getElementById('ssp-preview');
+  pv.innerHTML = html;
+  const bar = document.getElementById('ssp-topbar');
+  if(bar){
+    const tb = pv.querySelector('.ssp-toolbar');
+    if(tb){
+      tb.style.position = 'sticky';
+      tb.style.top = (bar.offsetHeight + 14) + 'px';
+      tb.style.zIndex = '15';
+      tb.style.background = 'var(--bg)';
+      tb.style.padding = '10px 12px';
+      tb.style.border = '2px solid var(--border)';
+      tb.style.borderRadius = '14px';
+      tb.style.boxShadow = '0 4px 10px -6px rgba(0,0,0,.2)';
+      tb.style.marginBottom = '14px';
+    }
+  }
+  pv.scrollIntoView({behavior:'smooth'});
   toast('Surat berhasil dibuat');
 }
 function val(id){ const el = document.getElementById(id); return el ? el.value : ''; }
