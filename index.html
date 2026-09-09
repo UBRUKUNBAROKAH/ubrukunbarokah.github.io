@@ -6749,8 +6749,17 @@ function suratSPOpenPilih(){
   openModal(`
     <div style="position:sticky;top:0;z-index:100;background:#fff;margin:0 -22px 14px;padding:20px 22px 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.25);">
       <h3 style="margin:0 0 12px;">Pilih Nasabah untuk Surat SP</h3>
-      <div class="toolbar-row" style="margin:0;flex-wrap:wrap;">
-        <select class="ssp-input" style="flex:1;min-width:120px;" onchange="currentSubState.kel=this.value; delete currentSubState.q; suratSPReopenPilih()"><option value="">Semua Kelompok</option>${kelOpts}</select>
+      <div class="toolbar-row" style="margin:0;flex-wrap:wrap;align-items:center;">
+        <div style="position:relative;flex:1;min-width:140px;">
+          <button type="button" class="ssp-input" style="text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;" onclick="suratSPToggleKel()">
+            <span id="ssp-kel-label">${kel?escapeHtml(kel):'Semua Kelompok'}</span>
+            <span style="font-size:10px;">▼</span>
+          </button>
+          <div id="ssp-kel-list" style="position:absolute;top:100%;left:0;right:0;z-index:200;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px -8px rgba(0,0,0,.35);max-height:220px;overflow-y:auto;display:none;">
+            <div style="padding:10px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border);" onclick="suratSPSelectKel('')">Semua Kelompok</div>
+            ${kelGroups.map(k=>`<div style="padding:10px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border);" onclick="suratSPSelectKel('${escapeHtml(k)}')">${escapeHtml(k)}</div>`).join('')}
+          </div>
+        </div>
         <div class="search-box">${ICONS.search}<input id="ssp-cari" placeholder="Cari nama..." value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; suratSPFilterPilih()"></div>
       </div>
     </div>
@@ -6797,6 +6806,22 @@ function suratSPFilterPilih(){
   suratSPPostToggle();
 }
 function suratSPReopenPilih(){ suratSPFilterPilih(); }
+function suratSPToggleKel(){
+  const el = document.getElementById('ssp-kel-list');
+  if(!el) return;
+  el.style.display = el.style.display==='block' ? 'none' : 'block';
+}
+function suratSPSelectKel(k){
+  currentSubState.kel = k;
+  delete currentSubState.q;
+  const lbl = document.getElementById('ssp-kel-label');
+  if(lbl) lbl.textContent = k ? k : 'Semua Kelompok';
+  const el = document.getElementById('ssp-kel-list');
+  if(el) el.style.display = 'none';
+  const inp = document.getElementById('ssp-cari');
+  if(inp) inp.value = '';
+  suratSPFilterPilih();
+}
 function suratSPPostToggle(){
   var rows = document.querySelectorAll('.ssp-row');
   var all = true; rows.forEach(function(r){ if(!r.checked) all = false; });
