@@ -6647,9 +6647,10 @@ function spBermasalahImported(){
   try{ return !!(DB.koperasi && DB.koperasi.info && DB.koperasi.info.spBermasalah && DB.koperasi.info.spBermasalah.length); }catch(e){ return false; }
 }
 function spBermasalahImport(){
+  if(spBermasalahImported()){ toast('Data sudah dimuat, tidak diimpor ulang (agar catatan angsuran tidak hilang)'); return; }
   try{
     if(!DB.koperasi.info) DB.koperasi.info = {};
-    DB.koperasi.info.spBermasalah = SP_BERMASALAH_SEED.slice();
+    DB.koperasi.info.spBermasalah = SP_BERMASALAH_SEED.map(k=>Object.assign({}, k));
     persist();
     currentSubState.spSrc = 'bermasalah';
     toast('Data pembiayaan bermasalah dimuat ('+SP_BERMASALAH_SEED.length+')');
@@ -6690,7 +6691,10 @@ function suratSPBermasalah(){
       hariTelat: hariTelat,
       pokok: pokok, laba: laba, jumlah: os,
       sudahDiangsur: Math.max(os - kek, 0),
+      dibayarBaru: bmDibayar(o),
       sisaKewajiban: kek,
+      sisaSekarang: Math.max(kek - bmDibayar(o), 0),
+      lunas: (kek - bmDibayar(o)) <= 0,
       angsuranPerBulan: Number(o.pokokBln)||0
     };
   }).sort((a,b)=> b.hariTelat - a.hariTelat);
@@ -6698,6 +6702,222 @@ function suratSPBermasalah(){
 function renderAdminSPBermasalah(user){
   currentSubState.spSrc = 'bermasalah';
   return renderAdminSuratSP(user);
+}
+/* =========================================================
+   ANGSURAN LAGI — PIUTANG BERMASALAH
+   Data pembayaran disimpan di DB.koperasi.info.spBermasalah
+   (bukan DB.pembiayaan) supaya tidak mengganggu data aktif.
+   Sisa = kekurangan - total yang dibayar lewat fitur ini.
+========================================================= */
+function bmCardList(){ return spBermasalahData()||[]; }
+function bmCardById(pembId){
+  const id = String(pembId||'');
+  const arr = bmCardList();
+  for(let i=0;i<arr.length;i++){
+    const k = arr[i];
+    if(('bm-'+(k.tahun||'')+'-'+(k.no||String(k.nama).replace(/\W/g,'')))===id) return {i, k};
+  }
+  return null;
+}
+function bmEnsureImported(){
+  try{
+    if(!DB || !DB.koperasi) return null;
+    if(!DB.koperasi.info) DB.koperasi.info = {};
+    if(!DB.koperasi.info.spBermasalah || !DB.koperasi.info.spBermasalah.length){
+      DB.koperasi.info.spBermasalah = SP_BERMASALAH_SEED.map(k=>Object.assign({}, k));
+    }
+    return DB.koperasi.info.spBermasalah;
+  }catch(e){ return null; }
+}
+function bmRiwayat(k){ if(!Array.isArray(k.riwayatAngsuran)) k.riwayatAngsuran = []; return k.riwayatAngsuran; }
+function bmDibayar(k){ return bmRiwayat(k).reduce((s,a)=>s+(Number(a.jumlah)||0),0); }
+function bmSisa(k){ return Math.max((Number(k.kekurangan)||0) - bmDibayar(k), 0); }
+function bmIsLunas(k){ return bmSisa(k)<=0; }
+function bmPembIdOf(k){ return 'bm-'+(k.tahun||'')+'-'+(k.no||String(k.nama).replace(/\W/g,'')); }
+function renderSPBermasalahDetail(pembId){
+  const f = bmCardById(pembId);
+  if(!f) return `<div class="empty-state"><div class="ic">🔍</div><div class="t">Kartu tidak ditemukan</div></div>`;
+  const k = f.k;
+  const pokok = Number(k.pokok)||0;
+  const margin = Number(k.margin)||0;
+  const os = Number(k.os)||0;
+  const kek = Number(k.kekurangan)||0;
+  const dibayar = bmDibayar(k);
+  const sisa = bmSisa(k);
+  const lunas = sisa<=0;
+  const progres = kek>0 ? Math.min(100, Math.round((dibayar/kek)*100)) : 0;
+  const jt = suratSPTanggalObj(k.jatuhTempo || k.tglAkad);
+  const rw = bmRiwayat(k);
+  const grid5 = 'grid-template-columns:.35fr 1fr 1fr 1fr .5fr;';
+  return `
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_spbermasalah')">${ICONS.chevronLeft}</button>Buku Angsuran Piutang Bermasalah</span></div>
+    <div class="card balance-card">
+      <div class="label">${escapeHtml(k.nama)} ${lunas?'<span class="badge badge-green">LUNAS</span>':''}</div>
+      <div class="amount" style="font-size:24px;">${rupiah(sisa)}</div>
+      <div class="rekening">${escapeHtml(k.wilayah||'-')} &middot; Akad No. ${escapeHtml(k.no||'-')} (${escapeHtml(k.tahun||'')}) &middot; Jatuh tempo ${suratSPTanggal(jt)}</div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:14px;">
+      <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(os)}</div><div class="l">Total kewajiban</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(sisa)}</div><div class="l">Sisa tagihan</div></div>
+    </div>
+    <div class="card" style="padding:12px 14px;margin-bottom:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+      <div><span style="color:var(--muted);font-size:11px;">Pokok</span><br><b class="mono">${rupiah(pokok)}</b></div>
+      <div><span style="color:var(--muted);font-size:11px;">Margin</span><br><b class="mono">${rupiah(margin)}</b></div>
+      <div><span style="color:var(--muted);font-size:11px;">Tenor</span><br><b>${Number(k.tenor)||0} bln</b></div>
+      <div><span style="color:var(--muted);font-size:11px;">Sisa awal (kekurangan)</span><br><b class="mono">${rupiah(kek)}</b></div>
+    </div>
+    ${lunas ? `
+      <div class="hint" style="text-align:center;margin:0 0 14px;color:var(--primary);">Kartu ini sudah <b>LUNAS</b> — tidak ada sisa tagihan lagi.</div>
+    ` : `
+      <div class="bar-row"><div class="lbl"><span>Progres pelunasan sisa</span><span>${rupiah(dibayar)} / ${rupiah(kek)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${progres}%"></div></div></div>
+      <div style="display:flex;gap:10px;margin:12px 0 16px;">
+        <button class="btn btn-gold" style="flex:1;" onclick="bmBayarAngsuranPrompt('${pembId}')">${ICONS.down} Bayar angsuran</button>
+      </div>
+    `}
+    <div class="section-label">Riwayat Angsuran (setelah SP)</div>
+    <div class="ledger">
+      <div class="ledger-head" style="${grid5}"><div>No</div><div>Tanggal</div><div>Angsuran ke</div><div style="text-align:right;">Jumlah</div><div></div></div>
+      ${rw.length ? rw.slice().reverse().map((a,i)=>`
+        <div class="ledger-row" style="${grid5}"><div class="d">${rw.length - i}</div><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div><div style="text-align:right;"><button class="icon-btn" style="width:26px;height:26px;font-size:14px;color:var(--danger);border-radius:8px;" title="Hapus catatan ini" onclick="bmHapusAngsuran('${pembId}','${a.id}')">&times;</button></div></div>
+      `).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada angsuran dibayar</div>`}
+      ${rw.length>0 ? `<div class="ledger-row" style="grid-template-columns:1fr 1fr 1fr;font-weight:700;border-top:2px solid var(--border);"><div>Sisa</div><div></div><div style="text-align:right;" class="mono">${rupiah(sisa)}</div></div>` : ''}
+    </div>
+  `;
+}
+function bmBayarAngsuranPrompt(pembId){
+  const f = bmCardById(pembId);
+  if(!f) return;
+  const k = f.k;
+  const sisa = bmSisa(k);
+  if(sisa<=0){ toast('Kartu ini sudah lunas'); return; }
+  const todayStr = new Date().toISOString().slice(0,10);
+  openModal(`
+    <h3>Bayar Angsuran — Piutang Bermasalah</h3>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="list-row"><div class="info"><div class="title">${escapeHtml(k.nama)}</div><div class="sub">${escapeHtml(k.wilayah||'-')} &middot; Sisa tagihan ${rupiah(sisa)}</div></div></div>
+    </div>
+    <div class="form-row"><label>Jumlah bayar (Rp)</label><input type="number" id="bm-bayar-jumlah" min="0" step="1000" placeholder="${sisa}"></div>
+    <div style="margin-top:6px;"><button type="button" class="btn btn-outline btn-compact" onclick="document.getElementById('bm-bayar-jumlah').value='${sisa}'">Bayar lunas — ${rupiah(sisa)}</button></div>
+    <div class="form-row"><label>Tanggal bayar</label><input type="date" id="bm-bayar-tanggal" max="${todayStr}" value="${todayStr}"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="bmConfirmBayarAngsuran('${pembId}')">Konfirmasi bayar</button>
+    </div>
+  `);
+}
+async function bmConfirmBayarAngsuran(pembId){
+  const jumlah = parseIdr(document.getElementById('bm-bayar-jumlah').value);
+  if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
+  const tglInput = document.getElementById('bm-bayar-tanggal').value;
+  if(!tglInput){ toast('Pilih tanggal bayar'); return; }
+  const now = new Date();
+  const [ty,tm,td] = tglInput.split('-').map(Number);
+  const tglDate = new Date(ty, tm-1, td, now.getHours(), now.getMinutes(), now.getSeconds());
+  if(tglDate > now){ toast('Tanggal tidak boleh di masa depan'); return; }
+  const arr = bmEnsureImported();
+  const f = arr ? bmCardById(pembId) : null;
+  if(!arr || !f){ toast('Data belum dimuat'); return; }
+  const k = f.k;
+  const sisa = bmSisa(k);
+  if(jumlah > sisa){ toast('Jumlah melebihi sisa tagihan ('+rupiah(sisa)+')'); return; }
+  const rw = bmRiwayat(k);
+  const snapshot = JSON.parse(JSON.stringify(arr));
+  const angsuranKe = rw.length + 1;
+  rw.push({id:uid('ang'), tanggal:tglDate.toISOString(), jumlah, oleh:getSession().userId, angsuranKe});
+  const btn = document.querySelector('button[onclick="bmConfirmBayarAngsuran(\''+pembId+'\')"]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  const result = await persistNow();
+  if(!result.ok){
+    arr.splice(0, arr.length, ...snapshot);
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+    if(btn){ btn.disabled = false; btn.textContent = 'Konfirmasi bayar'; }
+    renderContent();
+    return;
+  }
+  try{ addLog('Angsuran piutang bermasalah', k.nama + ' - ' + rupiah(jumlah)); }catch(e){}
+  bigSuccess('Angsuran berhasil dicatat');
+  closeModal();
+  renderContent();
+}
+function bmHapusAngsuran(pembId, angId){
+  const arr = bmEnsureImported();
+  const f = arr ? bmCardById(pembId) : null;
+  if(!arr || !f) return;
+  const k = f.k;
+  const rec = bmRiwayat(k).find(a=>a.id===angId);
+  if(!rec) return;
+  confirmDialog('Hapus catatan angsuran?', 'Pembayaran '+rupiah(rec.jumlah)+' atas nama '+k.nama+' akan dihapus dari buku.', 'danger', async ()=>{
+    const snapshot = JSON.parse(JSON.stringify(arr));
+    k.riwayatAngsuran = k.riwayatAngsuran.filter(a=>a.id!==angId);
+    const result = await persistNow();
+    if(!result.ok){
+      arr.splice(0, arr.length, ...snapshot);
+      toast('Gagal menyimpan: cek koneksi internet, lalu coba lagi');
+      renderContent();
+      return;
+    }
+    bigSuccess('Catatan angsuran dihapus');
+    renderContent();
+  });
+}
+function renderSPBermasalahLaporan(){
+  const arr = bmCardList();
+  const rows = arr.filter(k=>k && k.nama).map(k=>{
+    return {k, pokok: Number(k.pokok)||0, kek: Number(k.kekurangan)||0, dibayar: bmDibayar(k), sisa: bmSisa(k), lunas: bmIsLunas(k)};
+  });
+  const totPokok = rows.reduce((t,r)=>t+r.pokok,0);
+  const totSisaAwal = rows.reduce((t,r)=>t+r.kek,0);
+  const totDibayar = rows.reduce((t,r)=>t+r.dibayar,0);
+  const totSisa = rows.reduce((t,r)=>t+r.sisa,0);
+  const lunasCount = rows.filter(r=>r.lunas).length;
+  const bulan = {};
+  rows.forEach(r=>{ (r.k.riwayatAngsuran||[]).forEach(a=>{ const key=(a.tanggal||'').slice(0,7); if(key) bulan[key]=(bulan[key]||0)+(Number(a.jumlah)||0); }); });
+  const bulanList = Object.keys(bulan).sort();
+  const sorted = rows.slice().sort((a,b)=> b.sisa - a.sisa);
+  const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const bulanLabel = (key)=>{ const [y,m]=key.split('-'); return MONTHS_ID[Number(m)-1]+' '+y; };
+  return `
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_spbermasalah')">${ICONS.chevronLeft}</button>Laporan Perkembangan Piutang Bermasalah</span></div>
+    <div class="card" style="padding:14px;margin-bottom:14px;">
+      <div class="stat-grid ssp-stat-grid" style="margin-bottom:4px;">
+        <div class="stat-box"><div class="n mono" style="font-size:20px;">${rows.length}</div><div class="l">Jumlah Kartu</div></div>
+        <div class="stat-box"><div class="n mono" style="font-size:20px;">${rupiah(totPokok)}</div><div class="l">Total Pokok</div></div>
+        <div class="stat-box"><div class="n mono" style="font-size:20px;">${rupiah(totSisaAwal)}</div><div class="l">Sisa Awal</div></div>
+        <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--primary);"><div class="n mono" style="font-size:20px;color:var(--primary);">${rupiah(totDibayar)}</div><div class="l">Sudah Terbayar</div></div>
+        <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--danger);"><div class="n mono" style="font-size:20px;color:var(--danger);">${rupiah(totSisa)}</div><div class="l">Sisa Saat Ini</div></div>
+        <div class="stat-box"><div class="n mono" style="font-size:20px;">${lunasCount}</div><div class="l">Kartu Lunas</div></div>
+      </div>
+    </div>
+    ${bulanList.length ? `<div class="card" style="padding:14px;margin-bottom:14px;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:10px;">Pembayaran per Bulan</div>
+      <div class="ssp-over"><table class="ssp-table">
+        <thead><tr><th>Bulan</th><th style="text-align:right;">Total Dibayar</th></tr></thead>
+        <tbody>${bulanList.map(b=>`<tr><td>${bulanLabel(b)}</td><td style="text-align:right;" class="mono">${rupiah(bulan[b])}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </div>` : ''}
+    <div class="card" style="padding:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:700;">Rincian per Kartu (urut sisa terbesar)</div>
+        <button class="btn btn-outline btn-compact no-print" onclick="window.print()">🖨️ Cetak</button>
+      </div>
+      <div class="ssp-over" style="max-height:420px;overflow:auto;">
+        <table class="ssp-table">
+          <thead><tr><th style="position:sticky;top:0;background:var(--bg);z-index:2;">Nama</th><th>Wilayah</th><th>Pokok</th><th>Sisa Awal</th><th>Terbayar</th><th>Sisa</th><th>Status</th></tr></thead>
+          <tbody>
+            ${sorted.map(r=>`<tr>
+              <td><a style="cursor:pointer;color:var(--primary);text-decoration:underline;" onclick="go('admin_spbermasalah_detail',{pembId:'${bmPembIdOf(r.k)}'})"><b>${escapeHtml(r.k.nama)}</b></a></td>
+              <td>${escapeHtml(r.k.wilayah||'')}</td>
+              <td>${rupiah(r.pokok)}</td>
+              <td>${rupiah(r.kek)}</td>
+              <td>${rupiah(r.dibayar)}</td>
+              <td><b>${rupiah(r.sisa)}</b></td>
+              <td>${r.lunas?'<span class="badge badge-green">LUNAS</span>':'<span class="badge badge-red">Belum</span>'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 function renderAdminSuratSP(user){
   const s = suratSPLoad();
@@ -6802,33 +7022,35 @@ function renderAdminSuratSP(user){
     ${currentSubState.spSrc==='bermasalah' ? (()=>{
       const bm = suratSPBermasalah();
       const totPokok = bm.reduce((t,d)=>t+d.pokok,0);
-      const totSisa = bm.reduce((t,d)=>t+d.sisaKewajiban,0);
+      const totSisa = bm.reduce((t,d)=>t+(d.sisaSekarang!=null?d.sisaSekarang:d.sisaKewajiban),0);
       const totJumlah = bm.reduce((t,d)=>t+d.jumlah,0);
-      const totDiangsur = bm.reduce((t,d)=>t+d.sudahDiangsur,0);
+      const totDiangsur = bm.reduce((t,d)=>t+d.sudahDiangsur+(d.dibayarBaru||0),0);
+      const lunasJml = bm.filter(d=>d.lunas).length;
       return `
       <div class="card" style="padding:14px;margin-bottom:14px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Ringkasan Pembiayaan Bermasalah</div>
         <div class="stat-grid ssp-stat-grid" style="margin-bottom:14px;">
-          <div class="stat-box"><div class="n mono" style="font-size:20px;">${bm.length}</div><div class="l">Jumlah Kartu</div></div>
+          <div class="stat-box"><div class="n mono" style="font-size:20px;">${bm.length}${lunasJml?(' <span style="font-size:12px;color:var(--muted);">('+lunasJml+' lunas)</span>'):''}</div><div class="l">Jumlah Kartu</div></div>
           <div class="stat-box"><div class="n mono" style="font-size:20px;">${rupiah(totPokok)}</div><div class="l">Total Pokok</div></div>
           <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--primary);"><div class="n mono" style="font-size:20px;color:var(--primary);">${rupiah(totDiangsur)}</div><div class="l">Sudah Diangsur</div></div>
           <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--danger);"><div class="n mono" style="font-size:20px;color:var(--danger);">${rupiah(totSisa)}</div><div class="l">Sisa Belum Diangsur</div></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
           <div style="font-size:14px;font-weight:700;">Daftar Kartu Pembiayaan Bermasalah</div>
+          <button class="btn btn-primary btn-compact no-print" onclick="go('admin_spbermasalah_laporan',{spSrc:'bermasalah'})">📈 Laporan Perkembangan</button>
         </div>
         <div class="ssp-over" style="max-height:320px;overflow:auto;">
           <table class="ssp-table">
             <thead><tr><th style="position:sticky;top:0;background:var(--bg);z-index:2;">Nama</th><th>Wilayah</th><th>Tahun</th><th>Pokok</th><th>Margin</th><th>Total</th><th>Sisa</th><th>Jatuh Tempo</th><th></th></tr></thead>
             <tbody>
               ${bm.map(d=>`<tr>
-                <td><b>${escapeHtml(d.nama)}</b><br><span style="color:var(--muted);font-size:11px;">Akad: ${escapeHtml(d.nomorAkad)}</span></td>
+                <td><a style="cursor:pointer;color:var(--primary);text-decoration:underline;" onclick="go('admin_spbermasalah_detail',{pembId:'${d.pembId}'})"><b>${escapeHtml(d.nama)}</b></a><br><span style="color:var(--muted);font-size:11px;">Akad: ${escapeHtml(d.nomorAkad)}</span></td>
                 <td>${escapeHtml(d.alamat)}</td>
                 <td>${escapeHtml((d.pembId.match(/^bm-(\d+)/)||[])[1]||'')}</td>
                 <td>${rupiah(d.pokok)}</td>
                 <td>${rupiah(d.laba)}</td>
                 <td>${rupiah(d.jumlah)}</td>
-                <td><b>${rupiah(d.sisaKewajiban)}</b></td>
+                <td><b>${rupiah(d.sisaSekarang!=null?d.sisaSekarang:d.sisaKewajiban)}</b> ${d.lunas?'<span class="badge badge-green">LUNAS</span>':''}</td>
                 <td>${suratSPTanggal(d.jatuhTempo)}</td>
                 <td><button class="btn btn-outline btn-compact no-print" onclick="suratSPBuatSatu('${d.pembId}')">✉️ Surat</button></td>
               </tr>`).join('')}
@@ -7869,6 +8091,8 @@ const _routerExtras = {
   admin_anggota_detail: (u)=>renderAdminAnggotaDetail(u, currentSubState.userId),
   admin_tabungan_detail: (u)=>renderAdminTabunganDetail(u, currentSubState.userId),
   admin_pembiayaan_detail: (u)=>renderPembiayaanDetailPage(currentSubState.pembId, 'admin_pembiayaan'),
+  admin_spbermasalah_detail: (u)=>renderSPBermasalahDetail(currentSubState.pembId),
+  admin_spbermasalah_laporan: (u)=>renderSPBermasalahLaporan(),
   admin_pembiayaan_lunas: (u)=>renderAdminPembiayaanLunas(u),
   admin_saham_certificate: (u)=>renderSahamCertificate(currentSubState.namaSaham),
   koor_anggota_detail: (u)=>renderKoorAnggotaDetail(u, currentSubState.userId),
