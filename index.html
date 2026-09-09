@@ -2324,6 +2324,13 @@ function renderContent(){
   };
   const fn = routes[currentPage] || routes[defaultPageFor(user.role)];
   el.innerHTML = fn(user);
+  if(currentPage==='admin_suratsp'){
+    const appHead = document.querySelector('.app-header');
+    if(appHead){
+      const tb = document.getElementById('ssp-topbar');
+      if(tb) tb.style.top = appHead.offsetHeight + 'px';
+    }
+  }
   if(currentPage==='admin_saham_certificate'){ requestAnimationFrame(fitSertifikatPreview); }
   if(activeId){
     const toFocus = document.getElementById(activeId);
@@ -6682,7 +6689,7 @@ function renderAdminSuratSP(user){
         .ssp-page:last-child{page-break-after:auto;}
       }
     </style>
-    <div id="ssp-topbar" style="position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 0 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.2);margin:-4px 0 14px;">
+    <div id="ssp-topbar" style="position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.2);margin:-4px 0 14px;">
       <div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
@@ -6971,12 +6978,16 @@ function suratSPBuat(){
   chosen.forEach(d=>{ html += suratSPBuatPage(d, s, urut); urut++; });
   const pv = document.getElementById('ssp-preview');
   pv.innerHTML = html;
+  const appHead = document.querySelector('.app-header');
   const bar = document.getElementById('ssp-topbar');
+  let barTop = 0;
   if(bar){
+    if(appHead) bar.style.top = appHead.offsetHeight + 'px';
+    barTop = bar.offsetTop;
     const tb = pv.querySelector('.ssp-toolbar');
     if(tb){
       tb.style.position = 'sticky';
-      tb.style.top = (bar.offsetHeight + 14) + 'px';
+      tb.style.top = ((appHead ? appHead.offsetHeight : 0) + bar.offsetHeight + 14) + 'px';
       tb.style.zIndex = '15';
       tb.style.background = 'var(--bg)';
       tb.style.padding = '10px 12px';
