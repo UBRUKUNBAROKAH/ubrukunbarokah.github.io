@@ -6693,8 +6693,8 @@ function suratSPBermasalah(){
       sudahDiangsur: Math.max(os - kek, 0),
       dibayarBaru: bmDibayar(o),
       sisaKewajiban: kek,
-      sisaSekarang: Math.max(kek - bmDibayar(o), 0),
-      lunas: (kek - bmDibayar(o)) <= 0,
+      sisaSekarang: bmSisa(o),
+      lunas: bmIsLunas(o),
       angsuranPerBulan: Number(o.pokokBln)||0
     };
   }).sort((a,b)=> b.hariTelat - a.hariTelat);
@@ -6731,8 +6731,9 @@ function bmEnsureImported(){
 }
 function bmRiwayat(k){ if(!Array.isArray(k.riwayatAngsuran)) k.riwayatAngsuran = []; return k.riwayatAngsuran; }
 function bmDibayar(k){ return bmRiwayat(k).reduce((s,a)=>s+(Number(a.jumlah)||0),0); }
-function bmSisa(k){ return Math.max((Number(k.kekurangan)||0) - bmDibayar(k), 0); }
-function bmIsLunas(k){ return bmSisa(k)<=0; }
+function bmSisa(k){ if(k.lunasManual) return 0; return Math.max((Number(k.kekurangan)||0) - bmDibayar(k), 0); }
+function bmIsLunas(k){ return !!(k.lunasManual) || bmSisa(k)<=0; }
+function bmLunasManual(k){ return !!(k.lunasManual); }
 function bmPembIdOf(k){ return 'bm-'+(k.tahun||'')+'-'+(k.no||String(k.nama).replace(/\W/g,'')); }
 function renderSPBermasalahDetail(pembId){
   const f = bmCardById(pembId);
@@ -6745,6 +6746,7 @@ function renderSPBermasalahDetail(pembId){
   const dibayar = bmDibayar(k);
   const sisa = bmSisa(k);
   const lunas = sisa<=0;
+  const lunasManual = bmLunasManual(k);
   const progres = kek>0 ? Math.min(100, Math.round((dibayar/kek)*100)) : 0;
   const jt = suratSPTanggalObj(k.jatuhTempo || k.tglAkad);
   const rw = bmRiwayat(k);
@@ -6767,13 +6769,20 @@ function renderSPBermasalahDetail(pembId){
       <div><span style="color:var(--muted);font-size:11px;">Sisa awal (kekurangan)</span><br><b class="mono">${rupiah(kek)}</b></div>
     </div>
     ${lunas ? `
-      <div class="hint" style="text-align:center;margin:0 0 14px;color:var(--primary);">Kartu ini sudah <b>LUNAS</b> — tidak ada sisa tagihan lagi.</div>
+      <div class="hint" style="text-align:center;margin:0 0 14px;color:var(--primary);">Kartu ini sudah <b>LUNAS</b>${lunasManual?' — ditandai manual oleh admin':''} — tidak ada sisa tagihan lagi.</div>
     ` : `
       <div class="bar-row"><div class="lbl"><span>Progres pelunasan sisa</span><span>${rupiah(dibayar)} / ${rupiah(kek)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${progres}%"></div></div></div>
-      <div style="display:flex;gap:10px;margin:12px 0 16px;">
-        <button class="btn btn-gold" style="flex:1;" onclick="bmBayarAngsuranPrompt('${pembId}')">${ICONS.down} Bayar angsuran</button>
-      </div>
     `}
+    ${!lunas ? `
+      <div style="display:flex;gap:10px;margin:12px 0 16px;flex-wrap:wrap;">
+        <button class="btn btn-gold" style="flex:1;" onclick="bmBayarAngsuranPrompt('${pembId}')">${ICONS.down} Bayar angsuran</button>
+        <button class="btn btn-outline" style="flex:1;" onclick="bmTandaiLunas('${pembId}')">✅ Tandai sudah lunas</button>
+      </div>
+    ` : (lunasManual ? `
+      <div style="display:flex;gap:10px;margin:12px 0 16px;">
+        <button class="btn btn-outline" style="flex:1;" onclick="bmBatalLunas('${pembId}')">↩️ Batalkan tanda lunas</button>
+      </div>
+    ` : '')}
     <div class="section-label">Riwayat Angsuran (setelah SP)</div>
     <div class="ledger">
       <div class="ledger-head" style="${grid5}"><div>No</div><div>Tanggal</div><div>Angsuran ke</div><div style="text-align:right;">Jumlah</div><div></div></div>
@@ -6857,6 +6866,46 @@ function bmHapusAngsuran(pembId, angId){
       return;
     }
     bigSuccess('Catatan angsuran dihapus');
+    renderContent();
+  });
+}
+function bmTandaiLunas(pembId){
+  const arr = bmEnsureImported();
+  const f = arr ? bmCardById(pembId) : null;
+  if(!arr || !f) return;
+  const k = f.k;
+  confirmDialog('Tandai sudah lunas?', k.nama+' akan ditandai LUNAS (sisa tagihan jadi Rp0). Data tidak akan dihitung lagi.', 'warning', async ()=>{
+    const snapshot = JSON.parse(JSON.stringify(arr));
+    k.lunasManual = true;
+    const result = await persistNow();
+    if(!result.ok){
+      arr.splice(0, arr.length, ...snapshot);
+      toast('Gagal menyimpan: cek koneksi internet, lalu coba lagi');
+      renderContent();
+      return;
+    }
+    try{ addLog('Tandai lunas piutang bermasalah', k.nama + ' - ditandai lunas manual'); }catch(e){}
+    bigSuccess('Ditandai sudah lunas');
+    renderContent();
+  });
+}
+function bmBatalLunas(pembId){
+  const arr = bmEnsureImported();
+  const f = arr ? bmCardById(pembId) : null;
+  if(!arr || !f) return;
+  const k = f.k;
+  confirmDialog('Batalkan tanda lunas?', 'Status LUNAS '+k.nama+' akan dibatalkan dan sisa tagihan kembali seperti sebelumnya.', 'warning', async ()=>{
+    const snapshot = JSON.parse(JSON.stringify(arr));
+    delete k.lunasManual;
+    const result = await persistNow();
+    if(!result.ok){
+      arr.splice(0, arr.length, ...snapshot);
+      toast('Gagal menyimpan: cek koneksi internet, lalu coba lagi');
+      renderContent();
+      return;
+    }
+    try{ addLog('Batal lunas piutang bermasalah', k.nama + ' - tanda lunas dibatalkan'); }catch(e){}
+    bigSuccess('Tanda lunas dibatalkan');
     renderContent();
   });
 }
