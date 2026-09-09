@@ -6561,6 +6561,9 @@ function suratSPTanggal(d){
 function suratSPLoad(){
   let s = suratSPDefSettings();
   try{ const saved = JSON.parse(localStorage.getItem(SURAT_SP_LS_KEY)||'null'); if(saved) s = Object.assign(s, saved); }catch(e){}
+  if(!s.tplPembuka){ s.tplPembuka = suratSPDefSettings().tplPembuka; }
+  if(!s.tplIsi){ s.tplIsi = suratSPDefSettings().tplIsi; }
+  if(!s.tplPenutup){ s.tplPenutup = suratSPDefSettings().tplPenutup; }
   return s;
 }
 function suratSPSave(obj){
