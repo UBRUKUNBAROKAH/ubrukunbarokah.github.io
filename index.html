@@ -6965,9 +6965,8 @@ function suratSPBuat(){
   const s = suratSPReadSettings();
   suratSPSave(s);
   const chosen = suratSPOverdue().filter(d=>suratSPSelected.includes(d.pembId)).sort((a,b)=>b.hariTelat-a.hariTelat);
-  let html = '<div class="ssp-toolbar no-print" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;">' +
-    '<div style="font-size:13px;color:var(--muted);">'+chosen.length+' surat siap</div>' +
-    '<button class="btn btn-primary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button></div>';
+  let html = '<div class="ssp-toolbar no-print" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+    '<div style="font-size:13px;color:var(--muted);"><b>'+chosen.length+' surat</b> siap dicetak</div></div>';
   let urut = s.nomorAwal;
   chosen.forEach(d=>{ html += suratSPBuatPage(d, s, urut); urut++; });
   const pv = document.getElementById('ssp-preview');
