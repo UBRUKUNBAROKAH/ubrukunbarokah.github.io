@@ -6878,6 +6878,7 @@ function renderSPBermasalahLaporan(){
   const bulanLabel = (key)=>{ const [y,m]=key.split('-'); return MONTHS_ID[Number(m)-1]+' '+y; };
   return `
     <style>
+      .bm-print-title{display:none;}
       @media print{
         .app-header,.sidebar,.bottom-nav,.fab-bar,.no-print{display:none!important;}
         body{background:#fff!important;}
@@ -6887,6 +6888,7 @@ function renderSPBermasalahLaporan(){
         .bm-report{display:block!important;}
         .bm-report > *:not(.bm-rincian){display:none!important;}
         .bm-rincian{display:block!important;}
+        .bm-rincian .bm-print-title{display:block!important;text-align:center;font-weight:700;font-size:14px!important;text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px!important;text-decoration:underline;}
         .bm-rincian .ssp-over{max-height:none!important;overflow:visible!important;}
         .bm-rincian table{width:100%;border-collapse:collapse;font-size:10.5px;}
         .bm-rincian th,.bm-rincian td{border:1px solid #000;padding:4px 6px;text-align:left;}
@@ -6920,6 +6922,7 @@ function renderSPBermasalahLaporan(){
         <div style="font-size:14px;font-weight:700;">Rincian per Kartu (urut sisa terbesar)</div>
         <button class="btn btn-outline btn-compact" onclick="window.print()">🖨️ Cetak</button>
       </div>
+      <div class="bm-print-title">LAPORAN PERKEMBANGAN PIUTANG BERMASALAH</div>
       <div class="ssp-over" style="max-height:420px;overflow:auto;">
         <table class="ssp-table">
           <thead><tr><th style="position:sticky;top:0;background:var(--bg);z-index:2;">Nama</th><th>Wilayah</th><th>Pokok</th><th>Sisa Awal</th><th>Terbayar</th><th>Sisa</th><th>Status</th></tr></thead>
