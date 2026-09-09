@@ -6680,11 +6680,13 @@ function renderAdminSuratSP(user){
         .ssp-page:last-child{page-break-after:auto;}
       }
     </style>
-    <div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>
-    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-      <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
-      <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
+    <div style="position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 0 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.2);margin:-4px 0 14px;">
+      <div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
+        <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
+      </div>
     </div>
     <div class="ssp-preview-wrap">
       <div class="card" style="padding:16px;">
