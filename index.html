@@ -6746,7 +6746,7 @@ function suratSPOpenPilih(){
   const kelGroups = Array.from(new Set(all.map(x=>x.kelompok))).sort();
   const kelOpts = kelGroups.map(k=>`<option value="${escapeHtml(k)}" ${kel===k?'selected':''}>${escapeHtml(k)}</option>`).join('');
   openModal(`
-    <div style="position:sticky;top:0;z-index:100;background:#fff;margin:-22px -22px 0;padding:20px 22px 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.25);">
+    <div style="position:sticky;top:-22px;z-index:100;background:#fff;margin:-22px -22px 0;padding:20px 22px 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.25);">
       <h3 style="margin:0 0 12px;">Pilih Nasabah untuk Surat SP</h3>
       <div class="toolbar-row" style="margin:0;flex-wrap:wrap;">
         <select class="ssp-input" style="flex:1;min-width:120px;" onchange="currentSubState.kel=this.value; delete currentSubState.q; suratSPReopenPilih()"><option value="">Semua Kelompok</option>${kelOpts}</select>
