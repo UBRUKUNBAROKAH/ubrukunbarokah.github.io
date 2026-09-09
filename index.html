@@ -6730,6 +6730,8 @@ function renderAdminSuratSP(user){
       .ssp-sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;}
       .ssp-sw input{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;}
       .ssp-over{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+      .ssp-stat-grid{grid-template-columns:1fr 1fr;}
+      @media (min-width:900px){.ssp-stat-grid{grid-template-columns:repeat(4,1fr);}}
       #ssp-preview{overflow-x:auto;}
       .ssp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
       @media (max-width:640px){.ssp-stats{grid-template-columns:1fr 1fr;}}
@@ -6801,15 +6803,19 @@ function renderAdminSuratSP(user){
       const bm = suratSPBermasalah();
       const totPokok = bm.reduce((t,d)=>t+d.pokok,0);
       const totSisa = bm.reduce((t,d)=>t+d.sisaKewajiban,0);
+      const totJumlah = bm.reduce((t,d)=>t+d.jumlah,0);
+      const totDiangsur = bm.reduce((t,d)=>t+d.sudahDiangsur,0);
       return `
       <div class="card" style="padding:14px;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Ringkasan Pembiayaan Bermasalah</div>
+        <div class="stat-grid ssp-stat-grid" style="margin-bottom:14px;">
+          <div class="stat-box"><div class="n mono" style="font-size:20px;">${bm.length}</div><div class="l">Jumlah Kartu</div></div>
+          <div class="stat-box"><div class="n mono" style="font-size:20px;">${rupiah(totPokok)}</div><div class="l">Total Pokok</div></div>
+          <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--primary);"><div class="n mono" style="font-size:20px;color:var(--primary);">${rupiah(totDiangsur)}</div><div class="l">Sudah Diangsur</div></div>
+          <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--danger);"><div class="n mono" style="font-size:20px;color:var(--danger);">${rupiah(totSisa)}</div><div class="l">Sisa Belum Diangsur</div></div>
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
           <div style="font-size:14px;font-weight:700;">Daftar Kartu Pembiayaan Bermasalah</div>
-          <div style="display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap;">
-            <span>📦 <b>${bm.length}</b> kartu</span>
-            <span>💳 Pokok <b>${rupiah(totPokok)}</b></span>
-            <span>⚠️ Sisa <b>${rupiah(totSisa)}</b></span>
-          </div>
         </div>
         <div class="ssp-over" style="max-height:320px;overflow:auto;">
           <table class="ssp-table">
