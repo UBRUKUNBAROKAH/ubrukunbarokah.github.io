@@ -2330,6 +2330,20 @@ function renderContent(){
       const tb = document.getElementById('ssp-topbar');
       if(tb) tb.style.top = appHead.offsetHeight + 'px';
     }
+    const wrap = document.querySelector('.ssp-preview-wrap');
+    if(wrap){
+      const appH = document.querySelector('.app-header').offsetHeight;
+      const bar = document.getElementById('ssp-topbar');
+      const barH = bar ? bar.offsetHeight + 14 : 14;
+      const bnav = document.querySelector('.bottom-nav');
+      const bnavH = (bnav && getComputedStyle(bnav).display !== 'none') ? bnav.offsetHeight : 0;
+      const cs = getComputedStyle(el);
+      const padTop = parseFloat(cs.paddingTop) || 0;
+      const padBottom = parseFloat(cs.paddingBottom) || 0;
+      wrap.style.height = (window.innerHeight - appH - barH - padTop - padBottom - bnavH - 14) + 'px';
+      wrap.style.overflowY = 'auto';
+      wrap.style.maxHeight = 'none';
+    }
   }
   if(currentPage==='admin_saham_certificate'){ requestAnimationFrame(fitSertifikatPreview); }
   if(activeId){
@@ -6681,7 +6695,7 @@ function renderAdminSuratSP(user){
       @media print{
         .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}
         #content > *:not(.ssp-preview-wrap){display:none!important;}
-        .ssp-preview-wrap{display:block!important;}#ssp-preview{display:block!important;}
+        .ssp-preview-wrap{display:block!important;height:auto!important;max-height:none!important;overflow:visible!important;}#ssp-preview{display:block!important;}
         .ssp-preview-head{display:none!important;}
         .ssp-preview-wrap>.card{padding:0!important;border:none!important;box-shadow:none!important;background:transparent!important;}
         #content{overflow:visible!important;}
@@ -6978,24 +6992,15 @@ function suratSPBuat(){
   chosen.forEach(d=>{ html += suratSPBuatPage(d, s, urut); urut++; });
   const pv = document.getElementById('ssp-preview');
   pv.innerHTML = html;
-  const appHead = document.querySelector('.app-header');
-  const bar = document.getElementById('ssp-topbar');
-  let barTop = 0;
-  if(bar){
-    if(appHead) bar.style.top = appHead.offsetHeight + 'px';
-    barTop = bar.offsetTop;
-    const tb = pv.querySelector('.ssp-toolbar');
-    if(tb){
-      tb.style.position = 'sticky';
-      tb.style.top = ((appHead ? appHead.offsetHeight : 0) + bar.offsetHeight + 14) + 'px';
-      tb.style.zIndex = '15';
-      tb.style.background = 'var(--bg)';
-      tb.style.padding = '10px 12px';
-      tb.style.border = '2px solid var(--border)';
-      tb.style.borderRadius = '14px';
-      tb.style.boxShadow = '0 4px 10px -6px rgba(0,0,0,.2)';
-      tb.style.marginBottom = '14px';
-    }
+  const tb = pv.querySelector('.ssp-toolbar');
+  if(tb){
+    tb.style.position = 'sticky';
+    tb.style.top = '0';
+    tb.style.zIndex = '15';
+    tb.style.background = 'var(--bg)';
+    tb.style.padding = '10px 12px';
+    tb.style.borderRadius = '14px';
+    tb.style.marginBottom = '14px';
   }
   pv.scrollIntoView({behavior:'smooth'});
   toast('Surat berhasil dibuat');
