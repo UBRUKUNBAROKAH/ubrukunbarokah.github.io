@@ -6840,8 +6840,16 @@ function suratSPRemoveTtd(btn){
 }
 function suratSPSyncAllScript(){ return "var_all=true;var_rows=document.querySelectorAll('.ssp-row');var_rows.forEach(function(r){if(!r.checked)var_all=false;});var_a=document.getElementById('ssp-all');if(var_a)var_a.checked=var_all;"; }
 function suratSPToggleAll(checked){
-  suratSPSelected = (checked ? suratSPOverdue().map(d=>d.pembId) : []);
-  renderContent();
+  const kel = currentSubState.kel || '';
+  const q = (currentSubState.q||'').toLowerCase();
+  let list = suratSPOverdue();
+  if(kel) list = list.filter(x=>x.kelompok===kel);
+  if(q) list = list.filter(x=>x.nama.toLowerCase().includes(q));
+  const ids = list.map(d=>d.pembId);
+  if(checked){ ids.forEach(id=>{ if(!suratSPSelected.includes(id)) suratSPSelected.push(id); }); }
+  else { suratSPSelected = suratSPSelected.filter(id=>!ids.includes(id)); }
+  document.querySelectorAll('.ssp-row').forEach(function(r){ r.checked = checked; });
+  var a = document.getElementById('ssp-all'); if(a) a.checked = checked;
 }
 function suratSPToggleRow(id, checked){
   if(checked){ if(!suratSPSelected.includes(id)) suratSPSelected.push(id); }
