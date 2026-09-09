@@ -6856,6 +6856,8 @@ function suratSPToggleRow(id, checked){
   else { suratSPSelected = suratSPSelected.filter(x=>x!==id); }
 }
 function suratSPReadSettings(){
+  const prev = suratSPLoad();
+  const fld = function(id){ const el = document.getElementById(id); return el ? el.value : null; };
   const ttds = [];
   const listEl = document.getElementById('ssp-ttd-list');
   if(listEl){
@@ -6865,14 +6867,21 @@ function suratSPReadSettings(){
       ttds.push({jabatan: j?j.value:'', nama: n?n.value:''});
     });
   }
+  const tmpLogo = fld('ssp-logo');
   const obj = {
-    namaLembaga: val('ssp-nama'), alamatLembaga: val('ssp-alamat'), kota: val('ssp-kota'),
-    tanggalSurat: val('ssp-tgl'), nomorAwal: parseInt(val('ssp-nomor-awal'))||1, batasHari: parseInt(val('ssp-batas'))||7,
-    formatNomor: val('ssp-format') || '{urut}/SP/UB-RB/{bulan_romawi}/{tahun}',
-    logo: suratSPLogo || val('ssp-logo') || '',
-    tampilLogo: (document.getElementById('ssp-tampil-logo') ? document.getElementById('ssp-tampil-logo').checked : true),
-    ttdList: ttds.length?ttds:[{jabatan:'',nama:''}],
-    tplPembuka: val('ssp-pembuka'), tplIsi: val('ssp-isi'), tplPenutup: val('ssp-penutup')
+    namaLembaga: fld('ssp-nama') !== null ? fld('ssp-nama') : prev.namaLembaga,
+    alamatLembaga: fld('ssp-alamat') !== null ? fld('ssp-alamat') : prev.alamatLembaga,
+    kota: fld('ssp-kota') !== null ? fld('ssp-kota') : prev.kota,
+    tanggalSurat: fld('ssp-tgl') !== null ? fld('ssp-tgl') : prev.tanggalSurat,
+    nomorAwal: fld('ssp-nomor-awal') !== null ? parseInt(fld('ssp-nomor-awal'))||1 : prev.nomorAwal,
+    batasHari: fld('ssp-batas') !== null ? parseInt(fld('ssp-batas'))||7 : prev.batasHari,
+    formatNomor: fld('ssp-format') !== null && fld('ssp-format') ? fld('ssp-format') : prev.formatNomor,
+    logo: (suratSPLogo || (tmpLogo !== null ? tmpLogo : (prev.logo||''))) || '',
+    tampilLogo: (document.getElementById('ssp-tampil-logo') ? document.getElementById('ssp-tampil-logo').checked : prev.tampilLogo),
+    ttdList: ttds.length ? ttds : (prev.ttdList && prev.ttdList.length ? prev.ttdList : [{jabatan:'',nama:''}]),
+    tplPembuka: fld('ssp-pembuka') !== null ? fld('ssp-pembuka') : prev.tplPembuka,
+    tplIsi: fld('ssp-isi') !== null ? fld('ssp-isi') : prev.tplIsi,
+    tplPenutup: fld('ssp-penutup') !== null ? fld('ssp-penutup') : prev.tplPenutup
   };
   return obj;
 }
