@@ -6559,8 +6559,10 @@ function suratSPTanggal(d){
   return d.getDate() + ' ' + SURAT_SP_MONTHS[d.getMonth()] + ' ' + d.getFullYear();
 }
 function suratSPLoad(){
+  const cloud = (DB && DB.koperasi && DB.koperasi.info && DB.koperasi.info.suratSP && Object.keys(DB.koperasi.info.suratSP).length) ? DB.koperasi.info.suratSP : null;
   let s = suratSPDefSettings();
-  try{ const saved = JSON.parse(localStorage.getItem(SURAT_SP_LS_KEY)||'null'); if(saved) s = Object.assign(s, saved); }catch(e){}
+  if(cloud) s = Object.assign(s, cloud);
+  try{ const saved = JSON.parse(localStorage.getItem(SURAT_SP_LS_KEY)||'null'); if(saved && !cloud) s = Object.assign(s, saved); }catch(e){}
   if(!s.tplPembuka){ s.tplPembuka = suratSPDefSettings().tplPembuka; }
   if(!s.tplIsi){ s.tplIsi = suratSPDefSettings().tplIsi; }
   if(!s.tplPenutup){ s.tplPenutup = suratSPDefSettings().tplPenutup; }
@@ -6568,6 +6570,12 @@ function suratSPLoad(){
 }
 function suratSPSave(obj){
   try{ localStorage.setItem(SURAT_SP_LS_KEY, JSON.stringify(obj)); }catch(e){}
+  try{
+    if(DB && DB.koperasi && DB.koperasi.info){
+      DB.koperasi.info.suratSP = obj;
+      persist();
+    }
+  }catch(e){}
 }
 function suratSPOverdue(){
   return computeOverdueLoans().map(o=>{
@@ -6687,6 +6695,7 @@ function renderAdminSuratSP(user){
 }
 function suratSPOpenSettings(){
   const s = suratSPLoad();
+  suratSPLogo = s.logo || '';
   openModal(`
     <h3>Pengaturan Surat SP</h3>
     <label class="ssp-label">Nama Lembaga</label><input class="ssp-input" id="ssp-nama" value="${escapeHtml(s.namaLembaga)}">
