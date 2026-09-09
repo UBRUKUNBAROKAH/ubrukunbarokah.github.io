@@ -6877,7 +6877,22 @@ function renderSPBermasalahLaporan(){
   const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const bulanLabel = (key)=>{ const [y,m]=key.split('-'); return MONTHS_ID[Number(m)-1]+' '+y; };
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_spbermasalah')">${ICONS.chevronLeft}</button>Laporan Perkembangan Piutang Bermasalah</span></div>
+    <style>
+      @media print{
+        .app-header,.sidebar,.bottom-nav,.fab-bar,.no-print{display:none!important;}
+        body{background:#fff!important;}
+        #app-screen{display:block!important;}
+        #content{display:block!important;overflow:visible!important;height:auto!important;padding:0!important;}
+        #content > *:not(.bm-report){display:none!important;}
+        .bm-report{display:block!important;}
+        .bm-report .stat-box{break-inside:avoid;}
+        .bm-report table{width:100%;border-collapse:collapse;font-size:11px;}
+        .bm-report th,.bm-report td{border:1px solid #bbb;padding:4px 6px;text-align:left;}
+        .bm-report th{background:#eee;}
+      }
+    </style>
+    <div class="page-title no-print"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_spbermasalah')">${ICONS.chevronLeft}</button>Laporan Perkembangan Piutang Bermasalah</span></div>
+    <div class="bm-report">
     <div class="card" style="padding:14px;margin-bottom:14px;">
       <div class="stat-grid ssp-stat-grid" style="margin-bottom:4px;">
         <div class="stat-box"><div class="n mono" style="font-size:20px;">${rows.length}</div><div class="l">Jumlah Kartu</div></div>
@@ -6916,6 +6931,7 @@ function renderSPBermasalahLaporan(){
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   `;
 }
