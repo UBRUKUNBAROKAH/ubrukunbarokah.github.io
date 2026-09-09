@@ -6928,6 +6928,8 @@ function renderSPBermasalahLaporan(){
   return `
     <style>
       .bm-print-title{display:none;}
+      .ssp-table tr.bm-row-lunas td{background:#e7f6e9!important;}
+      .ssp-table tr.bm-row-lunas:hover td{background:#d8efdc!important;}
       @media print{
         .app-header,.sidebar,.bottom-nav,.fab-bar,.no-print{display:none!important;}
         body{background:#fff!important;}
@@ -6976,7 +6978,7 @@ function renderSPBermasalahLaporan(){
         <table class="ssp-table">
           <thead><tr><th style="position:sticky;top:0;background:var(--bg);z-index:2;">Nama</th><th>Wilayah</th><th>Pokok</th><th>Sisa Awal</th><th>Terbayar</th><th>Sisa</th><th>Status</th></tr></thead>
           <tbody>
-            ${sorted.map(r=>`<tr>
+            ${sorted.map(r=>`<tr class="${r.lunas?'bm-row-lunas':''}">
               <td><a style="cursor:pointer;color:var(--primary);text-decoration:underline;" onclick="go('admin_spbermasalah_detail',{pembId:'${bmPembIdOf(r.k)}'})"><b>${escapeHtml(r.k.nama)}</b></a></td>
               <td>${escapeHtml(r.k.wilayah||'')}</td>
               <td>${rupiah(r.pokok)}</td>
@@ -7041,6 +7043,8 @@ function renderAdminSuratSP(user){
       .ssp-table th{text-align:left;background:var(--bg);border-bottom:1px solid var(--border);padding:9px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
       .ssp-table td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
       .ssp-table tr:hover td{background:var(--bg);}
+      .ssp-table tr.bm-row-lunas td{background:#e7f6e9!important;}
+      .ssp-table tr.bm-row-lunas:hover td{background:#d8efdc!important;}
       .ssp-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;}
       .ssp-badge.d1{background:#fdf1e0;color:#b5731a;}
       .ssp-badge.d2{background:#fbe8e5;color:#7a2331;}
@@ -7116,7 +7120,7 @@ function renderAdminSuratSP(user){
           <table class="ssp-table">
             <thead><tr><th style="position:sticky;top:0;background:var(--bg);z-index:2;">Nama</th><th>Wilayah</th><th>Tahun</th><th>Pokok</th><th>Margin</th><th>Total</th><th>Sisa</th><th>Jatuh Tempo</th><th></th></tr></thead>
             <tbody>
-              ${bm.map(d=>`<tr>
+              ${bm.map(d=>`<tr class="${d.lunas?'bm-row-lunas':''}">
                 <td><a style="cursor:pointer;color:var(--primary);text-decoration:underline;" onclick="go('admin_spbermasalah_detail',{pembId:'${d.pembId}'})"><b>${escapeHtml(d.nama)}</b></a><br><span style="color:var(--muted);font-size:11px;">Akad: ${escapeHtml(d.nomorAkad)}</span></td>
                 <td>${escapeHtml(d.alamat)}</td>
                 <td>${escapeHtml((d.pembId.match(/^bm-(\d+)/)||[])[1]||'')}</td>
