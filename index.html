@@ -2400,7 +2400,7 @@ function renderAdminBeranda(user){
     <div class="section-label" style="color:var(--danger);">Pembiayaan Terlambat</div>
     <div class="card" style="padding:14px 18px;border-left:3px solid var(--danger);display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div class="info"><div class="title">${overdue.length} pembiayaan telat bayar</div><div class="sub">Segera cek dan tindak lanjuti di menu Pembiayaan</div></div>
-      <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="go('admin_pembiayaan')">Lihat</button>
+      <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="go('admin_pembiayaan_terlambat')">Lihat</button>
     </div>` : '';
   const adaTindakan = !!(notifSaldoKoorHtml || pendingPembHtml || overdueHtml);
 
@@ -3489,7 +3489,7 @@ function renderAdminPembiayaan(user){
   const lunas = list.filter(p=>p.status==='lunas');
   const totalLunas = lunas.length;
   const totalLunasNilai = lunas.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
-  const pembTab = currentSubState.pembTab==='pengajuan' ? 'pengajuan' : 'aktif';
+  const overdueCount = computeOverdueLoans().length;
   return `
     <div class="page-title">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
     <div class="stat-grid" style="margin-bottom:14px;grid-template-columns:repeat(2,1fr);">
@@ -3500,64 +3500,52 @@ function renderAdminPembiayaan(user){
         <div class="n mono" style="font-size:16px;color:var(--ok);">${totalLunas}</div>
         <div class="l">Lunas &middot; ${rupiah(totalLunasNilai)}</div>
       </div>
+      ${overdueCount ? `
+      <div class="stat-box" style="cursor:pointer;grid-column:1 / -1;border:1px solid var(--danger);" onclick="go('admin_pembiayaan_terlambat')" title="Klik untuk melihat daftar pembiayaan terlambat">
+        <div class="n mono" style="font-size:16px;color:var(--danger);">${overdueCount}</div>
+        <div class="l" style="color:var(--danger);">Pembiayaan Terlambat &middot; lihat detail</div>
+      </div>` : ''}
     </div>
-    <div class="tabs">
-      <button class="${pembTab==='aktif'?'active':''}" onclick="currentSubState.pembTab='aktif'; renderContent()">Berjalan (${belumLunas.length})</button>
-      <button class="${pembTab==='pengajuan'?'active':''}" onclick="currentSubState.pembTab='pengajuan'; renderContent()">Menunggu ACC (${pending.length})</button>
+
+    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
+      <select onchange="currentSubState.kelFilter=this.value; delete currentSubState.q; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
+        <option value="">Semua kelompok</option>
+        ${kelompokOptions}
+      </select>
+      <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download} Export</button>
+      <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">${ICONS.upload}</button>
+      <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
     </div>
-    ${pembTab==='pengajuan' ? `
-      ${pending.length ? `
-      <div class="card" style="padding:6px 18px;">
-        ${pending.map(p=>`
-          <div class="list-row">
-            <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
-              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
-              <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
-              <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
-            </div>
-          </div>
-        `).join('')}
-      </div>` : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">✅</div><div class="t">Tidak ada pengajuan</div><div class="d">Semua pengajuan sudah diproses</div></div></div>`}
-    ` : `
-      ${(function(){
-        const overdue = computeOverdueLoans();
-        if(!overdue.length) return '';
-        return `
-        <div class="section-label" style="color:var(--danger);">Peringatan Pembiayaan Terlambat (${overdue.length})</div>
-        <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);margin-bottom:14px;">
-          ${overdue.map(function(o){
-            const u = userById(o.p.userId);
-            return '<div class="list-row"><div class="info"><div class="title">'+(u?u.nama:'-')+'</div><div class="sub">Telat '+o.telat+' angsuran &middot; '+rupiah(o.p.angsuranPerBulan)+'/bln &middot; Jatuh tempo '+o.tglJatuh.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+'</div></div><span class="badge badge-red">Telat</span></div>';
-          }).join('')}
-        </div>`;
-      })()}
-      <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
-        <select onchange="currentSubState.kelFilter=this.value; delete currentSubState.q; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
-          <option value="">Semua kelompok</option>
-          ${kelompokOptions}
-        </select>
-        <div class="search-box">${ICONS.search}<input id="search-admin-pembiayaan" placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
-        <button class="btn btn-outline btn-compact" onclick="openExportModal('pembiayaan')" title="Export">${ICONS.download} Export</button>
-        <button class="btn btn-outline btn-compact" onclick="openImportModal('pembiayaan')" title="Import CSV">${ICONS.upload}</button>
-        <button class="btn btn-primary btn-compact" onclick="openPengajuanModal()">${ICONS.plus} Ajukan</button>
-      </div>
-      ${list.length ? groups.map(g=>`
-        <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
-        <div class="card" style="padding:6px 18px;margin-bottom:14px;">
-          ${g.items.map(p=>{ i++; return `
-          <div class="list-row">
-            <div class="row-num">${i}</div>
-            <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
-            <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
+    ${pending.length ? `
+    <div class="section-label">Pengajuan Menunggu ACC (${pending.length})</div>
+    <div class="card" style="padding:6px 18px;">
+      ${pending.map(p=>`
+        <div class="list-row">
+          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
             <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
             <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
           </div>
-        `; }).join('')}
         </div>
-      `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div></div>`}
-    `}
+      `).join('')}
+    </div>` : ''}
+    ${list.length ? groups.map(g=>`
+      <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
+      <div class="card" style="padding:6px 18px;margin-bottom:14px;">
+        ${g.items.map(p=>{ i++; return `
+        <div class="list-row">
+          <div class="row-num">${i}</div>
+          <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
+          <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
+          <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
+          <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
+        </div>
+      `; }).join('')}
+      </div>
+    `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div></div>`}
   `;
 }
 function accPengajuan(pembId){
@@ -3692,6 +3680,25 @@ function renderAdminPembiayaanLunas(user){
       `; }).join('')}
       </div>
     `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">Belum ada pembiayaan lunas${q?' untuk kata kunci tersebut':''}</div></div></div>`}
+  `;
+}
+function renderAdminPembiayaanTerlambat(user){
+  const q = (currentSubState.q||'').toLowerCase();
+  let overdue = computeOverdueLoans();
+  if(q) overdue = overdue.filter(o=>{ const u=userById(o.p.userId); return u && u.nama.toLowerCase().includes(q); });
+  const totalSisaTelat = overdue.reduce((s,o)=>{const p=o.p;const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  return `
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_pembiayaan')">${ICONS.chevronLeft}</button>Pembiayaan Terlambat</span><span class="sub">${overdue.length} pembiayaan telat &middot; sisa ${rupiah(totalSisaTelat)}</span></div>
+    <div class="toolbar-row" style="margin-bottom:14px;">
+      <div class="search-box">${ICONS.search}<input placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+    </div>
+    ${overdue.length ? `
+    <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);">
+      ${overdue.map(function(o){
+        const u = userById(o.p.userId);
+        return '<div class="list-row" style="cursor:pointer;" onclick="go(\'admin_pembiayaan_detail\',{pembId:\''+o.p.id+'\'})"><div class="info"><div class="title">'+(u?u.nama:'-')+'</div><div class="sub">Telat '+o.telat+' angsuran &middot; '+rupiah(o.p.angsuranPerBulan)+'/bln &middot; Jatuh tempo '+o.tglJatuh.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+'</div></div><span class="badge badge-red">Telat</span></div>';
+      }).join('')}
+    </div>` : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">✅</div><div class="t">Tidak ada</div><div class="d">Tidak ada pembiayaan terlambat${q?' untuk kata kunci tersebut':''}</div></div></div>`}
   `;
 }
 function renderPembiayaanDetailPage(pembId, backPage){
@@ -8188,6 +8195,7 @@ const _routerExtras = {
   admin_spbermasalah_detail: (u)=>renderSPBermasalahDetail(currentSubState.pembId),
   admin_spbermasalah_laporan: (u)=>renderSPBermasalahLaporan(),
   admin_pembiayaan_lunas: (u)=>renderAdminPembiayaanLunas(u),
+  admin_pembiayaan_terlambat: (u)=>renderAdminPembiayaanTerlambat(u),
   admin_saham_certificate: (u)=>renderSahamCertificate(currentSubState.namaSaham),
   koor_anggota_detail: (u)=>renderKoorAnggotaDetail(u, currentSubState.userId),
   koor_tabungan_detail: (u)=>renderKoorTabunganDetail(u, currentSubState.userId),
