@@ -393,6 +393,8 @@ input,select{font-family:inherit;}
 
 .list-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;}
 .list-row:last-child{border-bottom:none;}
+.list-row.lunas{background:#e7f6e9!important;border-radius:10px;}
+.list-row.lunas:hover{background:#d8efdc!important;}
 .list-row .row-ic{width:32px;height:32px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--shadow-neu-xs);}
 .list-row .info{min-width:0;flex:1;}
 .list-row .info .title{font-weight:600;font-size:13.5px;}
@@ -3536,7 +3538,7 @@ function renderAdminPembiayaan(user){
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
       <div class="card" style="padding:6px 18px;margin-bottom:14px;">
         ${g.items.map(p=>{ i++; return `
-        <div class="list-row">
+        <div class="list-row ${p.status==='lunas'?'lunas':''}">
           <div class="row-num">${i}</div>
           <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
           <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
