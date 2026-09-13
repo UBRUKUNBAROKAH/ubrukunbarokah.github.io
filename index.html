@@ -495,6 +495,7 @@ input,select{font-family:inherit;}
   padding:18px;
   padding-bottom:80px;
 }
+.app-footer{padding:14px 18px 26px;text-align:center;font-size:11px;color:var(--muted);border-top:1px solid var(--border);}
 
 /* desktop layout */
 @media (min-width: 769px){
@@ -718,6 +719,7 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
     </div>
 
     <div class="bottom-nav" id="bottom-nav"></div>
+    <div class="app-footer no-print">Copyright &copy; <span id="copy-year"></span> UBR Rukun Barokah. All rights reserved.</div>
   </div>
 
 </div>
@@ -8419,6 +8421,8 @@ if ('serviceWorker' in navigator) {
 
 const loginYearEl = document.getElementById('login-year');
 if(loginYearEl) loginYearEl.textContent = new Date().getFullYear();
+const copyYearEl = document.getElementById('copy-year');
+if(copyYearEl) copyYearEl.textContent = new Date().getFullYear();
 ['login-username','login-password'].forEach(id=>{
   const el = document.getElementById(id);
   if(el) el.addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
