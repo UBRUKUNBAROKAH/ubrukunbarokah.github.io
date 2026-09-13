@@ -1,0 +1,19 @@
+name: Keep Alive Supabase
+
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping database harian
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51Y3p5d2ZvcmJ3YmN0d3hiZmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjY5NTAsImV4cCI6MjA5ODkwMjk1MH0.4xQPbzS8EQ3NAdwzkU5Q5Fjbxi2Q0rlRDWYaYBCQ8Ic" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51Y3p5d2ZvcmJ3YmN0d3hiZmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjY5NTAsImV4cCI6MjA5ODkwMjk1MH0.4xQPbzS8EQ3NAdwzkU5Q5Fjbxi2Q0rlRDWYaYBCQ8Ic" \
+            "https://nuczywforbwbctwxbfky.supabase.co/rest/v1/pengaturan_koperasi?select=id&limit=1")
+          echo "Supabase response: $code"
+          [ "$code" = "200" ]
