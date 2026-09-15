@@ -2879,8 +2879,7 @@ function renderMemberDetail(nas, backPage){
   const pembs = pembiayaanForUser(nas.id);
   const isAktif = nas.status !== 'nonaktif';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>${nas.nama}</span></div>
-    <button class="btn btn-outline btn-block" style="margin-bottom:14px;" onclick="openEditAnggotaModal('${nas.id}')">${ICONS.edit||'✎'} Edit Info Anggota</button>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>${nas.nama}<button class="btn btn-outline btn-sm" style="margin-left:4px;" onclick="openEditAnggotaModal('${nas.id}')">${ICONS.edit||'✎'} Edit Info Anggota</button></span></div>
     <div class="card">
       <div class="flex-between">
         <div class="flex"><div class="avatar">${initials(nas.nama)}</div><div><div style="font-weight:700;">${nas.nama}</div><div class="hint">${kelompokName(nas.kelompokId)} &middot; No. Rek ${nas.noRekening||'-'}</div></div></div>
