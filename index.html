@@ -7680,7 +7680,7 @@ function renderKoorTabungan(user){
       ${anggota.length ? anggota.map((u,i)=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_tabungan_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${u.noRekening}</div></div></div>
-          <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
+          <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
         </div>
       `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
     </div>
