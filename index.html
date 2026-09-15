@@ -2879,10 +2879,10 @@ function renderMemberDetail(nas, backPage){
   const pembs = pembiayaanForUser(nas.id);
   const isAktif = nas.status !== 'nonaktif';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>${nas.nama}<button class="btn btn-outline btn-sm" style="margin-left:4px;" onclick="openEditAnggotaModal('${nas.id}')">${ICONS.edit||'✎'} Edit Info Anggota</button></span></div>
+    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>${nas.nama}</span></div>
     <div class="card">
       <div class="flex-between">
-        <div class="flex"><div class="avatar">${initials(nas.nama)}</div><div><div style="font-weight:700;">${nas.nama}</div><div class="hint">${kelompokName(nas.kelompokId)} &middot; No. Rek ${nas.noRekening||'-'}</div></div></div>
+        <div class="flex"><div class="avatar">${initials(nas.nama)}</div><div><div style="font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${nas.nama}<button class="btn btn-outline btn-sm" onclick="openEditAnggotaModal('${nas.id}')">${ICONS.edit||'✎'} Edit Info Anggota</button></div><div class="hint">${kelompokName(nas.kelompokId)} &middot; No. Rek ${nas.noRekening||'-'}</div></div></div>
         <span class="badge ${isAktif?'badge-green':'badge-red'}">${isAktif?'Aktif':'Nonaktif'}</span>
       </div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);font-size:13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
