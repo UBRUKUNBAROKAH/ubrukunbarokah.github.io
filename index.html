@@ -7658,15 +7658,15 @@ function renderKoorSaham(user){
   const pct = DB.koperasi.saham.pemupukanPersen||0;
   return `
     <div class="page-title">Saham<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="stat-grid" style="margin-bottom:10px;">
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
       <div class="stat-box stat-info"><div class="n mono">${rupiah(totalNilaiAwal)}</div><div class="l">Total nilai saham (awal)</div></div>
       <div class="stat-box stat-gold"><div class="n mono">${rupiah(totalNilaiSesudah)}</div><div class="l">Total nilai saham (sesudah pemupukan${pct?' '+pct+'%':''})</div></div>
       <div class="stat-box stat-primary"><div class="n">${totalLembar}</div><div class="l">Total lembar saham</div></div>
     </div>
-    <div class="stat-grid" style="margin-bottom:14px;">
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px;">
       ${jns.map(j=>{
         const total = ks.filter(k=>k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0);
-        return `<div class="stat-box"><div class="n">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
+        return `<div class="stat-box"><div class="n" style="font-size:13px;">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
       }).join('')}
     </div>
     <div class="section-label">Pemilik saham (${daftarPemilik.length})</div>
