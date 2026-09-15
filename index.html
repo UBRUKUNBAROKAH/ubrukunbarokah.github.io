@@ -2783,7 +2783,7 @@ function commitImportRows(){
       let username = baseUsername, counter = 1;
       while(DB.users.some(u=>u.username===username)){ username = baseUsername+counter; counter++; }
       const newUser = {
-        id:uid('u'), username, password:'anggota123', role:'nasabah', nama:o.nama, nik:o.nik, alamat:o.alamat, noHp:o.noHp, kelompokId:o.kelompokId,
+        id:uid('u'), username, password:'anggota354', role:'nasabah', nama:o.nama, nik:o.nik, alamat:o.alamat, noHp:o.noHp, kelompokId:o.kelompokId,
         noRekening: '2026'+String(1000+DB.users.length), saham:{s_A:0,s_B:0,s_C:0}, status:'aktif', anggotaId:uid('agg'), createdAt: nowISO()
       };
       DB.users.push(newUser);
@@ -3362,7 +3362,7 @@ function submitTambahAnggota(){
   let username = baseUsername;
   let counter = 1;
   while(DB.users.some(u=>u.username===username)){ username = baseUsername + counter; counter++; }
-  const password = 'anggota123';
+  const password = 'anggota354';
 
   const newUser = {
     id: uid('u'), username, password, role:'nasabah', nama, nik, alamat, noHp, telegramChatId: tgChat, kelompokId,
@@ -4092,7 +4092,7 @@ function openUserModal(userId, newRole, fixedKelompokId){
       </div>
       <div class="form-row"><label>Nama lengkap</label><input type="text" id="um-nama" readonly placeholder="Terisi otomatis dari nasabah"></div>
       <div class="form-row"><label>Nama pengguna (username)</label><input type="text" id="um-username" placeholder="Username untuk login"></div>
-      <div class="form-row"><label>Kata sandi <span class="hint" style="font-weight:400;">(default: anggota123)</span></label><input type="text" id="um-password" value="anggota123" placeholder="Kata sandi"></div>
+      <div class="form-row"><label>Kata sandi <span class="hint" style="font-weight:400;">(default: anggota354)</span></label><input type="text" id="um-password" value="anggota354" placeholder="Kata sandi"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" onclick="closeModal()">Batal</button>
         <button class="btn btn-primary" onclick="submitUser('')">Simpan</button>
@@ -4109,7 +4109,7 @@ function openUserModal(userId, newRole, fixedKelompokId){
     <input type="hidden" id="um-editing" value="${editing?'1':''}">
     <div class="form-row"><label>Nama lengkap</label><input type="text" id="um-nama" value="${editing?editing.nama:''}" placeholder="Nama lengkap"></div>
     <div class="form-row"><label>Nama pengguna (username)</label><input type="text" id="um-username" value="${editing?editing.username:''}" placeholder="Username untuk login" ${editing && editing.id==='u_admin'?'disabled':''}></div>
-    <div class="form-row"><label>Kata sandi ${!editing?'<span class="hint" style="font-weight:400;">(default: anggota123)</span>':''}</label><input type="text" id="um-password" value="${editing?editing.password:'anggota123'}" placeholder="Kata sandi"></div>
+    <div class="form-row"><label>Kata sandi ${!editing?'<span class="hint" style="font-weight:400;">(default: anggota354)</span>':''}</label><input type="text" id="um-password" value="${editing?editing.password:'anggota354'}" placeholder="Kata sandi"></div>
    <div class="form-row" id="um-kelompok-row"><label>Kelompok</label>
      <select id="um-kelompok" ${fixedKelompokId?'disabled':''}>${fixedKelompokId
        ? (()=>{ const kk=DB.koperasi.kelompok.find(k=>k.id===fixedKelompokId); return `<option value="${fixedKelompokId}" selected>${kk?kk.nama:'Kelompok'}</option>`; })()
@@ -4138,7 +4138,7 @@ function umLoadMembers(){
   if(hint) hint.textContent = list.length ? 'Menampilkan ' + list.length + ' nasabah. Klik salah satu.' : (q ? 'Tidak ada nasabah yang cocok dengan kata kunci.' : 'Tidak ada nasabah pada kelompok ini. Tambah nasabah dulu lewat menu Anggota.');
   document.getElementById('um-nama').value = '';
   document.getElementById('um-username').value = '';
-  document.getElementById('um-password').value = 'anggota123';
+  document.getElementById('um-password').value = 'anggota354';
 }
 function umFilterMembers(){ umLoadMembers(); }
 function umClearSearch(){ const sEl = document.getElementById('um-search'); if(sEl) sEl.value = ''; }
