@@ -2861,11 +2861,13 @@ function renderAdminAnggota(user){
   const groups = groupByKelompok(list, u=>u.id);
   let i = 0;
   return `
-    <div class="page-title">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
-    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Daftar Anggota<span class="sub">${DB.users.filter(u=>u.role==='nasabah').length} nasabah terdaftar</span></div>
+    <div class="toolbar-row" style="margin-bottom:2px;">
       <div class="search-box">${ICONS.search}<input id="search-admin-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('anggota')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal()">${ICONS.plus} Tambah</button>
+    </div>
     </div>
     ${list.length ? groups.map(g=>`
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
@@ -3067,8 +3069,8 @@ function renderAdminTabungan(user){
   const totalSaldo = filteredAccounts.reduce((s,a)=>s+(a.saldo||0),0);
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   return `
-    <div class="page-title">Tabungan<span class="sub">Daftar nasabah</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Tabungan<span class="sub">Daftar nasabah</span></div>
     <div class="stat-grid" style="margin-bottom:10px;">
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
@@ -3115,8 +3117,8 @@ function renderAdminTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
@@ -3513,8 +3515,8 @@ function renderAdminPembiayaan(user){
   const totalLunasNilai = lunas.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
   const overdueCount = computeOverdueLoans().length;
   return `
-    <div class="page-title">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Pembiayaan<span class="sub">${list.length} pengajuan tercatat</span></div>
     <div class="stat-grid" style="margin-bottom:10px;grid-template-columns:repeat(2,1fr);">
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSisa)}</div><div class="l">Total Sisa Pembiayaan</div></div>
@@ -3684,7 +3686,9 @@ function renderAdminPembiayaanLunas(user){
   const totalNilai = list.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
   let i = 0;
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_pembiayaan')">${ICONS.chevronLeft}</button>Pembiayaan Lunas</span><span class="sub">${list.length} pengajuan lunas &middot; total ${rupiah(totalNilai)}</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_pembiayaan')">${ICONS.chevronLeft}</button>Pembiayaan Lunas</span><span class="sub">${list.length} pengajuan lunas &middot; total ${rupiah(totalNilai)}</span></div>
+    </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <select onchange="currentSubState.kelFilter=this.value; delete currentSubState.q; renderContent()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;font-size:13.5px;background:var(--surface);">
         <option value="">Semua kelompok</option>
@@ -3712,7 +3716,9 @@ function renderAdminPembiayaanTerlambat(user){
   if(q) overdue = overdue.filter(o=>{ const u=userById(o.p.userId); return u && u.nama.toLowerCase().includes(q); });
   const totalSisaTelat = overdue.reduce((s,o)=>{const p=o.p;const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_pembiayaan')">${ICONS.chevronLeft}</button>Pembiayaan Terlambat</span><span class="sub">${overdue.length} pembiayaan telat &middot; sisa ${rupiah(totalSisaTelat)}</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_pembiayaan')">${ICONS.chevronLeft}</button>Pembiayaan Terlambat</span><span class="sub">${overdue.length} pembiayaan telat &middot; sisa ${rupiah(totalSisaTelat)}</span></div>
+    </div>
     <div class="toolbar-row" style="margin-bottom:14px;">
       <div class="search-box">${ICONS.search}<input placeholder="Cari nama nasabah" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
     </div>
@@ -3736,13 +3742,13 @@ function renderPembiayaanDetailPage(pembId, backPage){
   const progres = totalKew>0 ? ((totalDibayar/totalKew)*100).toFixed(0) : 0;
   const isActive = p.statusPengajuan==='approved' && p.status!=='lunas';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span></div>
     <div class="card balance-card">
       <div class="label">${nas.nama}</div>
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
       <div class="rekening">${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; ${rupiah(p.angsuranPerBulan)}/bln</div>
     </div>
-    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
     <div class="stat-grid" style="margin-bottom:0;">
       <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(totalKew)}</div><div class="l">Total kewajiban</div></div>
       <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(sisaTagihan)}</div><div class="l">Sisa tagihan</div></div>
@@ -4053,9 +4059,11 @@ function renderAdminUserMgmt(user){
   let filtered = realUsers.filter(u=>u.role===tabRole);
   if(umQ) filtered = filtered.filter(u=>(u.nama||'').toLowerCase().includes(umQ) || (u.username||'').toLowerCase().includes(umQ) || (u.noRekening||'').includes(umQ));
   return `
-    <div class="page-title">Manajemen Pengguna<span class="sub">${realUsers.length} akun terdaftar</span></div>
-    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openUserModal(null,'${tabRole}')">${ICONS.plus} Tambah ${groups.find(g=>g.role===tabRole).label}</button>
-    <div class="search-box" style="margin-bottom:14px;">${ICONS.search}<input id="search-umgmt" placeholder="Cari nama, username, atau no. rekening" value="${currentSubState.umQ||''}" oninput="currentSubState.umQ=this.value; renderContent()"></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Manajemen Pengguna<span class="sub">${realUsers.length} akun terdaftar</span></div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:2px;" onclick="openUserModal(null,'${tabRole}')">${ICONS.plus} Tambah ${groups.find(g=>g.role===tabRole).label}</button>
+    <div class="search-box" style="margin-bottom:2px;">${ICONS.search}<input id="search-umgmt" placeholder="Cari nama, username, atau no. rekening" value="${currentSubState.umQ||''}" oninput="currentSubState.umQ=this.value; renderContent()"></div>
+    </div>
     <div class="tabs">
       ${groups.map(g=>`<button class="${tabRole===g.role?'active':''}" onclick="currentSubState.roleTab='${g.role}'; renderContent()">${g.label}</button>`).join('')}
     </div>
@@ -6006,8 +6014,8 @@ function renderAdminSHU(user){
   const tab = currentSubState.shuTab||'saham';
 
   let html = '';
-  html += '<div class="page-title">SHU<span class="sub">Sisa Hasil Usaha</span></div>';
   html += '<div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">';
+  html += '<div class="page-title" style="margin:0 0 10px;">SHU<span class="sub">Sisa Hasil Usaha</span></div>';
   html += '<div class="stat-grid">';
   html += '<div class="stat-box"><div class="n">'+rupiah(poolBHT)+'</div><div class="l">Pool Bagi Hasil Tabungan</div></div>';
   html += '<div class="stat-box"><div class="n">'+rupiah(poolSHUSaham)+'</div><div class="l">Pool SHU Saham</div></div>';
@@ -6205,8 +6213,8 @@ function renderAdminSaham(user){
   const totalNilaiSesudah = ksForStats.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
   const pctPemupukan = DB.koperasi.saham.pemupukanPersen||0;
   return `
-    <div class="page-title">Saham<span class="sub">Kepemilikan saham</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Saham<span class="sub">Kepemilikan saham</span></div>
     <div class="stat-grid" style="margin-bottom:10px;">
       <div class="stat-box stat-info"><div class="n mono">${rupiah(totalNilaiAwal)}</div><div class="l">Total nilai saham (awal)</div></div>
       <div class="stat-box stat-gold"><div class="n mono">${rupiah(totalNilaiSesudah)}</div><div class="l">Total nilai saham (sesudah pemupukan${pctPemupukan?' '+pctPemupukan+'%':''})</div></div>
@@ -6806,13 +6814,13 @@ function renderSPBermasalahDetail(pembId){
   const rw = bmRiwayat(k);
   const grid5 = 'grid-template-columns:.35fr 1fr 1fr 1fr .5fr;';
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_spbermasalah')">${ICONS.chevronLeft}</button>Buku Angsuran Piutang Bermasalah</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_spbermasalah')">${ICONS.chevronLeft}</button>Buku Angsuran Piutang Bermasalah</span></div>
     <div class="card balance-card">
       <div class="label">${escapeHtml(k.nama)} ${lunas?'<span class="badge badge-green">LUNAS</span>':''}</div>
       <div class="amount" style="font-size:24px;">${rupiah(sisa)}</div>
       <div class="rekening">${escapeHtml(k.wilayah||'-')} &middot; Akad No. ${escapeHtml(k.no||'-')} (${escapeHtml(k.tahun||'')}) &middot; Jatuh tempo ${suratSPTanggal(jt)}</div>
     </div>
-    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
     <div class="stat-grid" style="margin-bottom:0;">
       <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(os)}</div><div class="l">Total kewajiban</div></div>
       <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(sisa)}</div><div class="l">Sisa tagihan</div></div>
@@ -7539,7 +7547,9 @@ function suratSPLoadLogoFile(input){
 function renderAdminLog(user){
   const logs = DB.logs.filter(l=>!l.aksi.startsWith('Masuk')&&!l.aksi.startsWith('Keluar')).slice().sort((a,b)=>new Date(b.waktu)-new Date(a.waktu));
   return `
-    <div class="page-title">Log Transaksi<span class="sub">${logs.length} catatan aktivitas</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0;">Log Transaksi<span class="sub">${logs.length} catatan aktivitas</span></div>
+    </div>
     <div class="card" style="padding:6px 18px;">
       ${logs.slice(0,100).map((l,i)=>`
         <div class="list-row">
@@ -7602,10 +7612,12 @@ function renderKoorAnggota(user){
   let anggota = nasabahOfKelompok(user.kelompokId).filter(u=>u.status!=='nonaktif');
   if(q) anggota = anggota.filter(u=>u.nama.toLowerCase().includes(q) || (u.noRekening||'').includes(q));
   return `
-    <div class="page-title">Daftar Anggota<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="toolbar-row toolbar-sticky" style="margin-bottom:14px;">
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Daftar Anggota<span class="sub">${kelompokName(user.kelompokId)}</span></div>
+    <div class="toolbar-row" style="margin-bottom:2px;">
       <div class="search-box">${ICONS.search}<input id="search-koor-anggota" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
       <button class="btn btn-primary btn-compact" onclick="openTambahAnggotaModal('${user.kelompokId}')">${ICONS.plus} Tambah</button>
+    </div>
     </div>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map((u,i)=>`
@@ -7629,9 +7641,11 @@ function renderKoorUserMgmt(user){
   const belum = semua.filter(u=>u._noAkun).length;
   const filtered = q ? anggota.filter(u=>(u.nama||'').toLowerCase().includes(q) || (u.noRekening||'').includes(q)) : anggota;
   return `
-    <div class="page-title">Management Akun<span class="sub">${kelompokName(user.kelompokId)} &middot; ${anggota.length} akun</span></div>
-    <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openUserModal(null,'nasabah','${user.kelompokId}')">${ICONS.plus} Buat Akun Nasabah</button>
-    <div class="search-box" style="margin-bottom:14px;">${ICONS.search}<input id="search-koor-um" placeholder="Cari nama atau no. rekening" value="${currentSubState.umQ||''}" oninput="currentSubState.umQ=this.value; renderContent()"></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Management Akun<span class="sub">${kelompokName(user.kelompokId)} &middot; ${anggota.length} akun</span></div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:2px;" onclick="openUserModal(null,'nasabah','${user.kelompokId}')">${ICONS.plus} Buat Akun Nasabah</button>
+    <div class="search-box" style="margin-bottom:2px;">${ICONS.search}<input id="search-koor-um" placeholder="Cari nama atau no. rekening" value="${currentSubState.umQ||''}" oninput="currentSubState.umQ=this.value; renderContent()"></div>
+    </div>
     <div class="card" style="padding:6px 18px;">
       ${filtered.length ? filtered.map((u,i)=>`
         <div class="list-row">
@@ -7673,9 +7687,9 @@ function renderKoorSaham(user){
   const q = (currentSubState.q||'').toLowerCase();
   const pemilikTerFilter = q ? daftarPemilik.filter(n=>n.toLowerCase().includes(q)) : daftarPemilik;
   return `
-    <div class="page-title">Saham<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:4px 0 2px;margin:-4px 0 2px;">
-      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Saham<span class="sub">${kelompokName(user.kelompokId)}</span></div>
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
         <div class="stat-box stat-info"><div class="n mono">${rupiah(totalNilaiAwal)}</div><div class="l">Total nilai saham (awal)</div></div>
         <div class="stat-box stat-gold"><div class="n mono">${rupiah(totalNilaiSesudah)}</div><div class="l">Total nilai saham (sesudah pemupukan${pct?' '+pct+'%':''})</div></div>
         <div class="stat-box stat-primary"><div class="n">${totalLembar}</div><div class="l">Total lembar saham</div></div>
@@ -7715,8 +7729,8 @@ function renderKoorTabungan(user){
   const totalRekening = DB.tabunganAccounts.filter(a=>anggotaIds.includes(a.userId)).length;
   const totalSaldo = DB.tabunganAccounts.filter(a=>anggotaIds.includes(a.userId)).reduce((s,a)=>s+(a.saldo||0),0);
   return `
-    <div class="page-title">Tabungan<span class="sub">${kelompokName(user.kelompokId)}</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Tabungan<span class="sub">${kelompokName(user.kelompokId)}</span></div>
     <div class="stat-grid" style="margin-bottom:10px;">
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalRekening}</div><div class="l">Total Rekening Tabungan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSaldo)}</div><div class="l">Total Saldo</div></div>
@@ -7743,8 +7757,8 @@ function renderKoorTabunganDetail(user, userId){
   const accs = userAccounts(nas.id);
   const tx = txForUser(nas.id).slice(0,30);
   return `
-    <div class="page-title"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('koor_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('koor_tabungan')">${ICONS.chevronLeft}</button>Buku Tabungan</span></div>
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
@@ -7781,8 +7795,8 @@ const anggota = nasabahOfKelompok(user.kelompokId);
   const totalBelumLunas = belumLunas.length;
   const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
   return `
-    <div class="page-title">Pembiayaan<span class="sub">Anggota ${kelompokName(user.kelompokId)}</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Pembiayaan<span class="sub">Anggota ${kelompokName(user.kelompokId)}</span></div>
     <div class="stat-grid" style="margin-bottom:10px;grid-template-columns:repeat(3,1fr);">
       <div class="stat-box"><div class="n mono" style="font-size:16px;">${totalPembiayaan}</div><div class="l">Total Pembiayaan</div></div>
       <div class="stat-box stat-primary"><div class="n mono" style="font-size:16px;">${rupiah(totalSisa)}</div><div class="l">Total Sisa Pembiayaan</div></div>
@@ -8082,7 +8096,9 @@ function renderNasInfo(user){
     ? '<img src="'+iconKoperasi+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;">'
     : '<div style="font-size:56px;line-height:1;">'+(DB.koperasi.icon||'🏦')+'</div>';
   return `
-    <div class="page-title">Info Koperasi<span class="sub">${DB.koperasi.nama}</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Info Koperasi<span class="sub">${DB.koperasi.nama}</span></div>
+    </div>
     <div class="card" style="text-align:center;padding:24px 16px;">
       <div style="margin-bottom:12px;">${iconEl}</div>
       <div style="font-size:18px;font-weight:700;margin-bottom:4px;">${DB.koperasi.nama}</div>
@@ -8160,8 +8176,8 @@ function renderNasTabungan(user){
   const selected = accs.find(x=>x.j.id===activeJenisId) || accs[0];
   const tx = txForUser(user.id).filter(t=>t.jenisId===activeJenisId);
   return `
-    <div class="page-title">Buku Tabungan<span class="sub">${user.nama}</span></div>
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Buku Tabungan<span class="sub">${user.nama}</span></div>
     ${accs.length>1 ? `<div class="tabs">${accs.map(({j})=>`<button class="${j.id===activeJenisId?'active':''}" onclick="currentSubState.tabJenisId='${j.id}'; renderContent()">${j.nama}</button>`).join('')}</div>` : ''}
     <div class="hero-balance">
       <div class="greet">Saldo ${selected.j.nama}</div>
@@ -8195,7 +8211,9 @@ function renderNasPembiayaan(user){
     `;
   }
   return `
-    <div class="page-title">Pembiayaan<span class="sub">${user.nama}</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0 0 10px;">Pembiayaan<span class="sub">${user.nama}</span></div>
+    </div>
     ${list.map(p=>{
       const totalKew = p.jumlahPinjaman + marginNominalOf(p);
       const totalDibayar = (p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);
