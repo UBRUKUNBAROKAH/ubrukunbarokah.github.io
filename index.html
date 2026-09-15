@@ -2439,7 +2439,9 @@ function renderAdminBeranda(user){
   const showAllStats = !!currentSubState.berandaShowAllStats;
 
   return `
-    <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0;">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
+    </div>
     <div class="card balance-card" style="margin-bottom:18px;">
       <div class="label">Total Aset (Neraca)</div>
       <div class="amount mono">${rupiah(totalAset)}</div>
@@ -7577,7 +7579,9 @@ function renderKoorBeranda(user){
   const kasBersih = kasKoordinator(user.id);
   const hutangAdmin = totalHutangKoor(user.id);
   return `
-    <div class="page-title">Halo, ${user.nama.split(' ')[0]}<span class="sub">${kelompok?kelompok.nama:'-'}</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0;">Halo, ${user.nama.split(' ')[0]}<span class="sub">${kelompok?kelompok.nama:'-'}</span></div>
+    </div>
     <div class="stat-grid">
       <div class="stat-box"><div class="n">${anggota.length}</div><div class="l">Anggota binaan</div></div>
       <div class="stat-box"><div class="n mono">${rupiah(totalSimpanan)}</div><div class="l">Total simpanan</div></div>
@@ -8046,7 +8050,9 @@ function renderNasBeranda(user){
   const marquee = `<div class="ubr-marquee"><span class="ubr-shine"></span><div class="ubr-track">${_msgs.map(m=>`<span>${_orn}${m}</span>`).join('')}</div></div>`;
   const chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   return `
-    <div class="page-title">Beranda<span class="sub">${DB.koperasi.nama}</span></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
+    <div class="page-title" style="margin:0;">Beranda<span class="sub">${DB.koperasi.nama}</span></div>
+    </div>
     ${marquee}
 
     <div class="card" style="cursor:pointer;padding:18px;display:flex;align-items:center;gap:14px;" onclick="go('profil_saya')">
