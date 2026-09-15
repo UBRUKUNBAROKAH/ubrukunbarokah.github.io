@@ -7656,22 +7656,27 @@ function renderKoorSaham(user){
   const totalNilaiAwal = ks.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*(j.nominalPerLembar||0):0); },0);
   const totalNilaiSesudah = ks.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
   const pct = DB.koperasi.saham.pemupukanPersen||0;
+  const q = (currentSubState.q||'').toLowerCase();
+  const pemilikTerFilter = q ? daftarPemilik.filter(n=>n.toLowerCase().includes(q)) : daftarPemilik;
   return `
     <div class="page-title">Saham<span class="sub">${kelompokName(user.kelompokId)}</span></div>
-    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
-      <div class="stat-box stat-info"><div class="n mono">${rupiah(totalNilaiAwal)}</div><div class="l">Total nilai saham (awal)</div></div>
-      <div class="stat-box stat-gold"><div class="n mono">${rupiah(totalNilaiSesudah)}</div><div class="l">Total nilai saham (sesudah pemupukan${pct?' '+pct+'%':''})</div></div>
-      <div class="stat-box stat-primary"><div class="n">${totalLembar}</div><div class="l">Total lembar saham</div></div>
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:4px 0 2px;margin:-4px 0 2px;">
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
+        <div class="stat-box stat-info"><div class="n mono">${rupiah(totalNilaiAwal)}</div><div class="l">Total nilai saham (awal)</div></div>
+        <div class="stat-box stat-gold"><div class="n mono">${rupiah(totalNilaiSesudah)}</div><div class="l">Total nilai saham (sesudah pemupukan${pct?' '+pct+'%':''})</div></div>
+        <div class="stat-box stat-primary"><div class="n">${totalLembar}</div><div class="l">Total lembar saham</div></div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
+        ${jns.map(j=>{
+          const total = ks.filter(k=>k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0);
+          return `<div class="stat-box"><div class="n" style="font-size:13px;">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
+        }).join('')}
+      </div>
+      <div class="search-box">${ICONS.search}<input id="search-koor-saham" placeholder="Cari nama pemilik..." value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
     </div>
-    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px;">
-      ${jns.map(j=>{
-        const total = ks.filter(k=>k.jenisId===j.id).reduce((s,k)=>s+k.lembar,0);
-        return `<div class="stat-box"><div class="n" style="font-size:13px;">${total} lembar</div><div class="l">${j.nama}<br><span class="sub">${rupiah(nilaiSahamPerLembar(j))}/lbr &middot; Nilai ${rupiah(total*nilaiSahamPerLembar(j))}</span></div></div>`;
-      }).join('')}
-    </div>
-    <div class="section-label">Pemilik saham (${daftarPemilik.length})</div>
+    <div class="section-label">Pemilik saham (${pemilikTerFilter.length}${q?' dari '+daftarPemilik.length:''})</div>
     <div class="card" style="padding:6px 18px;">
-      ${daftarPemilik.length ? daftarPemilik.map((nama,i)=>{
+      ${pemilikTerFilter.length ? pemilikTerFilter.map((nama,i)=>{
         const holdings = ks.filter(k=>k.nama===nama);
         const total = holdings.reduce((s,k)=>{ const j=jns.find(j=>j.id===k.jenisId); return s+(j?k.lembar*nilaiSahamPerLembar(j):0); },0);
         return `<div class="list-row"${i>0?' style="border-top:1px dashed var(--border);"':''}>
@@ -7679,7 +7684,7 @@ function renderKoorSaham(user){
           <div class="info"><div class="title">${nama}</div><div class="sub" style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;align-items:center;">${holdings.map(k=>{ const j=jns.find(j=>j.id===k.jenisId); return `<span style="font-size:10px;background:var(--primary-soft);padding:2px 8px;border-radius:4px;">${j?j.nama:'-'}: ${k.lembar}</span>`; }).join('')}</div></div>
           <div style="display:flex;align-items:center;gap:6px;"><div class="amt mono">${rupiah(total)}</div></div>
         </div>`;
-      }).join('') : `<div class="empty-state"><div class="ic">${ICONS.coin}</div><div class="t">Belum ada pemilik saham</div><div class="d">Belum ada anggota di kelompok ini yang memiliki saham</div></div>`}
+      }).join('') : `<div class="empty-state"><div class="ic">${q?'🔍':ICONS.coin}</div><div class="t">${q?'Tidak ditemukan':'Belum ada pemilik saham'}</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota di kelompok ini yang memiliki saham'}</div></div>`}
     </div>
   `;
 }
