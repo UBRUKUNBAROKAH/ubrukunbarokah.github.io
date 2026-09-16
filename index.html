@@ -4306,13 +4306,16 @@ function waInfoAkunTemplate(u){
   var kop = DB.koperasi ? DB.koperasi.nama : 'Koperasi';
   var tpl = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.waInfoTemplate) ? DB.koperasi.info.waInfoTemplate : '';
   if(!tpl){
-    tpl = 'Assalamu\'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu\'alaikum Wr. Wb.';
+    tpl = 'Assalamu\'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}:\n{link}\n\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu\'alaikum Wr. Wb.';
   }
-  return tpl
+  var appLink = (typeof location!=='undefined' && location.origin && location.protocol!=='file:' && /^https?:/.test(location.protocol)) ? location.origin+'/' : 'https://ubrukunbarokah.github.io/';
+  var msg = tpl
     .split('{nama}').join(u.nama)
     .split('{koperasi}').join(kop)
     .split('{username}').join(u.username)
     .split('{password}').join(u.password);
+  if(tpl.indexOf('{link}')>=0) return msg.split('{link}').join(appLink);
+  return msg + '\n\nLink aplikasi : ' + appLink;
 }
 function kirimInfoAkun(userId){
   var u = userById(userId);
@@ -5419,7 +5422,7 @@ function renderPengaturanWA(){
     </div>`;
   const tplContent = `
     <div class="hint" style="margin-bottom:10px;">Template pesan WhatsApp yang dikirim ke nasabah saat tombol "Kirim Info Akun" diklik.</div>
-    <div class="form-row"><label>Templat pesan Info Akun</label><textarea id="set-wa-template" rows="8" style="font-size:12px;">${(DB.koperasi.info&&DB.koperasi.info.waInfoTemplate) || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}.\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Kode otomatis yang diganti saat dikirim: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b></span></div>
+    <div class="form-row"><label>Templat pesan Info Akun</label><textarea id="set-wa-template" rows="8" style="font-size:12px;">${(DB.koperasi.info&&DB.koperasi.info.waInfoTemplate) || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}:\n{link}\n\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Kode otomatis yang diganti saat dikirim: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b>, <b>{link}</b> (link aplikasi).</span></div>
     <button class="btn btn-primary btn-block" onclick="saveTemplateWA()">Simpan Templat</button>`;
   const accordion = (id,label,desc,open,content) => `
     <div class="card" style="padding:0;overflow:hidden;${open?'border-color:var(--primary);':''}">
