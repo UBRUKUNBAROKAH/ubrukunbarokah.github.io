@@ -384,6 +384,7 @@ input,select{font-family:inherit;}
 .tx-list-item .tx-ic{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--shadow-neu-xs);}
 .tx-list-item .tx-ic.in{background:var(--primary-soft);color:var(--ok);}
 .tx-list-item .tx-ic.out{background:var(--danger-soft);color:var(--danger);}
+.tx-list-item .tx-ic.transin{background:var(--info-soft);color:var(--info);}
 .tx-list-item .tx-info{flex:1;min-width:0;}
 .tx-list-item .tx-info .t{font-weight:600;font-size:13px;}
 .tx-list-item .tx-info .s{font-size:11px;color:var(--muted);margin-top:1px;}
@@ -8706,7 +8707,7 @@ function renderNasTabungan(user){
     <div class="card" style="padding:2px 16px;">
       ${tx.length ? tx.map(t=>`
         <div class="tx-list-item">
-          <div class="tx-ic ${t.tipe==='setor'?'in':'out'}">${txIsPlus(t)?ICONS.down:ICONS.up}</div>
+          <div class="tx-ic ${t.tipe==='setor'?'in':t.tipe==='transfer_masuk'?'transin':'out'}">${txIsPlus(t)?ICONS.down:ICONS.up}</div>
           <div class="tx-info"><div class="t">${jenisName(t.jenisId)} ${txIsTransferTipe(t)?`<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:var(--gold);margin-left:4px;">${txBadgeLabel(t)}</span>`:''}</div><div class="s">${fmtDateShort(t.tanggal)} &middot; ${t.tipe==='setor'?'Setor':t.tipe==='tarik'?'Tarik':txBadgeLabel(t)}${t.keterangan?` — ${t.keterangan}`:''}</div></div>
           <div class="tx-amt ${txIsPlus(t)?'plus':'minus'}">${txIsPlus(t)?'+':'-'}${rupiah(t.jumlah)}</div>
         </div>
