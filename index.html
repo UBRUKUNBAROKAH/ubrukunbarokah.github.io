@@ -4395,13 +4395,15 @@ function submitEditPengajuan(pembId){
 function renderProfilSaya(user){
   const u = currentUser();
   if(!u) return '';
+  const _pAccs = userAccounts(u.id);
+  const _noRekP = u.noRekening || (_pAccs[0] ? _pAccs[0].acc.noRekening : '') || '';
   scheduleTgPoll();
   const st = tgLinkStatusForUser(u);
   return `
     <div class="page-title">Profil Saya<span class="sub">Informasi akun Anda</span></div>
     <div class="card">
       <div class="form-row"><label>Nama lengkap</label><input type="text" id="ps-nama" value="${u.nama}" placeholder="Nama lengkap"></div>
-      <div class="form-row"><label>Nomor rekening <span class="hint" style="font-weight:400;">(nomor untuk transfer / identitas Anda)</span></label><div style="display:flex;align-items:center;gap:8px;"><input type="text" value="${u.noRekening||'-'}" disabled style="flex:1;opacity:.7;">${u.noRekening?`<button type="button" onclick="copyText('${u.noRekening}','No. rekening')" style="background:var(--primary-soft);border:none;border-radius:8px;color:var(--primary);padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;">Salin</button>`:''}</div></div>
+      <div class="form-row"><label>Nomor rekening <span class="hint" style="font-weight:400;">(nomor untuk transfer / identitas Anda)</span></label><div style="display:flex;align-items:center;gap:8px;"><input type="text" value="${_noRekP||'-'}" disabled style="flex:1;opacity:.7;">${_noRekP?`<button type="button" onclick="copyText('${_noRekP}','No. rekening')" style="background:var(--primary-soft);border:none;border-radius:8px;color:var(--primary);padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;">Salin</button>`:''}</div>${_pAccs.length?`<div style="font-size:11px;color:var(--muted);margin-top:4px;">Rekening per jenis: ${_pAccs.map(a=>jenisName(a.j.id)+' '+a.acc.noRekening).join(' &middot; ')}</div>`:''}</div></div>
       <div class="form-row"><label>Username</label><input type="text" id="ps-username" value="${u.username||''}" placeholder="Nama pengguna"></div>
       <div class="form-row"><label>Role</label><input type="text" value="${roleLabel(u.role)}" disabled style="opacity:.6;"></div>
       <div class="form-row"><label>Kata sandi baru <span class="hint" style="font-weight:400;">(kosongkan jika tidak ingin ganti)</span></label><input type="text" id="ps-password" placeholder="Kata sandi baru"></div>
@@ -8449,6 +8451,8 @@ function renderNasBeranda(user){
     return s + Math.max(totalKew - totalDibayar, 0);
   },0);
   const isiAwal = (user.nama||' ').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const _uAccs = userAccounts(user.id);
+  const _noRek = user.noRekening || (_uAccs[0] ? _uAccs[0].acc.noRekening : '') || '';
   const _sl = (DB.koperasi.info && DB.koperasi.info.slogan) ? DB.koperasi.info.slogan.trim() : '';
   const _msgs = _sl ? [DB.koperasi.nama+' &middot; '+_sl, _sl, 'Tabungan, pembiayaan & saham syariah', 'Menuju mandiri bersama '+DB.koperasi.nama]
                     : [DB.koperasi.nama, 'Simpan pinjam menyejahterakan anggota', 'Tabungan & pembiayaan syariah', 'Wujudkan masa depan bersama '+DB.koperasi.nama];
@@ -8481,13 +8485,14 @@ function renderNasBeranda(user){
           </div>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".85"><path d="M3 9a15 15 0 0 1 18 0"/><path d="M6.5 12.5a10 10 0 0 1 11 0"/><path d="M9.8 16a5 5 0 0 1 4.4 0"/><circle cx="12" cy="19" r="1"/></svg>
         </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:19px;letter-spacing:2.5px;margin-top:12px;text-shadow:0 1px 2px rgba(0,0,0,.25);">${user.noRekening || '----------'}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:19px;letter-spacing:2.5px;margin-top:12px;text-shadow:0 1px 2px rgba(0,0,0,.25);">${_noRek || '----------'}</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
           <div style="min-width:0;">
             <div style="font-size:8.5px;letter-spacing:1.4px;opacity:.75;font-weight:700;">NOMOR REKENING &middot; ${roleLabel(user.role).toUpperCase()}</div>
             <div style="font-family:'Sora',sans-serif;font-weight:700;font-size:16px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.nama}</div>
+            ${_uAccs.length ? `<div style="font-size:9px;opacity:.85;margin-top:6px;font-family:'IBM Plex Mono',monospace;">${_uAccs.map(a=>jenisName(a.j.id)+' '+a.acc.noRekening).join(' &middot; ')}</div>` : ''}
           </div>
-          <button type="button" onclick="event.stopPropagation();copyText('${user.noRekening}','No. rekening')" style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:10px;color:#fff;padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.2);">📋 Salin</button>
+          <button type="button" onclick="event.stopPropagation();copyText('${_noRek}','No. rekening')" style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:10px;color:#fff;padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.2);">📋 Salin</button>
         </div>
       </div>
       <div style="position:relative;background:rgba(0,0,0,.14);height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:8.5px;letter-spacing:1.6px;color:rgba(255,255,255,.9);font-weight:700;">
