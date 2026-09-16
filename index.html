@@ -899,6 +899,14 @@ function toSnake(obj) {
 ========================================================= */
 let DB = {}; // Global DB object (mirrors localStorage structure)
 let DB_LOADED = false;
+let TABUNGAN_NONAKTIF_COL = false; // apakah tabel tabungan_accounts sudah punya kolom nonaktif
+
+async function checkTabunganNonaktifCol(){
+  try{
+    const { error } = await supabaseClient.from(TABLES.tabungan_accounts).select('nonaktif').limit(1);
+    TABUNGAN_NONAKTIF_COL = !error;
+  }catch(e){ TABUNGAN_NONAKTIF_COL = false; }
+}
 
 // ---- Initialize DB from Supabase ----
 async function initSupabaseDB() {
@@ -1034,7 +1042,8 @@ async function initSupabaseDB() {
     // Ensure defaults
     ensureDefaults();
     DB_LOADED = true;
-    
+    checkTabunganNonaktifCol();
+
     return DB;
     
   } catch (err) {
@@ -1212,7 +1221,11 @@ async function syncAllToSupabase() {
   // Sync jenis tabungan
   await safeUpsert(TABLES.jenis_tabungan, toSnake(DB.koperasi?.jenisTabungan));
   // Sync tabungan accounts
-  await safeUpsert(TABLES.tabungan_accounts, toSnake(DB.tabunganAccounts));
+  let accountsSync = toSnake(DB.tabunganAccounts);
+  if(!TABUNGAN_NONAKTIF_COL && Array.isArray(accountsSync)){
+    accountsSync = accountsSync.map(r=>{ const o = Object.assign({}, r); delete o.nonaktif; return o; });
+  }
+  await safeUpsert(TABLES.tabungan_accounts, accountsSync, 'tabungan_accounts');
   // Sync tabungan tx
   const txSnake = DB.tabunganTx?.map(t => {
     const s = toSnake(t);
@@ -2123,6 +2136,389 @@ function doTarik(userId, jenisId, jumlah, keterangan){
   return {ok:true};
 }
 /* =========================================================
+   FITUR TRANSFER TABUNGAN & BAYAR PEMBIAYAAN DARI TABUNGAN
+========================================================= */
+const ICON_SWAP = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>';
+function copyText(txt, label){
+  const done = ()=>toast((label||'Nomor rekening')+' disalin');
+  const fb = ()=>{
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove(); done();
+    }catch(e){ toast('Gagal menyalin'); }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(fb); }
+  else fb();
+}
+function copyBtn(nomor){
+  return `<button class="icon-btn-sm ic-primary" style="padding:4px;flex-shrink:0;" title="Salin nomor rekening ${nomor}" onclick="event.stopPropagation();copyText('${nomor}','No. rekening')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>`;
+}
+function txBadgeLabel(t){
+  if(t.tipe==='setor') return 'SETOR';
+  if(t.tipe==='tarik') return 'TARIK';
+  if(t.tipe==='transfer_keluar') return 'TRANSFER KELUAR';
+  if(t.tipe==='transfer_masuk') return 'TRANSFER MASUK';
+  if(t.tipe==='bayar_sp') return 'BAYAR SP';
+  return 'TRANSFER';
+}
+function txBadgeColor(t){
+  if(t.tipe==='setor') return 'var(--ok)';
+  if(t.tipe==='tarik') return 'var(--danger)';
+  return 'var(--gold)';
+}
+function txIsPlus(t){ return t.tipe==='setor' || t.tipe==='transfer_masuk'; }
+function txIsTransferTipe(t){ return t.tipe==='transfer_keluar' || t.tipe==='transfer_masuk' || t.tipe==='bayar_sp'; }
+
+function _transferModalUserOptions(){
+  const cu = currentUser();
+  if(cu.role==='nasabah') return [cu];
+  const pool = cu.role==='koordinator' ? nasabahOfKelompok(cu.kelompokId) : DB.users.filter(u=>u.role==='nasabah');
+  return pool.filter(u=>DB.tabunganAccounts.some(a=>a.userId===u.id && !a.nonaktif));
+}
+function _transferModalUserId(){
+  const f = document.getElementById('trsf-asal-user-forced');
+  return f ? f.value : (document.getElementById('trsf-asal-user') ? document.getElementById('trsf-asal-user').value : null);
+}
+function populateAccSelect(selId, userId, excludeJenisId){
+  const sel = document.getElementById(selId);
+  if(!sel) return;
+  const opts = userAccounts(userId).filter(a=>!a.acc.nonaktif && a.j.id!==excludeJenisId);
+  sel.innerHTML = opts.length
+    ? opts.map(a=>`<option value="${a.j.id}">${a.j.nama} &middot; ${rupiah(a.acc.saldo)}</option>`).join('')
+    : '<option value="">- Tidak ada rekening aktif -</option>';
+}
+function transferSelectUser(){
+  const uid = _transferModalUserId();
+  populateAccSelect('trsf-asal-jenis', uid);
+  transferAsalChanged();
+  transferLookupTujuan();
+}
+function transferAsalChanged(){
+  const uid = _transferModalUserId();
+  const asal = document.getElementById('trsf-asal-jenis') ? document.getElementById('trsf-asal-jenis').value : null;
+  populateAccSelect('trsf-self-jenis', uid, asal);
+}
+function transferModeChange(m){
+  const sbBtn = document.getElementById('trsf-mode-self');
+  const obBtn = document.getElementById('trsf-mode-other');
+  if(sbBtn) sbBtn.className = 'btn ' + (m==='self'?'btn-primary':'btn-outline');
+  if(obBtn) obBtn.className = 'btn ' + (m==='other'?'btn-primary':'btn-outline');
+  const sb = document.getElementById('trsf-self-block');
+  const ob = document.getElementById('trsf-other-block');
+  if(sb) sb.style.display = m==='self' ? '' : 'none';
+  if(ob) ob.style.display = m==='other' ? '' : 'none';
+  if(m==='self') transferAsalChanged();
+}
+let _trsfDstAccs = [];
+function transferLookupTujuan(){
+  const infoEl = document.getElementById('trsf-tujuan-info');
+  if(!infoEl) return;
+  const no = String((document.getElementById('trsf-tujuan-no') ? document.getElementById('trsf-tujuan-no').value : '') || '').trim();
+  const jenisSel = document.getElementById('trsf-tujuan-jenis');
+  const jenisRow = document.getElementById('trsf-tujuan-jenis-row');
+  _trsfDstAccs = [];
+  if(!no){
+    infoEl.innerHTML='';
+    if(jenisRow) jenisRow.style.display='none';
+    if(jenisSel) jenisSel.innerHTML='';
+    return;
+  }
+  let accs = DB.tabunganAccounts.filter(a=>String(a.noRekening||'')===no);
+  if(!accs.length){
+    const m = DB.users.find(u=>u.role==='nasabah' && String(u.noRekening||'')===no);
+    if(m) accs = userAccounts(m.id).map(x=>x.acc);
+  }
+  if(!accs.length){
+    infoEl.innerHTML='<div class="hint" style="color:var(--danger);">No. rekening tidak ditemukan.</div>';
+    if(jenisRow) jenisRow.style.display='none';
+    return;
+  }
+  _trsfDstAccs = accs.filter(a=>!a.nonaktif);
+  const u = userById(accs[0].userId);
+  const asal = _transferModalUserId();
+  const isSameAcc = accs.some(a=>a.userId===asal);
+  const adaNonaktif = accs.some(a=>a.nonaktif);
+  if(accs.length>1){
+    if(jenisRow && jenisSel){
+      jenisRow.style.display='';
+      jenisSel.innerHTML = _trsfDstAccs.length
+        ? _trsfDstAccs.map(a=>`<option value="${a.id}">${jenisName(a.jenisId)} &middot; Saldo ${rupiah(a.saldo||0)}</option>`).join('')
+        : '<option value="">- Semua rekening nonaktif -</option>';
+    }
+  } else if(jenisRow){ jenisRow.style.display='none'; }
+  infoEl.innerHTML = `
+    <div style="background:var(--primary-soft);border-radius:6px;padding:8px 10px;font-size:12.5px;">
+      <div style="font-weight:700;">${u.nama} &middot; ${kelompokName(u.kelompokId)}</div>
+      <div>${accs.map(a=>jenisName(a.jenisId)).join(', ')}</div>
+      ${accs.length>1?'<div style="color:var(--muted);">Nasabah punya beberapa rekening &mdash; pilih jenis di form di bawah.</div>':''}
+      ${adaNonaktif?'<div style="color:var(--danger);font-weight:700;">Ada rekening NONAKTIF — tidak dapat menjadi tujuan</div>':''}
+      ${isSameAcc?'<div style="color:var(--danger);font-weight:700;">Rekening milik nasabah yang sama (bukan transfer antar rekening sendiri)</div>':''}
+    </div>`;
+}
+function openTransferModal(prefUserId){
+  const cu = currentUser();
+  if(!cu) return;
+  const candidates = _transferModalUserOptions();
+  if(!candidates.length){ toast('Belum ada rekening tabungan yang aktif'); return; }
+  const initialUser = prefUserId && candidates.some(u=>u.id===prefUserId) ? prefUserId
+    : (cu.role==='nasabah' ? cu.id : candidates[0].id);
+  const forced = cu.role==='nasabah' ? cu.id : (prefUserId ? prefUserId : null);
+  const userSel = cu.role==='nasabah' ? '' : `
+    <div class="form-row"><label>Nasabah (pemilik rekening asal)</label>
+      <select id="trsf-asal-user" onchange="transferSelectUser()">
+        ${candidates.map(u=>`<option value="${u.id}" ${initialUser===u.id?'selected':''}>${u.nama} &middot; ${kelompokName(u.kelompokId)}</option>`).join('')}
+      </select>
+    </div>`;
+  openModal(`
+    <h3>Transfer Tabungan</h3>
+    ${userSel}
+    ${forced?`<input type="hidden" id="trsf-asal-user-forced" value="${forced}">`:``}
+    <div class="form-row"><label>Rekening asal (uang dikirim dari)</label><select id="trsf-asal-jenis" onchange="transferAsalChanged()"></select></div>
+    <div class="form-row"><label>Tujuan</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" id="trsf-mode-self" class="btn btn-outline" style="font-size:12px;" onclick="transferModeChange('self')">Rekening sendiri</button>
+        <button type="button" id="trsf-mode-other" class="btn btn-outline" style="font-size:12px;" onclick="transferModeChange('other')">Ke nasabah lain</button>
+      </div>
+    </div>
+    <div id="trsf-self-block">
+      <div class="form-row"><label>Rekening tujuan (antar jenis)</label><select id="trsf-self-jenis"></select></div>
+    </div>
+    <div id="trsf-other-block" style="display:none;">
+      <div class="form-row"><label>No. rekening tujuan</label><input type="text" id="trsf-tujuan-no" placeholder="cth. 2026-10001" oninput="transferLookupTujuan()"></div>
+      <div id="trsf-tujuan-info" style="margin-bottom:8px;"></div>
+      <div class="form-row" id="trsf-tujuan-jenis-row" style="display:none;"><label>Rekening tujuan</label><select id="trsf-tujuan-jenis"></select></div>
+    </div>
+    <div class="form-row"><label>Nominal (Rp)</label><input type="number" id="trsf-jumlah" min="0" step="1000" placeholder="cth. 50000"></div>
+    <div class="form-row"><label>Keterangan (opsional)</label><input type="text" id="trsf-ket" placeholder="cth. Transfer ke Ani"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="confirmTransfer()">Lanjut</button>
+    </div>
+  `);
+  transferSelectUser();
+  transferModeChange('self');
+}
+function confirmTransfer(){
+  const srcUserId = _transferModalUserId();
+  const srcJenisEl = document.getElementById('trsf-asal-jenis');
+  if(!srcUserId || !srcJenisEl || !srcJenisEl.value){ toast('Pilih rekening asal'); return; }
+  const srcJenisId = srcJenisEl.value;
+  const modeSelf = document.getElementById('trsf-mode-self').classList.contains('btn-primary');
+  let dstUserId, dstJenisId, dstNama, dstJenisNama;
+  if(modeSelf){
+    const dstEl = document.getElementById('trsf-self-jenis');
+    if(!dstEl || !dstEl.value){ toast('Pilih rekening tujuan'); return; }
+    dstJenisId = dstEl.value;
+    dstUserId = srcUserId;
+    dstNama = userById(srcUserId).nama;
+    dstJenisNama = jenisName(dstJenisId);
+  } else {
+    const jenisSel = document.getElementById('trsf-tujuan-jenis');
+    let acc = null;
+    if(_trsfDstAccs.length===1){ acc = _trsfDstAccs[0]; }
+    else if(_trsfDstAccs.length>1 && jenisSel && jenisSel.value){ acc = DB.tabunganAccounts.find(a=>a.id===jenisSel.value); }
+    if(!acc){ toast('Pilih rekening tujuan yang valid'); return; }
+    dstUserId = acc.userId;
+    dstJenisId = acc.jenisId;
+    dstNama = userById(acc.userId).nama;
+    dstJenisNama = jenisName(acc.jenisId);
+  }
+  const jumlah = parseIdr(document.getElementById('trsf-jumlah').value);
+  if(!jumlah || jumlah<=0){ toast('Masukkan nominal yang valid'); return; }
+  const srcAcc = getAccount(srcUserId, srcJenisId);
+  if(!srcAcc){ toast('Rekening asal tidak ditemukan'); return; }
+  if(srcAcc.nonaktif){ toast('Rekening asal dinonaktifkan, tidak dapat transfer'); return; }
+  if(srcAcc.saldo < jumlah){ toast('Saldo rekening asal tidak mencukupi'); return; }
+  if(srcUserId===dstUserId && srcJenisId===dstJenisId){ toast('Rekening asal dan tujuan tidak boleh sama'); return; }
+  const dstAcc = getAccount(dstUserId, dstJenisId);
+  if(!dstAcc){ toast('Rekening tujuan tidak ditemukan'); return; }
+  if(dstAcc.nonaktif){ toast('Rekening tujuan dinonaktifkan'); return; }
+  const ket = String(document.getElementById('trsf-ket').value||'').trim();
+  confirmDialog('Transfer ' + rupiah(jumlah) + '?',
+    'Dari : ' + userById(srcUserId).nama + ' (' + jenisName(srcJenisId) + ')' +
+    '<br>Ke : ' + dstNama + ' (' + dstJenisNama + ')' +
+    (ket ? '<br>Keterangan : ' + ket : ''),
+    'warning',
+    ()=>{ prosesTransfer(srcUserId, srcJenisId, dstUserId, dstJenisId, jumlah, ket); },
+    'Ya, transfer');
+}
+function prosesTransfer(srcUserId, srcJenisId, dstUserId, dstJenisId, jumlah, ket){
+  const srcAcc = getAccount(srcUserId, srcJenisId);
+  const dstAcc = getAccount(dstUserId, dstJenisId);
+  if(!srcAcc || !dstAcc){ toast('Rekening tidak ditemukan'); return; }
+  if(srcAcc.nonaktif || dstAcc.nonaktif){ toast('Rekening nonaktif, tidak dapat transfer'); return; }
+  if(srcAcc.saldo < jumlah){ toast('Saldo tidak mencukupi'); return; }
+  const s = getSession();
+  const srcNama = userById(srcUserId).nama;
+  const dstNama = userById(dstUserId).nama;
+  srcAcc.saldo -= jumlah;
+  dstAcc.saldo += jumlah;
+  DB.tabunganTx.push({id:uid('tx'), userId:srcUserId, jenisId:srcJenisId, tipe:'transfer_keluar', jumlah, saldoSetelah:srcAcc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: 'Transfer ke ' + dstNama + ' (' + jenisName(dstJenisId) + ')' + (ket?' - '+ket:'')});
+  DB.tabunganTx.push({id:uid('tx'), userId:dstUserId, jenisId:dstJenisId, tipe:'transfer_masuk', jumlah, saldoSetelah:dstAcc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: 'Transfer dari ' + srcNama + ' (' + jenisName(srcJenisId) + ')' + (ket?' - '+ket:'')});
+  persist();
+  addLog('Transfer tabungan', srcNama + ' (' + jenisName(srcJenisId) + ') &rarr; ' + dstNama + ' (' + jenisName(dstJenisId) + ') - ' + rupiah(jumlah) + (ket?' ('+ket+')':''));
+  notifUserWA(srcUserId, waHeader('TRANSFER KELUAR')
+    + waAnggotaInfo(userById(srcUserId))
+    + '\nKe : ' + dstNama + ' (' + jenisName(dstJenisId) + ')'
+    + '\nNominal : ' + rupiah(jumlah)
+    + '\nSisa Saldo : ' + rupiah(srcAcc.saldo)
+    + '\nWaktu : ' + waTanggal()
+    + waFooter());
+  notifUserWA(dstUserId, waHeader('TRANSFER MASUK')
+    + waAnggotaInfo(userById(dstUserId))
+    + '\nDari : ' + srcNama + ' (' + jenisName(srcJenisId) + ')'
+    + '\nNominal : ' + rupiah(jumlah)
+    + '\nSaldo : ' + rupiah(dstAcc.saldo)
+    + '\nWaktu : ' + waTanggal()
+    + waFooter());
+  bigSuccess('Transfer berhasil : ' + rupiah(jumlah));
+  closeModal();
+  renderContent();
+}
+function openBayarSPModal(prefUserId){
+  const cu = currentUser();
+  if(!cu) return;
+  let candidates = cu.role==='nasabah' ? [cu]
+    : (cu.role==='koordinator' ? nasabahOfKelompok(cu.kelompokId) : DB.users.filter(u=>u.role==='nasabah'));
+  candidates = candidates.filter(u=>DB.pembiayaan.some(p=>p.userId===u.id && p.statusPengajuan==='approved' && p.status!=='lunas'));
+  if(!candidates.length){ toast('Tidak ada pembiayaan aktif yang bisa dibayar dari tabungan'); return; }
+  const initialUser = prefUserId && candidates.some(u=>u.id===prefUserId) ? prefUserId
+    : (cu.role==='nasabah' ? cu.id : candidates[0].id);
+  const forced = cu.role==='nasabah' ? cu.id : (prefUserId ? prefUserId : null);
+  const userSel = cu.role==='nasabah' ? '' : `
+    <div class="form-row"><label>Nasabah</label>
+      <select id="bsp-user" onchange="bspSelectUser()">
+        ${candidates.map(u=>`<option value="${u.id}" ${initialUser===u.id?'selected':''}>${u.nama} &middot; ${kelompokName(u.kelompokId)}</option>`).join('')}
+      </select>
+    </div>`;
+  openModal(`
+    <h3>Bayar Pembiayaan dari Tabungan</h3>
+    ${userSel}
+    ${forced?`<input type="hidden" id="bsp-user-forced" value="${forced}">`:``}
+    <div class="form-row"><label>Pembiayaan (SP)</label><select id="bsp-pemb" onchange="bspSelectPemb()"></select></div>
+    <div id="bsp-info" style="background:var(--gold-soft);border-radius:6px;padding:8px 10px;font-size:12.5px;margin-bottom:12px;"></div>
+    <div class="form-row"><label>Rekening tabungan sumber</label><select id="bsp-asal-jenis"></select></div>
+    <div class="form-row"><label>Nominal bayar (Rp)</label><input type="number" id="bsp-jumlah" min="0" step="5000" placeholder="cth. 38000"></div>
+    <div class="form-row"><label>Keterangan (opsional)</label><input type="text" id="bsp-ket"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-gold" onclick="confirmBayarSP()">Lanjut</button>
+    </div>
+  `);
+  bspSelectUser();
+}
+function _bspUserId(){
+  const f = document.getElementById('bsp-user-forced');
+  return f ? f.value : (document.getElementById('bsp-user') ? document.getElementById('bsp-user').value : null);
+}
+function bspSelectUser(){
+  const uid = _bspUserId();
+  const list = pembiayaanForUser(uid).filter(p=>p.statusPengajuan==='approved' && p.status!=='lunas');
+  const sel = document.getElementById('bsp-pemb');
+  sel.innerHTML = list.length
+    ? list.map(p=>`<option value="${p.id}">${rupiah(p.jumlahPinjaman)} &middot; sisa ${p.sisaAngsuran}x &middot; ${rupiah(p.angsuranPerBulan)}/bln</option>`).join('')
+    : '<option value="">- Tidak ada -</option>';
+  bspSelectPemb();
+}
+function bspSelectPemb(){
+  const uid = _bspUserId();
+  if(!uid) return;
+  const pembId = document.getElementById('bsp-pemb') ? document.getElementById('bsp-pemb').value : '';
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  const infoEl = document.getElementById('bsp-info');
+  if(!infoEl) return;
+  const srcSel = document.getElementById('bsp-asal-jenis');
+  if(p){
+    const totalKew = p.jumlahPinjaman + marginNominalOf(p);
+    const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
+    const sisaTagihan = Math.max(totalKew-totalDibayar,0);
+    infoEl.innerHTML = 'Angsuran ke-' + (p.tenor - p.sisaAngsuran + 1) + ' dari ' + p.tenor +
+      '<br>Angsuran/bulan : <b>' + rupiah(p.angsuranPerBulan) + '</b> &middot; Sisa tagihan : <b>' + rupiah(sisaTagihan) + '</b>';
+    const jm = document.getElementById('bsp-jumlah');
+    if(jm && !jm.value){ jm.value = Math.min(p.angsuranPerBulan, sisaTagihan); }
+  } else {
+    infoEl.innerHTML = '';
+  }
+  const opts = userAccounts(uid).filter(a=>!a.acc.nonaktif);
+  srcSel.innerHTML = opts.length
+    ? opts.map(a=>`<option value="${a.j.id}">${a.j.nama} &middot; Saldo ${rupiah(a.acc.saldo)}</option>`).join('')
+    : '<option value="">- Tidak ada rekening tabungan aktif -</option>';
+}
+function confirmBayarSP(){
+  const uid = _bspUserId();
+  const pembId = document.getElementById('bsp-pemb').value;
+  const srcJenis = document.getElementById('bsp-asal-jenis').value;
+  const jumlah = parseIdr(document.getElementById('bsp-jumlah').value);
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p){ toast('Pilih pembiayaan'); return; }
+  if(!srcJenis){ toast('Pilih rekening tabungan sumber'); return; }
+  if(!jumlah || jumlah<=0){ toast('Masukkan nominal yang valid'); return; }
+  if(jumlah < p.angsuranPerBulan){ toast('Minimal bayar 1 angsuran : ' + rupiah(p.angsuranPerBulan)); return; }
+  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
+  const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
+  const sisaTagihan = Math.max(totalKew-totalDibayar,0);
+  if(jumlah > sisaTagihan){ toast('Nominal lebih besar dari sisa tagihan (' + rupiah(sisaTagihan) + ')'); return; }
+  const srcAcc = getAccount(uid, srcJenis);
+  if(!srcAcc){ toast('Rekening sumber tidak ditemukan'); return; }
+  if(srcAcc.nonaktif){ toast('Rekening sumber dinonaktifkan'); return; }
+  if(srcAcc.saldo < jumlah){ toast('Saldo rekening sumber tidak mencukupi'); return; }
+  const ket = String(document.getElementById('bsp-ket').value||'').trim();
+  confirmDialog('Bayar ' + rupiah(jumlah) + ' dari tabungan?',
+    'Pembiayaan : ' + userById(p.userId).nama + ' (sisa ' + p.sisaAngsuran + ' angsuran)' +
+    '<br>Sumber : ' + jenisName(srcJenis),
+    'warning',
+    ()=>{ prosesBayarSP(uid, pembId, srcJenis, jumlah, ket); },
+    'Ya, bayar');
+}
+async function prosesBayarSP(userId, pembId, srcJenis, jumlah, ket){
+  const s = getSession();
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p){ toast('Pembiayaan tidak ditemukan'); return; }
+  const srcAcc = getAccount(userId, srcJenis);
+  if(!srcAcc || srcAcc.nonaktif || srcAcc.saldo < jumlah){ toast('Rekening sumber tidak valid'); return; }
+  const angsuranKe = p.tenor - p.sisaAngsuran + 1;
+  const srcSaldo0 = srcAcc.saldo;
+  const txLen0 = DB.tabunganTx.length;
+  const snapshot = {
+    riwayatLen: p.riwayatAngsuran.length,
+    sisaAngsuran: p.sisaAngsuran,
+    status: p.status,
+    setoranLen: DB.setoran.length,
+    dana: JSON.parse(JSON.stringify(DB.koperasi.aturKeuangan.dana||{}))
+  };
+  srcAcc.saldo -= jumlah;
+  DB.tabunganTx.push({id:uid('tx'), userId, jenisId:srcJenis, tipe:'bayar_sp', jumlah, saldoSetelah:srcAcc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: 'Bayar angsuran ke-' + angsuranKe + ' pembiayaan' + (ket ? ' - ' + ket : '')});
+  const r = doBayarAngsuran(pembId, s.userId, jumlah, nowISO());
+  if(!r.ok){
+    srcAcc.saldo = srcSaldo0;
+    DB.tabunganTx.length = txLen0;
+    toast(r.msg);
+    return;
+  }
+  addLog('Bayar pembiayaan dari tabungan', userById(userId).nama + ' - ' + jenisName(srcJenis) + ' - ' + rupiah(jumlah) + ' (angsuran ke-' + angsuranKe + ')');
+  const btn = document.querySelector('button[onclick="confirmBayarSP()"]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  const result = await persistNow();
+  if(!result.ok){
+    if(p && snapshot){
+      p.riwayatAngsuran.length = snapshot.riwayatLen;
+      p.sisaAngsuran = snapshot.sisaAngsuran;
+      p.status = snapshot.status;
+      DB.setoran.length = snapshot.setoranLen;
+      DB.koperasi.aturKeuangan.dana = snapshot.dana;
+      srcAcc.saldo = srcSaldo0;
+      DB.tabunganTx.length = txLen0;
+    }
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+    renderContent();
+    return;
+  }
+  bigSuccess('Angsuran tercatat & dibayar dari tabungan');
+  closeModal();
+  renderContent();
+}
+/* =========================================================
    KAS KOORDINATOR & HUTANG ADMIN KE KOORDINATOR
    Dana yang dipegang koordinator (dari setoran yg belum disetor
    ke admin) berkurang duluan saat ada penarikan lewat koordinator.
@@ -2880,7 +3276,7 @@ function renderAdminAnggota(user){
           <div class="avatar">${initials(u.nama)}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${u.nama} <span class="badge ${(u.status||'aktif')==='aktif'?'badge-green':'badge-red'}" style="font-size:9.5px;">${u.status||'aktif'}</span>${u._noAkun?'<span class="badge badge-red" style="font-size:9.5px;" title="Belum ada akun login, data hanya dari tabel anggota">Belum ada akun</span>':''}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">${kelompokName(u.kelompokId)} &middot; ${u.noRekening} ${copyBtn(u.noRekening)}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0;">
             <button class="icon-btn-sm ${u.status==='aktif'?'ic-primary':'ic-danger'}" onclick="event.stopPropagation();${u.status==='nonaktif'?'aktifkanAnggota':'nonaktifkanAnggota'}('${u.id}')" title="${u.status==='nonaktif'?'Aktifkan':'Nonaktifkan'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7"/><circle cx="8" cy="12" r="2.5"/></svg></button>
@@ -3083,6 +3479,7 @@ function renderAdminTabungan(user){
         ${kelompokOptions}
       </select>
       <div class="search-box">${ICONS.search}<input id="search-admin-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-gold btn-compact" onclick="openTransferModal()" title="Transfer tabungan antar rekening / nasabah">${ICON_SWAP} Transfer</button>
       <button class="btn btn-outline btn-compact" onclick="openExportModal('tabungan')" title="Export">${ICONS.download} Export</button>
       <button class="btn btn-outline btn-compact" onclick="openImportModal('tabungan')" title="Import CSV">${ICONS.upload}</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
@@ -3103,8 +3500,8 @@ function renderAdminTabungan(user){
       <div class="card" style="padding:6px 18px;margin-bottom:14px;">
         ${g.items.map(u=>{ i++; return `
         <div class="list-row" style="cursor:pointer;" onclick="go('admin_tabungan_detail',{userId:'${u.id}'})">
-          <div class="flex"><div class="row-num">${i}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; ${u.noRekening}${rekeningNonaktif(u.id)?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}</div></div></div>
-          <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div>${rekeningNonaktif(u.id)
+          <div class="flex"><div class="row-num">${i}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; <span style="display:inline-flex;align-items:center;gap:5px;">${u.noRekening} ${copyBtn(u.noRekening)}</span>${rekeningNonaktif(u.id)?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}</div></div></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-primary" style="color:var(--gold);" title="Transfer dari rekening ini" onclick="event.stopPropagation();openTransferModal('${u.id}')">${ICON_SWAP}</button>${rekeningNonaktif(u.id)
             ? `<button class="icon-btn-sm ic-primary" title="Aktifkan semua rekening" onclick="event.stopPropagation();nonaktifkanSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>`
             : `<button class="icon-btn-sm ic-primary" title="Nonaktifkan semua rekening" onclick="event.stopPropagation();nonaktifkanSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>`}<button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
@@ -3124,12 +3521,13 @@ function renderAdminTabunganDetail(user, userId){
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
-      <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening}</div>
-      ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;${acc.nonaktif?'opacity:.55;':''}"><span style="font-size:12.5px;color:var(--muted);">${j.nama}${acc.nonaktif?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}<br><span style="font-size:9.5px;">${acc.noRekening||'-'}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
+      <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening} ${copyBtn(nas.noRekening)}</div>
+      ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;${acc.nonaktif?'opacity:.55;':''}"><span style="font-size:12.5px;color:var(--muted);">${j.nama}${acc.nonaktif?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}<br><span style="font-size:9.5px;display:inline-flex;align-items:center;gap:5px;">${acc.noRekening||'-'}${acc.noRekening?copyBtn(acc.noRekening):''}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:2px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:2px;">
       <button class="btn btn-primary" onclick="openSetorTarikModal('${nas.id}','setor')">Setor</button>
       <button class="btn btn-danger" onclick="openSetorTarikModal('${nas.id}','tarik')">Tarik</button>
+      <button class="btn btn-gold" onclick="openTransferModal('${nas.id}')">${ICON_SWAP} Transfer</button>
       <button class="btn btn-outline" onclick="downloadTabunganPDF('${nas.id}')" title="Download PDF Buku Tabungan">${ICONS.download} PDF</button>
     </div>
     </div>
@@ -3137,7 +3535,7 @@ function renderAdminTabunganDetail(user, userId){
     <div class="ledger">
       <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
       ${tx.length ? tx.map((t,i)=>
-        `<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>`
+        `<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${txBadgeColor(t)};margin-right:5px;">${txBadgeLabel(t)}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${txIsPlus(t)?'amt plus':'amt minus'}">${txIsPlus(t)?'+':'-'}${rupiah(t.jumlah)}</div></div>`
       ).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada transaksi</div>`}
     </div>
   `;
@@ -3759,7 +4157,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
     ${p.statusPengajuan==='approved' ? `
     <div class="bar-row"><div class="lbl"><span>Progres pembayaran</span><span>${rupiah(totalDibayar)} / ${rupiah(totalKew)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${progres}%"></div></div></div>
     <div style="display:flex;gap:10px;margin-bottom:16px;margin-top:10px;">
-      ${isActive ? `<button class="btn btn-gold" style="flex:1;" onclick="bayarAngsuranPrompt('${p.id}')">${ICONS.down} Bayar angsuran</button>` : ''}
+      ${isActive ? `<button class="btn btn-gold" style="flex:1;" onclick="bayarAngsuranPrompt('${p.id}')">${ICONS.down} Bayar angsuran</button><button class="btn btn-primary" style="flex:1;" onclick="openBayarSPModal('${p.userId}')">${ICON_SWAP} Bayar dari Tabungan</button>` : ''}
       <button class="btn btn-outline" style="flex:1;" onclick="detailPengajuanModal('${p.id}')">Detail pengajuan</button>
       ${backPage==='admin_pembiayaan' ? `<button class="btn btn-outline" style="flex:0 0 auto;" onclick="downloadAngsuranPDF('${p.id}')" title="Download PDF Buku Angsuran">${ICONS.download} PDF</button>` : ''}
     </div>
@@ -7556,13 +7954,15 @@ function renderAdminLog(user){
     <div class="page-title" style="margin:0;">Log Transaksi<span class="sub">${logs.length} catatan aktivitas</span></div>
     </div>
     <div class="card" style="padding:6px 18px;">
-      ${logs.slice(0,100).map((l,i)=>`
-        <div class="list-row">
+      ${logs.slice(0,100).map((l,i)=>{
+        const trf = /(transfer tabungan|bayar pembiayaan dari tabungan)/i.test(l.aksi||'');
+        return `
+        <div class="list-row"${trf?' style="background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;margin-bottom:4px;padding:10px 12px;"':''}>
           <div class="row-num">${i+1}</div>
-          <div class="info"><div class="title">${l.aksi} <span class="badge badge-green" style="margin-left:6px;">${l.peran}</span></div><div class="sub">${l.detail}</div></div>
+          <div class="info"><div class="title">${l.aksi} ${trf?'<span class="badge badge-gold" style="margin-left:6px;">TRANSFER</span>':`<span class="badge badge-green" style="margin-left:6px;">${l.peran}</span>`}</div><div class="sub">${l.detail}</div></div>
           <div class="sub" style="font-size:10.5px;white-space:nowrap;text-align:right;">${fmtDate(l.waktu)}</div>
-        </div>
-      `).join('') || emptyRow('Belum ada log')}
+        </div>`;
+      }).join('') || emptyRow('Belum ada log')}
     </div>
   `;
 }
@@ -7629,7 +8029,7 @@ function renderKoorAnggota(user){
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map((u,i)=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_anggota_detail',{userId:'${u.id}'})">
-          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">No. Rek ${u.noRekening}</div></div></div>
+          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub" style="display:inline-flex;align-items:center;gap:5px;">No. Rek ${u.noRekening} ${copyBtn(u.noRekening)}</div></div></div>
           <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
         </div>
       `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota aktif di kelompok ini'}</div></div>`}
@@ -7744,14 +8144,15 @@ function renderKoorTabungan(user){
     </div>
     <div class="toolbar-row" style="margin-bottom:2px;">
       <div class="search-box">${ICONS.search}<input id="search-koor-tabungan" placeholder="Cari nama atau no. rekening" value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; renderContent()"></div>
+      <button class="btn btn-gold btn-compact" onclick="openTransferModal()" title="Transfer tabungan antar rekening / nasabah">${ICON_SWAP} Transfer</button>
       <button class="btn btn-primary btn-compact" onclick="openTambahRekeningModal()">${ICONS.plus} Rekening</button>
     </div>
     </div>
     <div class="card" style="padding:6px 18px;">
       ${anggota.length ? anggota.map((u,i)=>`
         <div class="list-row" style="cursor:pointer;" onclick="go('koor_tabungan_detail',{userId:'${u.id}'})">
-          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${u.noRekening}${rekeningNonaktif(u.id)?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}</div></div></div>
-          <div class="amt">${rupiah(totalSaldoUser(u.id))}</div>
+          <div class="flex"><div class="row-num">${i+1}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub"><span style="display:inline-flex;align-items:center;gap:5px;">${u.noRekening} ${copyBtn(u.noRekening)}</span>${rekeningNonaktif(u.id)?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}</div></div></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-primary" style="color:var(--gold);" title="Transfer dari rekening ini" onclick="event.stopPropagation();openTransferModal('${u.id}')">${ICON_SWAP}</button></div>
         </div>
       `).join('') : `<div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada anggota yang memiliki rekening tabungan'}</div></div>`}
     </div>
@@ -7769,19 +8170,20 @@ function renderKoorTabunganDetail(user, userId){
     <div class="card balance-card">
       <div class="label">Total saldo tabungan</div>
       <div class="amount">${rupiah(totalSaldoUser(nas.id))}</div>
-      <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening}</div>
-      ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;${acc.nonaktif?'opacity:.55;':''}"><span style="font-size:12.5px;color:var(--muted);">${j.nama}${acc.nonaktif?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}<br><span style="font-size:9.5px;">${acc.noRekening||'-'}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
+      <div class="rekening">${nas.nama} &middot; NO. REK ${nas.noRekening} ${copyBtn(nas.noRekening)}</div>
+      ${accs.length ? `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:grid;gap:8px;">${accs.map(({j,acc})=>`<div style="display:flex;justify-content:space-between;align-items:center;${acc.nonaktif?'opacity:.55;':''}"><span style="font-size:12.5px;color:var(--muted);">${j.nama}${acc.nonaktif?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}<br><span style="font-size:9.5px;display:inline-flex;align-items:center;gap:5px;">${acc.noRekening||'-'}${acc.noRekening?copyBtn(acc.noRekening):''}</span></span><span class="mono" style="font-weight:700;">${rupiah(acc.saldo)}</span></div>`).join('')}</div>` : ''}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:2px;">
       <button class="btn btn-primary" onclick="openSetorTarikModal('${nas.id}','setor')">Setor</button>
       <button class="btn btn-danger" onclick="openSetorTarikModal('${nas.id}','tarik')">Tarik</button>
+      <button class="btn btn-gold" onclick="openTransferModal('${nas.id}')">${ICON_SWAP} Transfer</button>
     </div>
     </div>
     <div class="section-label">Riwayat transaksi</div>
     <div class="ledger">
       <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Keterangan</div><div style="text-align:right;">Jumlah</div></div>
       ${tx.length ? tx.map((t,i)=>
-        `<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${t.tipe==='setor'?'var(--ok)':'var(--danger)'};margin-right:5px;">${t.tipe==='setor'?'SETOR':'TARIK'}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${t.tipe==='setor'?'amt plus':'amt minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div></div>`
+        `<div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(t.tanggal)}</div><div class="k"><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:${txBadgeColor(t)};margin-right:5px;">${txBadgeLabel(t)}</span>${jenisName(t.jenisId)}${t.keterangan?'<br><span style="font-size:10px;color:var(--muted)">'+t.keterangan+'</span>':''}</div><div class="j ${txIsPlus(t)?'amt plus':'amt minus'}">${txIsPlus(t)?'+':'-'}${rupiah(t.jumlah)}</div></div>`
       ).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada transaksi</div>`}
     </div>
   `;
@@ -8058,6 +8460,11 @@ function renderNasBeranda(user){
     </div>
     ${marquee}
 
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 12px;">
+      <button class="btn btn-primary" style="padding:13px;white-space:normal;line-height:1.3;" onclick="openTransferModal()"><span style="display:flex;align-items:center;justify-content:center;gap:7px;">${ICON_SWAP} Transfer</span></button>
+      <button class="btn btn-gold" style="padding:13px;white-space:normal;line-height:1.3;" onclick="openBayarSPModal()"><span style="display:flex;align-items:center;justify-content:center;gap:7px;">${ICONS.finance} Bayar Pembiayaan</span></button>
+    </div>
+
     <div class="card" style="cursor:pointer;padding:18px;display:flex;align-items:center;gap:14px;" onclick="go('profil_saya')">
       <div style="width:52px;height:52px;flex-shrink:0;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:18px;">${isiAwal}</div>
       <div style="flex:1;min-width:0;">
@@ -8191,16 +8598,20 @@ function renderNasTabungan(user){
     <div class="hero-balance">
       <div class="greet">Saldo ${selected.j.nama}</div>
       <div class="amount">${rupiah(selected.acc.saldo)}</div>
-      <div class="rekening">NO. REK ${selected.acc.noRekening || user.noRekening}</div>
+      <div class="rekening" style="display:flex;align-items:center;gap:8px;">NO. REK ${selected.acc.noRekening || user.noRekening} <button onclick="event.stopPropagation();copyText('${selected.acc.noRekening || user.noRekening}','No. rekening')" style="background:rgba(255,255,255,.18);border:none;border-radius:6px;color:#fff;padding:3px 8px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">Salin</button></div>
     </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2px;">
+      <button class="btn btn-primary" onclick="openTransferModal()">${ICON_SWAP} Transfer</button>
+      <button class="btn btn-gold" onclick="openBayarSPModal()">Bayar Pembiayaan</button>
     </div>
     <div class="section-label" style="margin-top:0;">Riwayat transaksi &middot; ${selected.j.nama}</div>
     <div class="card" style="padding:2px 16px;">
       ${tx.length ? tx.map(t=>`
         <div class="tx-list-item">
-          <div class="tx-ic ${t.tipe==='setor'?'in':'out'}">${t.tipe==='setor'?ICONS.down:ICONS.up}</div>
-          <div class="tx-info"><div class="t">${jenisName(t.jenisId)}</div><div class="s">${fmtDateShort(t.tanggal)} &middot; ${t.tipe==='setor'?'Setor':'Tarik'}</div></div>
-          <div class="tx-amt ${t.tipe==='setor'?'plus':'minus'}">${t.tipe==='setor'?'+':'-'}${rupiah(t.jumlah)}</div>
+          <div class="tx-ic ${t.tipe==='setor'?'in':'out'}">${txIsPlus(t)?ICONS.down:ICONS.up}</div>
+          <div class="tx-info"><div class="t">${jenisName(t.jenisId)} ${txIsTransferTipe(t)?`<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;background:var(--gold);margin-left:4px;">${txBadgeLabel(t)}</span>`:''}</div><div class="s">${fmtDateShort(t.tanggal)} &middot; ${t.tipe==='setor'?'Setor':t.tipe==='tarik'?'Tarik':txBadgeLabel(t)}${t.keterangan?` — ${t.keterangan}`:''}</div></div>
+          <div class="tx-amt ${txIsPlus(t)?'plus':'minus'}">${txIsPlus(t)?'+':'-'}${rupiah(t.jumlah)}</div>
         </div>
       `).join('') : `<div class="hint" style="text-align:center;padding:16px 0;">Belum ada transaksi pada buku ini</div>`}
     </div>
