@@ -4401,6 +4401,7 @@ function renderProfilSaya(user){
     <div class="page-title">Profil Saya<span class="sub">Informasi akun Anda</span></div>
     <div class="card">
       <div class="form-row"><label>Nama lengkap</label><input type="text" id="ps-nama" value="${u.nama}" placeholder="Nama lengkap"></div>
+      <div class="form-row"><label>Nomor rekening <span class="hint" style="font-weight:400;">(nomor untuk transfer / identitas Anda)</span></label><div style="display:flex;align-items:center;gap:8px;"><input type="text" value="${u.noRekening||'-'}" disabled style="flex:1;opacity:.7;">${u.noRekening?`<button type="button" onclick="copyText('${u.noRekening}','No. rekening')" style="background:var(--primary-soft);border:none;border-radius:8px;color:var(--primary);padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;">Salin</button>`:''}</div></div>
       <div class="form-row"><label>Username</label><input type="text" id="ps-username" value="${u.username||''}" placeholder="Nama pengguna"></div>
       <div class="form-row"><label>Role</label><input type="text" value="${roleLabel(u.role)}" disabled style="opacity:.6;"></div>
       <div class="form-row"><label>Kata sandi baru <span class="hint" style="font-weight:400;">(kosongkan jika tidak ingin ganti)</span></label><input type="text" id="ps-password" placeholder="Kata sandi baru"></div>
@@ -8469,7 +8470,7 @@ function renderNasBeranda(user){
       <div style="width:52px;height:52px;flex-shrink:0;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:18px;">${isiAwal}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${user.nama}</div>
-        <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">NO. REK ${user.noRekening || '-'}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:8px;">NO. REK ${user.noRekening || '-'} ${user.noRekening?`<button onclick="event.stopPropagation();copyText('${user.noRekening}','No. rekening')" style="background:var(--primary-soft);border:none;border-radius:6px;color:var(--primary);padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">Salin</button>`:''}</div>
       </div>
       <div style="color:var(--primary);flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;">Info <span>${chev}</span></div>
     </div>
