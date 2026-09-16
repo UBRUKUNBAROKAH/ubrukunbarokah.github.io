@@ -606,15 +606,14 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 .csel-chevron{flex-shrink:0;width:16px;height:16px;color:var(--muted);transition:transform .15s;}
 .csel-trigger.csel-open .csel-chevron{transform:rotate(180deg);color:var(--primary);}
 
-.csel-overlay{position:fixed;inset:0;background:rgba(11,20,16,.45);z-index:300;display:flex;align-items:flex-end;justify-content:center;animation:cselFade .15s ease-out;}
+.csel-overlay{position:fixed;inset:0;background:rgba(11,20,16,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:18px;animation:cselFade .15s ease-out;}
 @keyframes cselFade{from{opacity:0;}to{opacity:1;}}
 .csel-sheet{
-  width:100%;max-width:520px;background:var(--surface);border-radius:20px 20px 0 0;
-  max-height:80vh;display:flex;flex-direction:column;box-shadow:0 -10px 30px -8px rgba(11,61,46,.35);
-  animation:cselUp .18s cubic-bezier(.22,.9,.32,1);
-  padding-bottom:env(safe-area-inset-bottom,0);
+  width:100%;max-width:520px;background:var(--surface);border-radius:20px;
+  max-height:78vh;display:flex;flex-direction:column;box-shadow:0 14px 44px -12px rgba(11,61,46,.4);
+  animation:cselPop .2s cubic-bezier(.22,.9,.32,1);
 }
-@keyframes cselUp{from{transform:translateY(16px);opacity:.6;}to{transform:translateY(0);opacity:1;}}
+@keyframes cselPop{from{transform:scale(.94);opacity:0;}to{transform:scale(1);opacity:1;}}
 .csel-sheet-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .csel-sheet-title{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--primary);}
 .csel-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--primary-soft);color:var(--primary);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
