@@ -1233,16 +1233,10 @@ async function syncAllToSupabase() {
     return s;
   });
   await safeUpsert(TABLES.tabungan_tx, txSnake);
-  // Sync pembiayaan
-  const pSnake = DB.pembiayaan?.map(p => {
-    const s = toSnake(p);
-    if (p.mulai) s.mulai = p.mulai.split('T')[0]; // YYYY-MM-DD
-    if (p.riwayatAngsuran) {
-      s.riwayat_angsuran = p.riwayatAngsuran;
-    }
-    return s;
-  });
-  await safeUpsert(TABLES.pembiayaan, pSnake);
+  // Sync pembiayaan (dengan gabungan data usang dari perangkat lain supaya
+  // status ACC/tolak & progres angsuran tidak ditimpa)
+  const pembSync = await mergePembiayaanForSync();
+  await safeUpsert(TABLES.pembiayaan, pembSync, 'pembiayaan');
   // Sync angsuran
   await safeUpsert(TABLES.angsuran, toSnake(DB.angsuran));
   // Sync jenis saham
@@ -1293,6 +1287,60 @@ async function syncAllToSupabase() {
     throw new Error(detail);
   }
   console.log('Auto-sync to Supabase berhasil');
+}
+
+// Sinkronkan pembiayaan dengan perlindungan agar data usang (mis. akun koordinator
+// yang masih menunggu ACC) TIDAK menimpa status ACC/tolak atau perkembangan
+// angsuran yang sudah lebih baru di server.
+async function mergePembiayaanForSync(){
+  const local = DB.pembiayaan || [];
+  if(!local.length) return [];
+  let server = [];
+  try{
+    const { data } = await supabaseClient.from(TABLES.pembiayaan).select('*');
+    server = data || [];
+  }catch(e){ console.error('mergePembiayaanForSync fetch err', e); }
+  const out = [];
+  for(const p of local){
+    const s = toSnake(p);
+    if(p.mulai) s.mulai = p.mulai.split('T')[0];
+    const row = server.find(r=>r.id===p.id) || null;
+    const localRiw = p.riwayatAngsuran || [];
+    if(!row){
+      s.riwayat_angsuran = localRiw.length ? localRiw.map(r=>toSnake(r)) : null;
+      out.push(s);
+      continue;
+    }
+    // 1) Status pengajuan yang sudah diproses admin menang atas perangkat yang masih pending
+    if(p.statusPengajuan==='pending' && row.status_pengajuan && row.status_pengajuan!=='pending'){
+      p.statusPengajuan = row.status_pengajuan;
+      p.status = row.status;
+      if(row.status_pengajuan==='approved'){
+        p.disetujuiOleh = row.disetujui_oleh; p.waktuAcc = row.waktu_acc;
+      } else {
+        p.ditolakOleh = row.ditolak_oleh; p.waktuTolak = row.waktu_tolak;
+      }
+      s.status_pengajuan = row.status_pengajuan;
+      s.status = row.status;
+      s.disetujui_oleh = row.disetujui_oleh; s.waktu_acc = row.waktu_acc;
+      s.ditolak_oleh = row.ditolak_oleh; s.waktu_tolak = row.waktu_tolak;
+    }
+    // 2) Status lunas tidak boleh mundur
+    if(row.status==='lunas' && p.status!=='lunas'){ p.status='lunas'; s.status='lunas'; }
+    // 3) Riwayat angsuran: gabungkan server + lokal (hindari duplikat memakai id)
+    const seen = new Map();
+    localRiw.forEach(r=>{ if(r && typeof r==='object' && r.id) seen.set(r.id, r); });
+    (row.riwayat_angsuran||[]).forEach(r=>{ if(r && typeof r==='object' && r.id) seen.set(r.id, r); });
+    const mergedRiw = [...seen.values()];
+    s.riwayat_angsuran = mergedRiw.length ? mergedRiw.map(r=>toSnake(r)) : null;
+    if(mergedRiw.length > localRiw.length){
+      const tenorN = Number(p.tenor)||0;
+      p.sisaAngsuran = Math.max(0, tenorN - mergedRiw.length);
+      s.sisa_angsuran = p.sisaAngsuran;
+    }
+    out.push(s);
+  }
+  return out;
 }
 
 // ================== WA Fonnte ==================
@@ -3974,16 +4022,27 @@ function renderAdminPembiayaan(user){
     `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div></div>`}
   `;
 }
-function accPengajuan(pembId){
+async function accPengajuan(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.statusPengajuan!=='pending') return;
   const s = getSession();
+  const oldMulai = p.mulai;
   p.statusPengajuan = 'approved';
   p.status = 'berjalan';
   p.mulai = nowISO();
   p.disetujuiOleh = s.userId;
   p.waktuAcc = nowISO();
-  persist();
+  const result = await persistNow();
+  if(!result.ok){
+    p.statusPengajuan = 'pending';
+    p.status = 'berjalan';
+    p.mulai = oldMulai;
+    delete p.disetujuiOleh;
+    delete p.waktuAcc;
+    toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+    renderContent();
+    return;
+  }
   addLog('ACC pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' disetujui');
   notifUserWA(p.userId, waHeader('PEMBIAYAAN DISETUJUI')
     + waAnggotaInfo(userById(p.userId))
@@ -4002,16 +4061,27 @@ function accPengajuan(pembId){
   bigSuccess('Pengajuan disetujui');
   renderContent();
 }
-function tolakPengajuan(pembId){
+async function tolakPengajuan(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.statusPengajuan!=='pending') return;
-  confirmDialog('Tolak pengajuan?', 'Pengajuan pembiayaan '+userById(p.userId).nama+' akan ditolak.', 'danger', ()=>{
+  confirmDialog('Tolak pengajuan?', 'Pengajuan pembiayaan '+userById(p.userId).nama+' akan ditolak.', 'danger', async ()=>{
     const s = getSession();
+    const oldMulai = p.mulai;
     p.statusPengajuan = 'rejected';
     p.status = 'rejected';
     p.ditolakOleh = s.userId;
     p.waktuTolak = nowISO();
-    persist();
+    const result = await persistNow();
+    if(!result.ok){
+      p.statusPengajuan = 'pending';
+      p.status = 'berjalan';
+      p.mulai = oldMulai;
+      delete p.ditolakOleh;
+      delete p.waktuTolak;
+      toast('Gagal menyimpan ke server: ' + (result.err && result.err.message ? result.err.message : 'cek koneksi internet, lalu coba lagi'));
+      renderContent();
+      return;
+    }
     addLog('Tolak pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' ditolak');
     notifUserWA(p.userId, waHeader('PEMBERITAHUAN PENOLAKAN PEMBIAYAAN')
       + waAnggotaInfo(userById(p.userId))
