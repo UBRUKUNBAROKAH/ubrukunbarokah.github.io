@@ -945,6 +945,7 @@ async function initSupabaseDB() {
     const ta = toCamel(tabunganAccounts.data || []);
     const ttx = toCamel(tabunganTx.data || []);
     const pb = toCamel(pembiayaan.data || []);
+    pb.forEach(x=>{ if(!Array.isArray(x.riwayatAngsuran)) x.riwayatAngsuran = []; });
     const an = toCamel(angsuran.data || []);
     const js = toCamel(jenisSaham.data || []);
     const ks = toCamel(kepemilikanSaham.data || []);
@@ -8733,8 +8734,9 @@ function renderNasPembiayaan(user){
     <div class="page-title" style="margin:0 0 10px;">Pembiayaan<span class="sub">${user.nama}</span></div>
     </div>
     ${list.map(p=>{
+      const riw = Array.isArray(p.riwayatAngsuran) ? p.riwayatAngsuran : [];
       const totalKew = p.jumlahPinjaman + marginNominalOf(p);
-      const totalDibayar = (p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);
+      const totalDibayar = riw.reduce((a,x)=>a+x.jumlah,0);
       const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
       return `
       <div class="card">
@@ -8747,9 +8749,9 @@ function renderNasPembiayaan(user){
           <div class="portfolio-box"><div class="v">${rupiah(p.angsuranPerBulan)}</div><div class="l">Per bulan</div></div>
           <div class="portfolio-box"><div class="v">${rupiah(sisaTagihan)}</div><div class="l">Sisa tagihan</div></div>
         </div>
-        ${p.riwayatAngsuran.length ? `
+        ${riw.length ? `
           <div class="section-label">Riwayat angsuran</div>
-          ${p.riwayatAngsuran.map(a=>`
+          ${riw.map(a=>`
             <div class="tx-list-item">
               <div class="tx-ic out">${ICONS.up}</div>
               <div class="tx-info"><div class="t">Angsuran ke-${a.angsuranKe}</div><div class="s">${fmtDateShort(a.tanggal)}</div></div>
