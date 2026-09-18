@@ -968,18 +968,26 @@ async function initSupabaseDB() {
       }
       return user;
     });
-    // Anggota yang ada di tabel "anggota" tapi belum punya akun login di tabel "users"
+// Anggota yang ada di tabel "anggota" tapi belum punya akun login di tabel "users"
     // (mis. diinput langsung lewat Supabase, atau sinkronisasi user sempat gagal)
     // tetap ditampilkan di daftar supaya tidak "hilang".
+    // Hindari nama ganda: lewati anggota legacy yang namanya+kelompoknya sudah diwakili
+    // anggota lain (akun modern), KECUALI ia punya catatan pembiayaan sendiri.
+    const seenMemberKey = new Set(mergedUsers.map(x => String(x.nama||'').toLowerCase() + '|' + (x.kelompokId||'')));
     a.forEach(agg => {
       if (!matchedAggIds.has(agg.id)) {
-        mergedUsers.push({
-          id: agg.id, role: 'nasabah', anggotaId: agg.id,
-          nama: agg.nama, nik: agg.nik, alamat: agg.alamat, noHp: agg.noHp,
-          kelompokId: agg.kelompokId, noRekening: agg.noRekening, saham: agg.saham || {},
-          status: agg.status || 'aktif', createdAt: agg.createdAt,
-          username: null, password: null, _noAkun: true
-        });
+        const key = String(agg.nama||'').toLowerCase() + '|' + (agg.kelompokId||'');
+        const ownsPemb = pb.some(x => x.userId === agg.id);
+        if (ownsPemb || !seenMemberKey.has(key)) {
+          mergedUsers.push({
+            id: agg.id, role: 'nasabah', anggotaId: agg.id,
+            nama: agg.nama, nik: agg.nik, alamat: agg.alamat, noHp: agg.noHp,
+            kelompokId: agg.kelompokId, noRekening: agg.noRekening, saham: agg.saham || {},
+            status: agg.status || 'aktif', createdAt: agg.createdAt,
+            username: null, password: null, _noAkun: true
+          });
+          seenMemberKey.add(key);
+        }
       }
     });
 
@@ -1306,6 +1314,7 @@ async function mergePembiayaanForSync(){
     const s = toSnake(p);
     if(p.mulai) s.mulai = p.mulai.split('T')[0];
     const row = server.find(r=>r.id===p.id) || null;
+    if(row) s.user_id = row.user_id; // identitas (pemilik) mengikuti server, mencegah kembalinya id legacy usang
     const localRiw = p.riwayatAngsuran || [];
     if(!row){
       s.riwayat_angsuran = localRiw.length ? localRiw.map(r=>toSnake(r)) : null;
