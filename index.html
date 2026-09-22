@@ -8564,7 +8564,6 @@ async function confirmBayarAngsuran(pembId){
 ========================================================= */
 const IKLAN_LS_KEY = 'ub_iklan_cache_v1';
 let DB_IKLAN = loadIklanCache();
-let iklanBooted = false;
 function loadIklanCache(){
   try{ const c = JSON.parse(localStorage.getItem(IKLAN_LS_KEY)||'null'); if(Array.isArray(c)) return c; }catch(e){}
   return [];
@@ -8594,9 +8593,10 @@ function iklanAktifSekarang(){
   });
 }
 function refreshIklanQuiet(){
-  if(iklanBooted) return;
-  iklanBooted = true;
-  loadIklan().then(()=>{ if(currentPage==='nas_beranda') renderContent(); });
+  const now = Date.now();
+  if(now - (window._iklanLastF || 0) < 60000) return;
+  window._iklanLastF = now;
+  loadIklan().then(()=>{ if(currentPage==='admin_iklan' || currentPage==='nas_beranda') renderContent(); });
 }
 function iklanBannerHTML(){
   const list = iklanAktifSekarang();
