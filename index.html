@@ -2847,6 +2847,10 @@ function renderContent(){
   };
   const fn = routes[currentPage] || routes[defaultPageFor(user.role)];
   el.innerHTML = fn(user);
+  if(['nas_beranda','nas_info','nas_tabungan','nas_pembiayaan','profil_saya'].includes(currentPage)){
+    const iklanExtra = iklanBannerHTML();
+    if(iklanExtra) el.insertAdjacentHTML('beforeend', '<div class="iklan-page-blk">'+iklanExtra+'</div>');
+  }
   refreshIklanQuiet();
   initIklanBanner();
   if(currentPage==='admin_suratsp' || currentPage==='admin_spbermasalah'){
@@ -8925,8 +8929,6 @@ function renderNasBeranda(user){
         <div style="color:var(--primary);font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:3px;">Tagihan <span>${chev}</span></div>
       </div>
     </div>
-
-    ${iklanBannerHTML()}
   `;
 }
 
