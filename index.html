@@ -8607,7 +8607,9 @@ function iklanBannerHTML(){
       ${dots}
     </div>`;
 }
+let _ikTimerGlobal = null;
 function initIklanBanner(){
+  if(_ikTimerGlobal){ clearInterval(_ikTimerGlobal); _ikTimerGlobal = null; }
   const wrap = document.getElementById('iklan-banner-wrap');
   if(!wrap) return;
   const slides = wrap.querySelectorAll('.ik-slide');
@@ -8619,8 +8621,8 @@ function initIklanBanner(){
     wrap.scrollTo({ left: idx * stepW(), behavior: 'smooth' });
     wrap.querySelectorAll('.ik-dot').forEach((d,i)=>d.classList.toggle('on', i===idx));
   }
-  function stop(){ if(wrap._ikTimer){ clearInterval(wrap._ikTimer); wrap._ikTimer = null; } }
-  function start(){ if(!wrap._ikTimer && slides.length>1){ wrap._ikTimer = setInterval(()=>goTo(idx+1), 4000); } }
+  function stop(){ if(_ikTimerGlobal){ clearInterval(_ikTimerGlobal); _ikTimerGlobal = null; } }
+  function start(){ if(!_ikTimerGlobal && slides.length>1){ _ikTimerGlobal = setInterval(()=>goTo(idx+1), 4000); } }
   wrap.onscroll = function(){
     idx = Math.round(wrap.scrollLeft / stepW());
     wrap.querySelectorAll('.ik-dot').forEach((d,i)=>d.classList.toggle('on', i===idx));
@@ -8667,6 +8669,10 @@ function renderAdminIklan(){
   const nonaktif = list.filter(x=>!x.aktif).length;
   return `
     <div class="page-title">Iklan<span class="sub">Kelola poster di Beranda nasabah</span></div>
+    <div class="card" style="padding:10px 10px 12px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--muted);margin:2px 2px 8px;">PRATINJAU &mdash; TAMPILAN DI BERANDA NASABAH</div>
+      ${iklanAktifSekarang().length ? iklanBannerHTML() : '<div style="padding:16px;border:1.5px dashed var(--border);border-radius:14px;text-align:center;color:var(--muted);font-size:13px;">Tidak ada iklan aktif sekarang &mdash; banner tidak muncul di nasabah.</div>'}
+    </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
       <div class="card" style="padding:12px;text-align:center;"><div style="font-weight:800;font-size:20px;color:var(--primary);">${tampil}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Muncul sekarang</div></div>
       <div class="card" style="padding:12px;text-align:center;"><div style="font-weight:800;font-size:20px;color:#8a6a1f;">${jadwal}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Terjadwal/Selesai</div></div>
