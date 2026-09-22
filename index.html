@@ -646,6 +646,9 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 .ik-wrap::-webkit-scrollbar{display:none;}
 .ik-slide{flex:0 0 100%;max-width:100%;scroll-snap-align:start;max-height:300px;border-radius:16px;overflow:hidden;position:relative;background:var(--surface);box-shadow:var(--shadow-neu-sm);display:flex;align-items:center;justify-content:center;}
 .ik-slide img{width:100%;height:auto;max-height:300px;object-fit:contain;display:block;}
+.ik-shine{position:absolute;top:-40%;width:26%;height:180%;transform:rotate(20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);opacity:0;pointer-events:none;animation:none;}
+.ik-single .ik-slide .ik-shine{opacity:1;animation:ikShine 4.5s ease-in-out infinite;}
+@keyframes ikShine{0%,12%{left:-36%;}60%,100%{left:140%;}}
 .ik-slide:active{opacity:.92;}
 #iklan-banner-wrap{margin:10px 0 16px;}
 .ik-dots{display:flex;justify-content:center;gap:6px;margin-top:6px;}
@@ -8597,9 +8600,9 @@ function iklanBannerHTML(){
   if(!list.length) return '';
   const dots = list.length>1 ? '<div class="ik-dots">'+list.map((_,i)=>'<span class="ik-dot'+(i===0?' on':'')+'"></span>').join('')+'</div>' : '';
   return `
-    <div id="iklan-banner-wrap">
+    <div id="iklan-banner-wrap"${list.length===1?' class="ik-single"':''}>
       <div class="ik-wrap">
-        ${list.map(x=>`<div class="ik-slide" onclick="openIklan('${x.id}')"><img src="${x.gambar}" alt="" loading="lazy"></div>`).join('')}
+        ${list.map(x=>`<div class="ik-slide" onclick="openIklan('${x.id}')"><img src="${x.gambar}" alt="" loading="lazy"><span class="ik-shine"></span></div>`).join('')}
       </div>
       ${dots}
     </div>`;
@@ -8684,7 +8687,7 @@ function iklanRowHTML(x,i,total){
   const a2 = x.sampai ? fmtDateShort(x.sampai) : 'tanpa batas';
   return `
   <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border);">
-    <img class="ik-thumb" src="${x.gambar}" alt="">
+    <img class="ik-thumb" src="${x.gambar}" alt="" onclick="openIklan('${x.id}')" title="Klik untuk pratinjau" style="cursor:pointer;">
     <div style="flex:1;min-width:0;">
       <div style="font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;">${escapeHtml(x.judul||'Tanpa judul')} <span class="badge ${st.cls}">${st.label}</span></div>
       <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">Tampil: <b>${a1}</b> &rarr; <b>${a2}</b>${x.tautan?' &middot; ada tautan':''}</div>
