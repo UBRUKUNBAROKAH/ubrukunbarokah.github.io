@@ -8607,12 +8607,24 @@ function iklanBannerHTML(){
 function initIklanBanner(){
   const wrap = document.getElementById('iklan-banner-wrap');
   if(!wrap) return;
+  const slides = wrap.querySelectorAll('.ik-slide');
+  if(!slides.length) return;
+  let idx = 0;
+  const stepW = () => (slides[0].offsetWidth + 10);
+  function goTo(n){
+    idx = (n + slides.length) % slides.length;
+    wrap.scrollTo({ left: idx * stepW(), behavior: 'smooth' });
+    wrap.querySelectorAll('.ik-dot').forEach((d,i)=>d.classList.toggle('on', i===idx));
+  }
+  function stop(){ if(wrap._ikTimer){ clearInterval(wrap._ikTimer); wrap._ikTimer = null; } }
+  function start(){ if(!wrap._ikTimer && slides.length>1){ wrap._ikTimer = setInterval(()=>goTo(idx+1), 4000); } }
   wrap.onscroll = function(){
-    const w = wrap.querySelector('.ik-slide');
-    if(!w) return;
-    const idx = Math.round(wrap.scrollLeft / (w.offsetWidth + 10));
+    idx = Math.round(wrap.scrollLeft / stepW());
     wrap.querySelectorAll('.ik-dot').forEach((d,i)=>d.classList.toggle('on', i===idx));
   };
+  wrap.addEventListener('touchstart', stop, { passive:true });
+  wrap.addEventListener('touchend', start, { passive:true });
+  start();
 }
 function openIklan(id){
   const x = (DB_IKLAN||[]).find(i=>i.id===id);
@@ -8832,8 +8844,6 @@ function renderNasBeranda(user){
     </div>
     ${marquee}
 
-    ${iklanBannerHTML()}
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 12px;">
       <button class="btn btn-primary" style="padding:13px;white-space:normal;line-height:1.3;" onclick="openTransferModal()"><span style="display:flex;align-items:center;justify-content:center;gap:7px;">${ICON_SWAP} Transfer</span></button>
       <button class="btn btn-gold" style="padding:13px;white-space:normal;line-height:1.3;" onclick="openBayarSPModal()"><span style="display:flex;align-items:center;justify-content:center;gap:7px;">${ICONS.finance} Bayar Pembiayaan</span></button>
@@ -8895,6 +8905,8 @@ function renderNasBeranda(user){
         <div style="color:var(--primary);font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:3px;">Tagihan <span>${chev}</span></div>
       </div>
     </div>
+
+    ${iklanBannerHTML()}
   `;
 }
 
