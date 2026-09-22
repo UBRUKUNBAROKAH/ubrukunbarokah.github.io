@@ -639,6 +639,30 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 .success-icon svg path{stroke-dasharray:32;stroke-dashoffset:32;animation:successCheck .4s .12s ease forwards;}
 @keyframes successCheck{to{stroke-dashoffset:0;}}
 .success-text{font-family:'Sora',sans-serif;font-weight:700;font-size:15.5px;color:var(--text);line-height:1.45;}
+
+/* ---------- Iklan / Poster (kelola admin + banner nasabah) ---------- */
+.badge-soft{background:rgba(0,0,0,.06);color:var(--muted);}
+.ik-wrap{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:16px;}
+.ik-wrap::-webkit-scrollbar{display:none;}
+.ik-slide{flex:0 0 100%;max-width:100%;scroll-snap-align:start;aspect-ratio:3/4;border-radius:16px;overflow:hidden;position:relative;background:#eef0ec;}
+.ik-slide img{width:100%;height:100%;object-fit:cover;display:block;}
+.ik-slide:active{opacity:.92;}
+.ik-dots{display:flex;justify-content:center;gap:6px;margin-top:9px;}
+.ik-dot{width:7px;height:7px;border-radius:99px;background:var(--border);transition:all .2s;flex-shrink:0;}
+.ik-dot.on{width:19px;background:var(--gold);}
+.ik-full{position:fixed;inset:0;z-index:410;display:flex;align-items:center;justify-content:center;padding:22px;}
+.ik-full-backdrop{position:absolute;inset:0;background:rgba(6,15,11,.93);animation:ikFade .18s ease-out;}
+@keyframes ikFade{from{opacity:0;}to{opacity:1;}}
+.ik-full-card{position:relative;width:min(100%,430px);max-height:88vh;display:flex;flex-direction:column;animation:ikPop .18s cubic-bezier(.22,.9,.32,1);}
+@keyframes ikPop{from{transform:scale(.95);opacity:0;}to{transform:scale(1);opacity:1;}}
+.ik-full-card img{width:100%;border-radius:18px;max-height:70vh;object-fit:contain;background:#fff;}
+.ik-full-close{position:absolute;top:-6px;right:-6px;width:36px;height:36px;border-radius:50%;border:none;background:#fff;color:#0a2b1e;font-size:20px;line-height:1;z-index:2;box-shadow:0 3px 10px rgba(0,0,0,.35);}
+.ik-full-title{color:#fff;font-size:15px;font-weight:700;text-align:center;margin-bottom:12px;}
+.ik-full-actions{display:flex;gap:10px;margin-top:14px;justify-content:center;flex-wrap:wrap;}
+.ik-full-actions .btn{flex:0 0 auto;}
+.ik-thumb{width:52px;height:62px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid var(--border);}
+.ik-form-img{display:flex;align-items:center;gap:12px;margin-top:6px;}
+.ik-form-img img{border-radius:10px;max-height:96px;}
 </style>
 </head>
 <body>
@@ -756,7 +780,8 @@ const TABLES = {
   pengaturan_koperasi: 'pengaturan_koperasi',
   logs: 'logs',
   kas_penarikan_koor: 'kas_penarikan_koor',
-  hutang_koordinator: 'hutang_koordinator'
+  hutang_koordinator: 'hutang_koordinator',
+  iklan: 'iklan'
 };
 
 /* =========================================================
@@ -799,7 +824,8 @@ const NAV_ICONS = {
   log: '🗒️',
   percent: '💹',
   ringkas: '🧾',
-  alert: '⚠️'
+  alert: '⚠️',
+  iklan: '📣'
 };
 
 /* =========================================================
@@ -1809,7 +1835,8 @@ const ADMIN_MORE_ITEMS = [
   {p:'admin_suratsp', ic:'report', label:'Surat SP'},
   {p:'admin_spbermasalah', ic:'alert', label:'Piutang Bermasalah'},
   {p:'admin_pengaturan', ic:'settings', label:'Pengaturan'},
-  {p:'admin_log', ic:'log', label:'Log Transaksi'}
+  {p:'admin_log', ic:'log', label:'Log Transaksi'},
+  {p:'admin_iklan', ic:'iklan', label:'Iklan'}
 ];
 
 function renderNav(){
@@ -2798,6 +2825,7 @@ function renderContent(){
     admin_spbermasalah: renderAdminSPBermasalah,
     admin_pengaturan: renderAdminPengaturan,
     admin_log: renderAdminLog,
+    admin_iklan: renderAdminIklan,
     koor_beranda: renderKoorBeranda,
     koor_anggota: renderKoorAnggota,
     koor_usermgmt: renderKoorUserMgmt,
@@ -2812,6 +2840,8 @@ function renderContent(){
   };
   const fn = routes[currentPage] || routes[defaultPageFor(user.role)];
   el.innerHTML = fn(user);
+  refreshIklanQuiet();
+  initIklanBanner();
   if(currentPage==='admin_suratsp' || currentPage==='admin_spbermasalah'){
     const appHead = document.querySelector('.app-header');
     if(appHead){
@@ -8520,6 +8550,262 @@ async function confirmBayarAngsuran(pembId){
 }
 
 /* =========================================================
+   IKLAN / POSTER
+   Menyimpan & menampilkan poster berjadwal di beranda nasabah.
+   Data ini TIDAK ikut sinkron penuh (syncAllToSupabase) supaya
+   gambar base64 tidak membebani perangkat lain — dibaca terpisah.
+========================================================= */
+const IKLAN_LS_KEY = 'ub_iklan_cache_v1';
+let DB_IKLAN = loadIklanCache();
+let iklanBooted = false;
+function loadIklanCache(){
+  try{ const c = JSON.parse(localStorage.getItem(IKLAN_LS_KEY)||'null'); if(Array.isArray(c)) return c; }catch(e){}
+  return [];
+}
+function iklanToday(){ return new Date().toISOString().slice(0,10); }
+async function loadIklan(){
+  try {
+    const { data, error } = await supabaseClient.from(TABLES.iklan).select('*').order('urutan', {ascending:true}).order('dibuat_pada', {ascending:true});
+    if (error) throw error;
+    DB_IKLAN = toCamel(data||[]).map(x=>Object.assign({ aktif:true, urutan:0 }, x));
+    DB_IKLAN.forEach(x=>{ x.mulai = (x.mulai||'').slice(0,10); x.sampai = (x.sampai||'').slice(0,10)||null; });
+    try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
+    return DB_IKLAN;
+  } catch (err) {
+    console.error('Gagal muat iklan:', err);
+    return DB_IKLAN;
+  }
+}
+function iklanAktifSekarang(){
+  const t = iklanToday();
+  return (DB_IKLAN||[]).filter(x=>{
+    if(!x.aktif) return false;
+    if(!x.gambar) return false;
+    if(x.mulai && t < x.mulai) return false;
+    if(x.sampai && t > x.sampai) return false;
+    return true;
+  });
+}
+function refreshIklanQuiet(){
+  if(iklanBooted) return;
+  iklanBooted = true;
+  loadIklan().then(()=>{ if(currentPage==='nas_beranda') renderContent(); });
+}
+function iklanBannerHTML(){
+  const list = iklanAktifSekarang();
+  if(!list.length) return '';
+  const dots = list.length>1 ? '<div class="ik-dots">'+list.map((_,i)=>'<span class="ik-dot'+(i===0?' on':'')+'"></span>').join('')+'</div>' : '';
+  return `
+    <div id="iklan-banner-wrap">
+      <div class="ik-wrap">
+        ${list.map(x=>`<div class="ik-slide" onclick="openIklan('${x.id}')"><img src="${x.gambar}" alt="" loading="lazy"></div>`).join('')}
+      </div>
+      ${dots}
+    </div>`;
+}
+function initIklanBanner(){
+  const wrap = document.getElementById('iklan-banner-wrap');
+  if(!wrap) return;
+  wrap.onscroll = function(){
+    const w = wrap.querySelector('.ik-slide');
+    if(!w) return;
+    const idx = Math.round(wrap.scrollLeft / (w.offsetWidth + 10));
+    wrap.querySelectorAll('.ik-dot').forEach((d,i)=>d.classList.toggle('on', i===idx));
+  };
+}
+function openIklan(id){
+  const x = (DB_IKLAN||[]).find(i=>i.id===id);
+  if(!x) return;
+  const ov = document.createElement('div');
+  ov.className = 'ik-full';
+  const tutup = `onclick="this.closest('.ik-full').remove()"`;
+  ov.innerHTML =
+    '<div class="ik-full-backdrop"></div>' +
+    '<div class="ik-full-card">' +
+      '<button type="button" class="ik-full-close" aria-label="Tutup" '+tutup+'>&times;</button>' +
+      (x.judul?'<div class="ik-full-title">'+escapeHtml(x.judul)+'</div>':'') +
+      '<img src="'+x.gambar+'" alt="'+escapeHtml(x.judul||'Poster')+'">' +
+      '<div class="ik-full-actions">' +
+        (x.tautan?'<button type="button" class="btn btn-primary" onclick="_openIklanTautan(\''+x.id+'\')">Buka Tautan</button>':'') +
+        '<button type="button" class="btn btn-outline" '+tutup+'>Tutup</button>' +
+      '</div>' +
+    '</div>';
+  ov.querySelector('.ik-full-backdrop').addEventListener('click', ()=>ov.remove());
+  document.body.appendChild(ov);
+}
+function _openIklanTautan(id){
+  const x = (DB_IKLAN||[]).find(i=>i.id===id);
+  if(x && x.tautan) window.open(x.tautan, '_blank');
+}
+
+/* ---- Admin: halaman kelola iklan ---- */
+let iklanLastFetch = 0;
+function renderAdminIklan(){
+  if(Date.now() - iklanLastFetch > 30000){
+    iklanLastFetch = Date.now();
+    loadIklan().then(()=>{ if(currentPage==='admin_iklan') renderContent(); });
+  }
+  const list = (DB_IKLAN||[]).slice();
+  const tampil = iklanAktifSekarang().length;
+  const jadwal = list.filter(x=>{ if(!x.aktif) return false; const t=iklanToday(); return (x.mulai&&t<x.mulai)||(x.sampai&&t>x.sampai); }).length;
+  const nonaktif = list.filter(x=>!x.aktif).length;
+  return `
+    <div class="page-title">Iklan<span class="sub">Kelola poster di Beranda nasabah</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+      <div class="card" style="padding:12px;text-align:center;"><div style="font-weight:800;font-size:20px;color:var(--primary);">${tampil}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Muncul sekarang</div></div>
+      <div class="card" style="padding:12px;text-align:center;"><div style="font-weight:800;font-size:20px;color:#8a6a1f;">${jadwal}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Terjadwal/Selesai</div></div>
+      <div class="card" style="padding:12px;text-align:center;"><div style="font-weight:800;font-size:20px;color:var(--muted);">${nonaktif}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Nonaktif</div></div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div class="flex-between" style="margin-bottom:4px;">
+        <div style="font-size:13px;color:var(--muted);font-weight:600;">${list.length} iklan tersimpan</div>
+        <button class="btn btn-primary btn-sm" onclick="openIklanForm(null)">${ICONS.plus} Tambah</button>
+      </div>
+      ${list.length? '' : '<div style="padding:24px 0;text-align:center;color:var(--muted);font-size:13px;">Belum ada iklan. Tekan <b>Tambah</b> untuk memasang poster pertama.</div>'}
+      ${list.map((x,i)=>iklanRowHTML(x,i,list.length)).join('')}
+    </div>`;
+}
+function iklanRowHTML(x,i,total){
+  const st = iklanStatus(x);
+  const a1 = x.mulai ? fmtDateShort(x.mulai) : 'sekarang';
+  const a2 = x.sampai ? fmtDateShort(x.sampai) : 'tanpa batas';
+  return `
+  <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border);">
+    <img class="ik-thumb" src="${x.gambar}" alt="">
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;">${escapeHtml(x.judul||'Tanpa judul')} <span class="badge ${st.cls}">${st.label}</span></div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">Tampil: <b>${a1}</b> &rarr; <b>${a2}</b>${x.tautan?' &middot; ada tautan':''}</div>
+      <div style="display:flex;gap:10px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="openIklanForm('${x.id}')">✏️ Edit</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="toggleIklanAktif('${x.id}')">${x.aktif?'🙈 Sembunyikan':'👁 Tampilkan'}</button>
+        <button type="button" class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger-soft);" onclick="hapusIklan('${x.id}')">🗑 Hapus</button>
+        <div style="display:flex;gap:6px;margin-left:auto;">
+          ${i>0?`<button type="button" class="btn btn-outline btn-sm" onclick="urutIklan('${x.id}',-1)">↑</button>`:''}
+          ${i<total-1?`<button type="button" class="btn btn-outline btn-sm" onclick="urutIklan('${x.id}',1)">↓</button>`:''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function iklanStatus(x){
+  const t = iklanToday();
+  if(!x.aktif) return {cls:'badge-soft', label:'Nonaktif'};
+  if(x.sampai && t > x.sampai) return {cls:'badge-red', label:'Selesai'};
+  if(x.mulai && t < x.mulai) return {cls:'badge-gold', label:'Jadwal'};
+  return {cls:'badge-green', label:'Aktif'};
+}
+
+/* ---- Admin: form tambah/edit iklan ---- */
+let ikEditTarget = null;
+function openIklanForm(id){
+  const x = id ? (DB_IKLAN||[]).find(i=>i.id===id) : null;
+  ikEditTarget = x || null;
+  const curImg = (x && x.gambar) ? x.gambar : '';
+  openModal(`
+    <h3 style="margin:0 0 14px;">${x?'Edit Iklan':'Tambah Iklan'}<span class="sub" style="display:block;font-weight:400;margin-top:3px;">${x?'Ubah lalu simpan, perubahan langsung terlihat nasabah':'Isi lalu simpan; iklan muncul di Beranda nasabah'}</span></h3>
+    <div class="form-row"><label>Judul <span style="font-weight:400;color:var(--muted);">(opsional)</span></label><input type="text" id="ik-judul" value="${x?escapeHtml(x.judul||''):''}" placeholder="cth. Promo Lebaran 2026"></div>
+    <div class="form-row"><label>Gambar poster</label>
+      <input type="file" accept="image/*" id="ik-file" onchange="ikFileChosen(this)">
+      <input type="hidden" id="ik-data" value="${curImg}">
+      <div class="ik-form-img" id="ik-preview">${curImg?'<img src="'+curImg+'" alt="">':''}</div>
+      <span style="font-size:11.5px;color:var(--muted);">Foto dikompres otomatis agar ringan &amp; tidak membebani kuota.</span>
+    </div>
+    <div class="form-row"><label>Tautan <span style="font-weight:400;color:var(--muted);">(opsional — menambah tombol "Buka Tautan")</span></label><input type="text" id="ik-tautan" value="${x?escapeHtml(x.tautan||''):''}" placeholder="https://..."></div>
+    <div class="form-row"><label>Mulai tampil</label><input type="date" id="ik-mulai" value="${x&&x.mulai?x.mulai:iklanToday()}"></div>
+    <div class="form-row"><label>Sampai tampil <span style="font-weight:400;color:var(--muted);">(kosongkan = tanpa batas)</span></label><input type="date" id="ik-sampai" value="${x&&x.sampai?x.sampai:''}"></div>
+    <label style="display:flex;align-items:center;gap:9px;margin-top:4px;font-size:13.5px;font-weight:600;cursor:pointer;"><input type="checkbox" id="ik-aktif" ${(x?x.aktif:true)!==false?'checked':''}> Aktif — tampilkan ke semua nasabah</label>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="saveIklan()">Simpan</button>
+    </div>`);
+}
+function ikFileChosen(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  if(f.type && !f.type.startsWith('image/')){ toast('Pilih file gambar (jpg/png)'); return; }
+  const maxW = 900, maxH = 1300, q = 0.82;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width||800, h = img.height||1000;
+      const ratio = Math.min(1, maxW/w, maxH/h);
+      if(ratio<1){ w = Math.round(w*ratio); h = Math.round(h*ratio); }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = cv.toDataURL('image/jpeg', q);
+      const hd = document.getElementById('ik-data'); if(hd) hd.value = dataUrl;
+      const pv = document.getElementById('ik-preview'); if(pv) pv.innerHTML = '<img src="'+dataUrl+'" alt="">';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(f);
+}
+function saveIklan(){
+  const judul = (document.getElementById('ik-judul').value||'').trim();
+  const gambar = (document.getElementById('ik-data').value||'').trim();
+  const tautan = (document.getElementById('ik-tautan').value||'').trim();
+  const mulai = document.getElementById('ik-mulai').value || iklanToday();
+  const sampai = document.getElementById('ik-sampai').value || null;
+  const aktif = document.getElementById('ik-aktif') ? document.getElementById('ik-aktif').checked : true;
+  if(!gambar){ toast('Pilih gambar poster dulu'); return; }
+  const id = ikEditTarget ? ikEditTarget.id : uid('ik');
+  let urutan = ikEditTarget ? ikEditTarget.urutan : 0;
+  if(!ikEditTarget){ urutan = (DB_IKLAN||[]).reduce((m,x)=>Math.max(m, x.urutan||0), 0)+1; }
+  const rec = {
+    id, judul, gambar, tautan: tautan||null, mulai, sampai, urutan, aktif,
+    dibuatPada: ikEditTarget ? (ikEditTarget.dibuatPada||nowISO()) : nowISO()
+  };
+  if(ikEditTarget) DB_IKLAN = (DB_IKLAN||[]).map(x=>x.id===id?rec:x);
+  else DB_IKLAN = (DB_IKLAN||[]).concat([rec]);
+  try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
+  upsertToSupabase(TABLES.iklan, toSnake(rec)).then(res => {
+    if(res.error){ toast('Gagal simpan ke server: '+(res.error.message||'coba lagi')); return; }
+    addLog(ikEditTarget?'Edit iklan':'Tambah iklan', judul||'(tanpa judul)');
+  });
+  ikEditTarget = null;
+  closeModal();
+  bigSuccess('Iklan disimpan');
+  renderContent();
+}
+function toggleIklanAktif(id){
+  const x = (DB_IKLAN||[]).find(i=>i.id===id);
+  if(!x) return;
+  confirmDialog((x.aktif?'Sembunyikan iklan?':'Tampilkan iklan?'),
+    x.aktif?'Iklan berhenti muncul di Beranda nasabah sampai diaktifkan lagi.':'Iklan tampil kembali (mengikuti periode waktunya).',
+    x.aktif?'danger':'warning',
+    ()=>{
+      x.aktif = !x.aktif;
+      try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
+      upsertToSupabase(TABLES.iklan, { id, aktif: x.aktif }).then(r=>{ if(r.error) toast('Gagal: '+r.error.message); });
+      renderContent();
+    });
+}
+function urutIklan(id, dir){
+  const list = (DB_IKLAN||[]).slice();
+  const i = list.findIndex(x=>x.id===id);
+  const j = i + dir;
+  if(i<0 || j<0 || j>=list.length) return;
+  const tmp = list[i].urutan; list[i].urutan = list[j].urutan; list[j].urutan = tmp;
+  DB_IKLAN = list;
+  try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
+  const rows = [list[i], list[j]].map(x=>({ id: x.id, urutan: x.urutan }));
+  upsertToSupabase(TABLES.iklan, rows).then(r=>{ if(r.error) toast('Gagal urutkan: '+r.error.message); });
+  renderContent();
+}
+function hapusIklan(id){
+  const x = (DB_IKLAN||[]).find(i=>i.id===id);
+  confirmDialog('Hapus iklan?', 'Iklan "'+((x&&x.judul)||'tanpa judul')+'" akan dihapus permanen dari database.', 'danger', ()=>{
+    DB_IKLAN = (DB_IKLAN||[]).filter(i=>i.id!==id);
+    try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
+    deleteFromSupabase(TABLES.iklan, id).then(r=>{ if(r.error) toast('Gagal hapus: '+r.error.message); });
+    addLog('Hapus iklan', (x&&x.judul)||'(tanpa judul)');
+    renderContent();
+  });
+}
+
+/* =========================================================
    NASABAH: BERANDA
 ========================================================= */
 function renderNasBeranda(user){
@@ -8544,6 +8830,8 @@ function renderNasBeranda(user){
     <div class="page-title" style="margin:0;">Beranda<span class="sub">${DB.koperasi.nama}</span></div>
     </div>
     ${marquee}
+
+    ${iklanBannerHTML()}
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 12px;">
       <button class="btn btn-primary" style="padding:13px;white-space:normal;line-height:1.3;" onclick="openTransferModal()"><span style="display:flex;align-items:center;justify-content:center;gap:7px;">${ICON_SWAP} Transfer</span></button>
