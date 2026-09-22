@@ -662,6 +662,9 @@ a.linklike{color:var(--primary);font-size:12.5px;font-weight:700;text-decoration
 .ik-full-card img{width:100%;border-radius:18px;max-height:70vh;object-fit:contain;background:#fff;}
 .ik-full-close{position:absolute;top:-6px;right:-6px;width:36px;height:36px;border-radius:50%;border:none;background:#fff;color:#0a2b1e;font-size:20px;line-height:1;z-index:2;box-shadow:0 3px 10px rgba(0,0,0,.35);}
 .ik-full-title{color:#fff;font-size:15px;font-weight:700;text-align:center;margin-bottom:12px;}
+.ik-full-text{background:#fff;border-radius:18px;padding:36px 26px;text-align:center;font-size:20px;font-weight:800;line-height:1.55;color:var(--text);white-space:pre-wrap;}
+.ik-text{width:100%;padding:18px 24px;text-align:center;font-family:'Sora',sans-serif;font-weight:800;font-size:15px;color:#fff;line-height:1.45;text-shadow:0 1px 3px rgba(0,0,0,.35);}
+.ik-textonly{background:linear-gradient(120deg,#0f4d3a 0%,#1b7758 50%,#0f4d3a 100%);}
 .ik-full-actions{display:flex;gap:10px;margin-top:14px;justify-content:center;flex-wrap:wrap;}
 .ik-full-actions .btn{flex:0 0 auto;}
 .ik-thumb{width:52px;height:62px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid var(--border);}
@@ -8584,7 +8587,7 @@ function iklanAktifSekarang(){
   const t = iklanToday();
   return (DB_IKLAN||[]).filter(x=>{
     if(!x.aktif) return false;
-    if(!x.gambar) return false;
+    if(!x.gambar && !String(x.judul||'').trim()) return false;
     if(x.mulai && t < x.mulai) return false;
     if(x.sampai && t > x.sampai) return false;
     return true;
@@ -8602,7 +8605,12 @@ function iklanBannerHTML(){
   return `
     <div id="iklan-banner-wrap"${list.length===1?' class="ik-single"':''}>
       <div class="ik-wrap">
-        ${list.map(x=>`<div class="ik-slide" onclick="openIklan('${x.id}')"><img src="${x.gambar}" alt="" loading="lazy"><span class="ik-shine"></span></div>`).join('')}
+        ${list.map(x=>{
+          const isi = x.gambar
+            ? '<img src="'+x.gambar+'" alt="" loading="lazy"><span class="ik-shine"></span>'
+            : '<div class="ik-text">'+escapeHtml(x.judul||'')+'</div><span class="ik-shine"></span>';
+          return `<div class="ik-slide${x.gambar?'':' ik-textonly'}" onclick="openIklan('${x.id}')">${isi}</div>`;
+        }).join('')}
       </div>
       ${dots}
     </div>`;
@@ -8641,8 +8649,9 @@ function openIklan(id){
     '<div class="ik-full-backdrop"></div>' +
     '<div class="ik-full-card">' +
       '<button type="button" class="ik-full-close" aria-label="Tutup" '+tutup+'>&times;</button>' +
-      (x.judul?'<div class="ik-full-title">'+escapeHtml(x.judul)+'</div>':'') +
-      '<img src="'+x.gambar+'" alt="'+escapeHtml(x.judul||'Poster')+'">' +
+      (x.gambar
+        ? '<img src="'+x.gambar+'" alt="'+escapeHtml(x.judul||'Poster')+'">' + (x.judul?'<div class="ik-full-title">'+escapeHtml(x.judul)+'</div>':'')
+        : '<div class="ik-full-text">'+escapeHtml(x.judul||'')+'</div>') +
       '<div class="ik-full-actions">' +
         (x.tautan?'<button type="button" class="btn btn-primary" onclick="_openIklanTautan(\''+x.id+'\')">Buka Tautan</button>':'') +
         '<button type="button" class="btn btn-outline" '+tutup+'>Tutup</button>' +
@@ -8693,7 +8702,9 @@ function iklanRowHTML(x,i,total){
   const a2 = x.sampai ? fmtDateShort(x.sampai) : 'tanpa batas';
   return `
   <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border);">
-    <img class="ik-thumb" src="${x.gambar}" alt="" onclick="openIklan('${x.id}')" title="Klik untuk pratinjau" style="cursor:pointer;">
+    ${x.gambar
+    ? '<img class="ik-thumb" src="'+x.gambar+'" alt="" onclick="openIklan(\''+x.id+'\')" title="Klik untuk pratinjau" style="cursor:pointer;">'
+    : '<div class="ik-thumb" style="display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(120deg,#0f4d3a,#1b7758);color:#fff;font-size:10.5px;font-weight:800;line-height:1.25;padding:2px;overflow:hidden;" onclick="openIklan(\''+x.id+'\')" title="Klik untuk pratinjau">'+escapeHtml((x.judul||'Teks').slice(0,16))+'</div>'}
     <div style="flex:1;min-width:0;">
       <div style="font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;">${escapeHtml(x.judul||'Tanpa judul')} <span class="badge ${st.cls}">${st.label}</span></div>
       <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">Tampil: <b>${a1}</b> &rarr; <b>${a2}</b>${x.tautan?' &middot; ada tautan':''}</div>
@@ -8725,12 +8736,12 @@ function openIklanForm(id){
   const curImg = (x && x.gambar) ? x.gambar : '';
   openModal(`
     <h3 style="margin:0 0 14px;">${x?'Edit Iklan':'Tambah Iklan'}<span class="sub" style="display:block;font-weight:400;margin-top:3px;">${x?'Ubah lalu simpan, perubahan langsung terlihat nasabah':'Isi lalu simpan; iklan muncul di Beranda nasabah'}</span></h3>
-    <div class="form-row"><label>Judul <span style="font-weight:400;color:var(--muted);">(opsional)</span></label><input type="text" id="ik-judul" value="${x?escapeHtml(x.judul||''):''}" placeholder="cth. Promo Lebaran 2026"></div>
+    <div class="form-row"><label>Teks / Judul iklan <span style="font-weight:400;color:var(--muted);">(wajib kalau tidak pakai gambar)</span></label><input type="text" id="ik-judul" value="${x?escapeHtml(x.judul||''):''}" placeholder="cth. Promo Lebaran 2026"></div>
     <div class="form-row"><label>Gambar poster</label>
       <input type="file" accept="image/*" id="ik-file" onchange="ikFileChosen(this)">
       <input type="hidden" id="ik-data" value="${curImg}">
       <div class="ik-form-img" id="ik-preview">${curImg?'<img src="'+curImg+'" alt="">':''}</div>
-      <span style="font-size:11.5px;color:var(--muted);">Foto dikompres otomatis agar ringan &amp; tidak membebani kuota.</span>
+      <span style="font-size:11.5px;color:var(--muted);">Bisa dikosongkan jika iklan cukup teks saja. Foto (jika ada) dikompres otomatis agar ringan.</span>
     </div>
     <div class="form-row"><label>Tautan <span style="font-weight:400;color:var(--muted);">(opsional — menambah tombol "Buka Tautan")</span></label><input type="text" id="ik-tautan" value="${x?escapeHtml(x.tautan||''):''}" placeholder="https://..."></div>
     <div class="form-row"><label>Mulai tampil</label><input type="date" id="ik-mulai" value="${x&&x.mulai?x.mulai:iklanToday()}"></div>
@@ -8771,7 +8782,7 @@ function saveIklan(){
   const mulai = document.getElementById('ik-mulai').value || iklanToday();
   const sampai = document.getElementById('ik-sampai').value || null;
   const aktif = document.getElementById('ik-aktif') ? document.getElementById('ik-aktif').checked : true;
-  if(!gambar){ toast('Pilih gambar poster dulu'); return; }
+  if(!gambar && !judul){ toast('Isi teks iklan atau unggah gambar poster'); return; }
   const id = ikEditTarget ? ikEditTarget.id : uid('ik');
   let urutan = ikEditTarget ? ikEditTarget.urutan : 0;
   if(!ikEditTarget){ urutan = (DB_IKLAN||[]).reduce((m,x)=>Math.max(m, x.urutan||0), 0)+1; }
