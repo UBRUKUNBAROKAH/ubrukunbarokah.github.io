@@ -8594,9 +8594,14 @@ function iklanAktifSekarang(){
 }
 function refreshIklanQuiet(){
   const now = Date.now();
-  if(now - (window._iklanLastF || 0) < 60000) return;
+  const last = window._iklanLastF || 0;
+  if(now - last < 15000) return;
   window._iklanLastF = now;
-  loadIklan().then(()=>{ if(currentPage==='admin_iklan' || currentPage==='nas_beranda') renderContent(); });
+  const prevSign = JSON.stringify((DB_IKLAN||[]).map(x=>x.id+'|'+x.urutan+'|'+(x.gambar?'P':'T')+'|'+(x.aktif?1:0)));
+  loadIklan().then(()=>{
+    const sign = JSON.stringify((DB_IKLAN||[]).map(x=>x.id+'|'+x.urutan+'|'+(x.gambar?'P':'T')+'|'+(x.aktif?1:0)));
+    if(sign!==prevSign && (currentPage==='admin_iklan'||currentPage==='nas_beranda')) renderContent();
+  });
 }
 function iklanBannerHTML(){
   const list = iklanAktifSekarang();
