@@ -5730,7 +5730,8 @@ function cetakLapTransBulan(bulan){
   doc.setTextColor(0);
   const head = ['No','Tanggal','Anggota','Kategori','Keterangan','Masuk','Keluar'];
   const body = tx.rows.length ? tx.rows.map((r,i)=>[(i+1), String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.masuk?rupiah(r.masuk):'', r.keluar?rupiah(r.keluar):'']) : [['-','-','-','Tidak ada transaksi','-','-','-']];
-  doc.autoTable({ head:[head], body, startY:31, styles:{ fontSize:8, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:{ 0:{ halign:'center' }, 5:{ halign:'right', fontStyle:'bold' }, 6:{ halign:'right', fontStyle:'bold' } } });
+  const foot = [['Total', '', '', '', '', rupiah(tx.total.masuk), rupiah(tx.total.keluar)]];
+  doc.autoTable({ head:[head], body, foot, startY:31, styles:{ fontSize:8, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, footStyles:{ fillColor:[11,61,46], textColor:255, fontStyle:'bold' }, columnStyles:{ 0:{ halign:'center' }, 5:{ halign:'right', fontStyle:'bold' }, 6:{ halign:'right', fontStyle:'bold' } } });
   doc.save(sanitizeFileName('Laporan Transaksi '+namaBulan)+'.pdf');
   toast('File PDF berhasil diunduh');
 }
