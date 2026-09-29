@@ -942,11 +942,12 @@ function xlsxDok(o){
         if(a.length>nCol) nCol=a.length;
       });
       const lastLet = colLet(nCol-1);
-      ws.mergeCells('A1:'+lastLet+'1');
-      ws.mergeCells('A2:'+lastLet+'2');
-      const c1 = ws.getCell('C1'); c1.value = orgName; c1.font={ bold:true, size:15, color:{ argb:'FF0B3D2E' } };
-      const c2 = ws.getCell('C2'); c2.value = String(sh.judul||'Laporan').toUpperCase(); c2.font={ bold:true, size:12, color:{ argb:'FF111827' } };
-      const c3 = ws.getCell('C3'); c3.value = (sh.sub? sh.sub+'    ':'')+'Dicetak '+tgl; c3.font={ size:9, color:{ argb:'FF6B7280' } };
+      const tEnd = Math.max(nCol, 10);
+      ws.mergeCells(1, 4, 1, tEnd);
+      ws.mergeCells(2, 4, 2, tEnd);
+      const c1 = ws.getCell(4,1); c1.value = orgName; c1.font={ bold:true, size:15, color:{ argb:'FF0B3D2E' } };
+      const c2 = ws.getCell(4,2); c2.value = String(sh.judul||'Laporan').toUpperCase(); c2.font={ bold:true, size:12, color:{ argb:'FF111827' } };
+      const c3 = ws.getCell(4,3); c3.value = (sh.sub? sh.sub+'    ':'')+'Dicetak '+tgl; c3.font={ size:9, color:{ argb:'FF6B7280' } };
       ws.getRow(1).height = 20; ws.getRow(2).height = 16;
       ws.addImage(imgId, { tl: { col:0, row:0 }, ext:{ width:64, height:64 } });
       let rr = 5;
