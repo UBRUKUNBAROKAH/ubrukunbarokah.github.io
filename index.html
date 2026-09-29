@@ -5594,6 +5594,83 @@ function computeLapRingkasData(){
   const poolSHUTabungan = (base.dana && base.dana.bagi_hasil_tabungan) || 0;
   return { pools: pools, byYear: base.byYear, overdue, totalTertunggak, totalSimpanan, totalPembiayaanAktif, poolSHUTabungan };
 }
+function computeLapTransaksiBulanan(bulan){
+  const rows = [];
+  const inMonth = d => String(d||'').slice(0,7) === bulan;
+  const nm = uid => { const u = userById(uid); return (u && u.nama && u.nama!=='-') ? u.nama : (uid||'-'); };
+  (DB.tabunganTx||[]).forEach(t=>{
+    if(!inMonth(t.tanggal)) return;
+    const nama = nm(t.userId||t.user_id);
+    if(t.tipe==='setor') rows.push({tanggalString:t.tanggal, nama, kategori:'Setoran Tabungan', ket:t.keterangan||'', masuk:t.jumlah||0, keluar:0});
+    else if(t.tipe==='tarik') rows.push({tanggalString:t.tanggal, nama, kategori:'Penarikan Tabungan', ket:t.keterangan||'', masuk:0, keluar:t.jumlah||0});
+    else if(t.tipe==='transfer_masuk') rows.push({tanggalString:t.tanggal, nama, kategori:'Transfer Masuk', ket:t.keterangan||'', masuk:t.jumlah||0, keluar:0});
+    else if(t.tipe==='transfer_keluar') rows.push({tanggalString:t.tanggal, nama, kategori:'Transfer Keluar', ket:t.keterangan||'', masuk:0, keluar:t.jumlah||0});
+  });
+  (DB.pembiayaan||[]).forEach(p=>{
+    if(inMonth(p.mulai) && p.statusPengajuan==='approved'){
+      rows.push({tanggalString:p.mulai, nama:nm(p.userId), kategori:'Pencairan Pembiayaan', ket:'Pinjaman '+rupiah(p.jumlahPinjaman||0)+' / '+(p.tenor||0)+' bln', masuk:0, keluar:p.jumlahPinjaman||0});
+    }
+    (p.riwayatAngsuran||[]).forEach(a=>{
+      if(!inMonth(a.tanggal)) return;
+      rows.push({tanggalString:a.tanggal, nama:nm(p.userId), kategori:'Pembayaran Angsuran', ket:(a.angsuranKe?'Angsuran ke-'+a.angsuranKe+' &middot; ':''), masuk:a.jumlah||0, keluar:0});
+    });
+  });
+  (DB.kasPenarikan||[]).forEach(k=>{
+    if(!inMonth(k.tanggal)) return;
+    const lunas = /pelunasan/i.test(String(k.keterangan||''));
+    rows.push({tanggalString:k.tanggal, nama:nm(k.userId), kategori: lunas?'Pengembalian Kas':'Penarikan Kas', ket:k.keterangan||'', masuk:lunas?(k.jumlah||0):0, keluar:lunas?0:(k.jumlah||0)});
+  });
+  (DB.hutangKoor||[]).forEach(h=>{
+    if(!inMonth(h.tanggal)) return;
+    rows.push({tanggalString:h.tanggal, nama:nm(h.userId)||nm(h.koorId), kategori:'Kekurangan Kas Koor', ket:h.keterangan||'', masuk:0, keluar:h.jumlah||0});
+  });
+  rows.sort((a,b)=>String(b.tanggalString||'').localeCompare(String(a.tanggalString||'')));
+  const total = {masuk:0, keluar:0};
+  const byKategori = {};
+  rows.forEach(r=>{
+    total.masuk += r.masuk||0; total.keluar += r.keluar||0;
+    const k = byKategori[r.kategori] || (byKategori[r.kategori] = {masuk:0, keluar:0, n:0});
+    k.masuk += r.masuk||0; k.keluar += r.keluar||0; k.n++;
+  });
+  return { rows, total, byKategori };
+}
+function adminSetLapTransBulan(v){ currentSubState.lapTransBulan = v || null; renderContent(); }
+function cetakLapTransBulan(bulan){
+  const tx = computeLapTransaksiBulanan(bulan);
+  const namaBulan = LAP_MODAL_BULAN[Number(bulan.slice(5))-1] + ' ' + bulan.slice(0,4);
+  const { jsPDF } = window.jspdf;
+  const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const doc = new jsPDF({ orientation:'landscape' });
+  doc.setFontSize(13); doc.text(orgName.toUpperCase(), 14, 14);
+  doc.setFontSize(10.5); doc.text('LAPORAN TRANSAKSI BULANAN \u2014 '+namaBulan.toUpperCase(), 14, 20.5);
+  doc.setFontSize(8.5); doc.setTextColor(120);
+  doc.text('Dicetak: '+tgl+'  |  Total Masuk: '+rupiah(tx.total.masuk)+'  |  Total Keluar: '+rupiah(tx.total.keluar), 14, 26);
+  doc.setTextColor(0);
+  const head = ['No','Tanggal','Anggota','Kategori','Keterangan','Masuk','Keluar'];
+  const body = tx.rows.length ? tx.rows.map((r,i)=>[(i+1), String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.masuk?rupiah(r.masuk):'', r.keluar?rupiah(r.keluar):'']) : [['-','-','-','Tidak ada transaksi','-','-','-']];
+  doc.autoTable({ head:[head], body, startY:31, styles:{ fontSize:8, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:{ 0:{ halign:'center' }, 5:{ halign:'right', fontStyle:'bold' }, 6:{ halign:'right', fontStyle:'bold' } } });
+  doc.save(sanitizeFileName('Laporan Transaksi '+namaBulan)+'.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function exportLapTransBulanXLS(bulan){
+  const tx = computeLapTransaksiBulanan(bulan);
+  const namaBulan = LAP_MODAL_BULAN[Number(bulan.slice(5))-1] + ' ' + bulan.slice(0,4);
+  const rows = [];
+  rows.push(['LAPORAN TRANSAKSI BULANAN','']);
+  rows.push(['Koperasi: '+((DB.koperasi&&DB.koperasi.nama)||''),'']);
+  rows.push(['Periode: '+namaBulan,'']);
+  rows.push(['Total Masuk: '+rupiah(tx.total.masuk),'']);
+  rows.push(['Total Keluar: '+rupiah(tx.total.keluar),'']);
+  rows.push(['','']);
+  rows.push(['Tanggal','Anggota','Kategori','Keterangan','Masuk','Keluar']);
+  tx.rows.forEach(r=>rows.push([String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.masuk||0, r.keluar||0]));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Transaksi '+namaBulan);
+  XLSX.writeFile(wb, sanitizeFileName('Laporan Transaksi '+namaBulan)+'.xlsx');
+  toast('File Excel berhasil diunduh');
+}
 const LAP_RINGKAS_CATATAN = 'Angsuran Masuk = total nominal angsuran (pokok + margin) yang diterima pada bulan tsb. Angsuran Macet = kondisi real-time saat laporan dibuka (bukan histori per bulan), memakai definisi yang sama dengan daftar "Telat Bayar" di Beranda. SHU Tabungan, SHU Saham, dan pool lain dihitung dari alokasi persentase margin angsuran yang diterima, sesuai pengaturan di menu Pengaturan &rarr; Aturan Keuangan.';
 function renderAdminLaporanRingkas(user){
   const data = computeLapRingkasData();
@@ -5610,6 +5687,42 @@ function renderAdminLaporanRingkas(user){
   html += '<div class="stat-box stat-primary"><div class="ic-badge">'+(ICONS.finance||'')+'</div><div class="n mono">'+fmt(data.poolSHUTabungan)+'</div><div class="l">Pool SHU Tabungan</div></div>';
   html += '<div class="stat-box'+(data.overdue.length?' stat-danger':'')+'"><div class="n mono">'+data.overdue.length+'</div><div class="l">Anggota telat bayar saat ini</div></div>';
   html += '<div class="stat-box'+(data.totalTertunggak?' stat-danger':'')+'"><div class="n mono">'+fmt(data.totalTertunggak)+'</div><div class="l">Total tunggakan angsuran</div></div>';
+  html += '</div>';
+
+  const thnNow = new Date().getFullYear();
+  const blnNow = thnNow + '-' + String(new Date().getMonth()+1).padStart(2,'0');
+  const bln = currentSubState.lapTransBulan || blnNow;
+  const tx = computeLapTransaksiBulanan(bln);
+  const txNama = LAP_MODAL_BULAN[Number(bln.slice(5))-1] + ' ' + bln.slice(0,4);
+  html += '<div class="section-label" style="margin-top:10px;">Laporan Transaksi Bulanan</div>';
+  html += '<div class="card" style="padding:14px 16px;margin-bottom:14px;">';
+  html += '<div class="flex-between" style="gap:8px;flex-wrap:wrap;margin-bottom:10px;">';
+  html += '<input type="month" value="'+bln+'" onchange="adminSetLapTransBulan(this.value)" style="max-width:180px;">';
+  html += '<div style="display:flex;gap:6px;">';
+  html += '<button class="btn btn-outline btn-sm" onclick="cetakLapTransBulan(\''+bln+'\')">'+(ICONS.pdf||'📄')+' PDF</button>';
+  html += '<button class="btn btn-outline btn-sm" onclick="exportLapTransBulanXLS(\''+bln+'\')">'+(ICONS.xls||'')+' Excel</button>';
+  html += '</div></div>';
+  html += '<div class="stat-grid cols-4" style="margin:0 0 12px;">';
+  html += '<div class="stat-box stat-primary"><div class="n mono">'+tx.rows.length+'</div><div class="l">Transaksi</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="color:var(--ok);">'+rupiah(tx.total.masuk)+'</div><div class="l">Total Masuk</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="color:var(--danger);">'+rupiah(tx.total.keluar)+'</div><div class="l">Total Keluar</div></div>';
+  html += '<div class="stat-box stat-gold"><div class="n mono">'+rupiah(tx.total.masuk-tx.total.keluar)+'</div><div class="l">Selisih</div></div>';
+  html += '</div>';
+  if(!tx.rows.length){
+    html += '<div class="hint" style="padding:10px;text-align:center;">Tidak ada transaksi tercatat pada '+txNama+'.</div>';
+  } else {
+    html += '<div style="font-size:11px;color:var(--muted);margin:2px 0 6px;">RINGKASAN PER KATEGORI</div>';
+    Object.keys(tx.byKategori).forEach(k=>{
+      const c = tx.byKategori[k];
+      html += '<div class="flex-between" style="padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;"><div style="font-weight:600;">'+k+'<span style="color:var(--muted);font-weight:400;"> ('+c.n+')</span></div><div class="mono">'+(c.masuk?'<span style="color:var(--ok);">+'+rupiah(c.masuk)+'</span> ':'')+(c.keluar?'<span style="color:var(--danger);">&minus;'+rupiah(c.keluar)+'</span>':'')+'</div></div>';
+    });
+    html += '<div style="font-size:11px;color:var(--muted);margin:12px 0 6px;">SEMUA TRANSAKSI</div>';
+    tx.rows.forEach(r=>{
+      const dStr = String(r.tanggalString||'').slice(0,10)||'-';
+      html += '<div class="list-row"><div class="info"><div class="title">'+r.nama+'</div><div class="sub">'+fmtDateShort(dStr)+' &middot; '+r.kategori+(r.ket?' &mdash; '+escapeHtml(r.ket):'')+'</div></div><div class="amt mono" style="font-weight:700;color:'+(r.keluar?'var(--danger)':'var(--ok)')+';">'+(r.keluar?'&minus;':'+')+rupiah(r.masuk||r.keluar)+'</div></div>';
+    });
+  }
+  html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.5;">Transaksi yang dirinci: setoran &amp; penarikan tabungan, transfer antar rekening, pembayaran angsuran, pencairan pembiayaan, serta penarikan/pengembalian kas koordinator. Pembelian saham dan setoran koordinator tidak dirinci terpisah agar tidak dihitung dua kali (sudah tercermin pada pos setoran tabungan / tanpa tanggal tercatat).</div>';
   html += '</div>';
 
   if(!data.byYear.length){
