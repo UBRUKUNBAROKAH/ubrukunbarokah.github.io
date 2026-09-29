@@ -5635,6 +5635,7 @@ function computeLapTransaksiBulanan(bulan){
   return { rows, total, byKategori };
 }
 function adminSetLapTransBulan(v){ currentSubState.lapTransBulan = v || null; renderContent(); }
+function adminSetLapTab(t){ currentSubState.lapTabs = t; renderContent(); }
 function cetakLapTransBulan(bulan){
   const tx = computeLapTransaksiBulanan(bulan);
   const namaBulan = LAP_MODAL_BULAN[Number(bulan.slice(5))-1] + ' ' + bulan.slice(0,4);
@@ -5679,22 +5680,19 @@ function renderAdminLaporanRingkas(user){
   const poolLabel = p => p.id==='bagiHasilTabungan' ? 'Bagi Hasil Tabungan' : (p.id==='shuSaham' ? 'SHU Saham' : p.label);
   const fmt = v => rupiah(v);
   let html = '';
-  html += '<div class="page-title">Laporan Ringkas<span class="sub">Angsuran & bagi hasil, per bulan/tahun</span></div>';
-
-  html += '<div class="stat-grid cols-4" style="margin-bottom:14px;">';
-  html += '<div class="stat-box stat-primary"><div class="ic-badge">'+(ICONS.wallet||'')+'</div><div class="n mono">'+fmt(data.totalSimpanan)+'</div><div class="l">Total tabungan</div></div>';
-  html += '<div class="stat-box stat-gold"><div class="ic-badge">'+(ICONS.finance||'')+'</div><div class="n mono">'+fmt(data.totalPembiayaanAktif)+'</div><div class="l">Sisa pembiayaan aktif</div></div>';
-  html += '<div class="stat-box stat-primary"><div class="ic-badge">'+(ICONS.finance||'')+'</div><div class="n mono">'+fmt(data.poolSHUTabungan)+'</div><div class="l">Pool SHU Tabungan</div></div>';
-  html += '<div class="stat-box'+(data.overdue.length?' stat-danger':'')+'"><div class="n mono">'+data.overdue.length+'</div><div class="l">Anggota telat bayar saat ini</div></div>';
-  html += '<div class="stat-box'+(data.totalTertunggak?' stat-danger':'')+'"><div class="n mono">'+fmt(data.totalTertunggak)+'</div><div class="l">Total tunggakan angsuran</div></div>';
+  const tab = currentSubState.lapTabs || 'trans';
+  html += '<div class="page-title">Laporan Ringkas<span class="sub">Transaksi bulanan & ringkasan tahunan</span></div>';
+  html += '<div style="display:flex;gap:8px;margin:0 0 14px;">';
+  html += '<button class="btn '+(tab==='trans'?'btn-primary':'btn-outline')+'" style="flex:1;font-size:12px;padding:9px 6px;" onclick="adminSetLapTab(\'trans\')">Laporan Transaksi</button>';
+  html += '<button class="btn '+(tab==='ringkas'?'btn-primary':'btn-outline')+'" style="flex:1;font-size:12px;padding:9px 6px;" onclick="adminSetLapTab(\'ringkas\')">Ringkasan Tahunan</button>';
   html += '</div>';
 
+  if(tab==='trans'){
   const thnNow = new Date().getFullYear();
   const blnNow = thnNow + '-' + String(new Date().getMonth()+1).padStart(2,'0');
   const bln = currentSubState.lapTransBulan || blnNow;
   const tx = computeLapTransaksiBulanan(bln);
   const txNama = LAP_MODAL_BULAN[Number(bln.slice(5))-1] + ' ' + bln.slice(0,4);
-  html += '<div class="section-label" style="margin-top:10px;">Laporan Transaksi Bulanan</div>';
   html += '<div class="card" style="padding:14px 16px;margin-bottom:14px;">';
   html += '<div class="flex-between" style="gap:8px;flex-wrap:wrap;margin-bottom:10px;">';
   html += '<input type="month" value="'+bln+'" onchange="adminSetLapTransBulan(this.value)" style="max-width:180px;">';
@@ -5723,6 +5721,16 @@ function renderAdminLaporanRingkas(user){
     });
   }
   html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.5;">Transaksi yang dirinci: setoran &amp; penarikan tabungan, transfer antar rekening, pembayaran angsuran, pencairan pembiayaan, serta penarikan/pengembalian kas koordinator. Pembelian saham dan setoran koordinator tidak dirinci terpisah agar tidak dihitung dua kali (sudah tercermin pada pos setoran tabungan / tanpa tanggal tercatat).</div>';
+  html += '</div>';
+  return html;
+  }
+
+  html += '<div class="stat-grid cols-4" style="margin-bottom:14px;">';
+  html += '<div class="stat-box stat-primary"><div class="ic-badge">'+(ICONS.wallet||'')+'</div><div class="n mono">'+fmt(data.totalSimpanan)+'</div><div class="l">Total tabungan</div></div>';
+  html += '<div class="stat-box stat-gold"><div class="ic-badge">'+(ICONS.finance||'')+'</div><div class="n mono">'+fmt(data.totalPembiayaanAktif)+'</div><div class="l">Sisa pembiayaan aktif</div></div>';
+  html += '<div class="stat-box stat-primary"><div class="ic-badge">'+(ICONS.finance||'')+'</div><div class="n mono">'+fmt(data.poolSHUTabungan)+'</div><div class="l">Pool SHU Tabungan</div></div>';
+  html += '<div class="stat-box'+(data.overdue.length?' stat-danger':'')+'"><div class="n mono">'+data.overdue.length+'</div><div class="l">Anggota telat bayar saat ini</div></div>';
+  html += '<div class="stat-box'+(data.totalTertunggak?' stat-danger':'')+'"><div class="n mono">'+fmt(data.totalTertunggak)+'</div><div class="l">Total tunggakan angsuran</div></div>';
   html += '</div>';
 
   if(!data.byYear.length){
