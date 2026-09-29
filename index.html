@@ -5704,29 +5704,28 @@ function computeLapTransaksiBulanan(bulan){
   (DB.tabunganTx||[]).forEach(t=>{
     if(!inMonth(t.tanggal)) return;
     const nama = nm(t.userId||t.user_id);
-    const oleh = t.oleh ? nm(t.oleh) : '';
-    if(t.tipe==='setor') rows.push({tanggalString:t.tanggal, nama, kategori:'Setoran Tabungan', ket:t.keterangan||'', masuk:t.jumlah||0, keluar:0, oleh});
-    else if(t.tipe==='tarik') rows.push({tanggalString:t.tanggal, nama, kategori:'Penarikan Tabungan', ket:t.keterangan||'', masuk:0, keluar:t.jumlah||0, oleh});
-    else if(t.tipe==='transfer_masuk') rows.push({tanggalString:t.tanggal, nama, kategori:'Transfer Masuk', ket:t.keterangan||'', masuk:t.jumlah||0, keluar:0, oleh});
-    else if(t.tipe==='transfer_keluar') rows.push({tanggalString:t.tanggal, nama, kategori:'Transfer Keluar', ket:t.keterangan||'', masuk:0, keluar:t.jumlah||0, oleh});
+    if(t.tipe==='setor') rows.push({tanggalString:t.tanggal, nama, kategori:'Setoran Tabungan', ket:t.keterangan||'', masuk:t.jumlah||0, keluar:0});
+    else if(t.tipe==='tarik') rows.push({tanggalString:t.tanggal, nama, kategori:'Penarikan Tabungan', ket:t.keterangan||'', masuk:0, keluar:t.jumlah||0});
+    else if(t.tipe==='transfer_masuk') rows.push({tanggalString:t.tanggal, nama, kategori:'Transfer Masuk', ket:t.keterangan||'', masuk:t.jumlah||0, keluar:0});
+    else if(t.tipe==='transfer_keluar') rows.push({tanggalString:t.tanggal, nama, kategori:'Transfer Keluar', ket:t.keterangan||'', masuk:0, keluar:t.jumlah||0});
   });
   (DB.pembiayaan||[]).forEach(p=>{
     if(inMonth(p.mulai) && p.statusPengajuan==='approved'){
-      rows.push({tanggalString:p.mulai, nama:nm(p.userId), kategori:'Pencairan Pembiayaan', ket:'Pinjaman '+rupiah(p.jumlahPinjaman||0)+' / '+(p.tenor||0)+' bln', masuk:0, keluar:p.jumlahPinjaman||0, oleh: nm(p.created_by) || nm(p.disetujui_oleh) || ''});
+      rows.push({tanggalString:p.mulai, nama:nm(p.userId), kategori:'Pencairan Pembiayaan', ket:'Pinjaman '+rupiah(p.jumlahPinjaman||0)+' / '+(p.tenor||0)+' bln', masuk:0, keluar:p.jumlahPinjaman||0});
     }
     (p.riwayatAngsuran||[]).forEach(a=>{
       if(!inMonth(a.tanggal)) return;
-      rows.push({tanggalString:a.tanggal, nama:nm(p.userId), kategori:'Pembayaran Angsuran', ket:(a.angsuranKe?'Angsuran ke-'+a.angsuranKe+' &middot; ':''), masuk:a.jumlah||0, keluar:0, oleh:a.oleh?nm(a.oleh):''});
+      rows.push({tanggalString:a.tanggal, nama:nm(p.userId), kategori:'Pembayaran Angsuran', ket:(a.angsuranKe?'Angsuran ke-'+a.angsuranKe+' &middot; ':''), masuk:a.jumlah||0, keluar:0});
     });
   });
   (DB.kasPenarikan||[]).forEach(k=>{
     if(!inMonth(k.tanggal)) return;
     const lunas = /pelunasan/i.test(String(k.keterangan||''));
-    rows.push({tanggalString:k.tanggal, nama:nm(k.userId), kategori: lunas?'Pengembalian Kas':'Penarikan Kas', ket:k.keterangan||'', masuk:lunas?(k.jumlah||0):0, keluar:lunas?0:(k.jumlah||0), oleh: k.oleh?nm(k.oleh):(k.koorId?nm(k.koorId):'')});
+    rows.push({tanggalString:k.tanggal, nama:nm(k.userId), kategori: lunas?'Pengembalian Kas':'Penarikan Kas', ket:k.keterangan||'', masuk:lunas?(k.jumlah||0):0, keluar:lunas?0:(k.jumlah||0)});
   });
   (DB.hutangKoor||[]).forEach(h=>{
     if(!inMonth(h.tanggal)) return;
-    rows.push({tanggalString:h.tanggal, nama:nm(h.userId)||nm(h.koorId), kategori:'Kekurangan Kas Koor', ket:h.keterangan||'', masuk:0, keluar:h.jumlah||0, oleh: h.koorId?nm(h.koorId):''});
+    rows.push({tanggalString:h.tanggal, nama:nm(h.userId)||nm(h.koorId), kategori:'Kekurangan Kas Koor', ket:h.keterangan||'', masuk:0, keluar:h.jumlah||0});
   });
   rows.sort((a,b)=>String(b.tanggalString||'').localeCompare(String(a.tanggalString||'')));
   const total = {masuk:0, keluar:0};
@@ -5751,20 +5750,20 @@ function cetakLapTransBulan(bulan){
   doc.setFontSize(8.5); doc.setTextColor(120);
   doc.text('Dicetak: '+tgl+'  |  Total Masuk: '+rupiah(tx.total.masuk)+'  |  Total Keluar: '+rupiah(tx.total.keluar), 14, 26);
   doc.setTextColor(0);
-  const head = ['No','Tanggal','Anggota','Kategori','Keterangan','Oleh','Masuk','Keluar'];
-  const body = tx.rows.length ? tx.rows.map((r,i)=>[(i+1), String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.oleh||'', r.masuk?rupiah(r.masuk):'', r.keluar?rupiah(r.keluar):'']) : [['-','-','-','Tidak ada transaksi','-','-','-','-']];
-  doc.autoTable({ head:[head], body, startY:31, styles:{ fontSize:8, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:{ 0:{ halign:'center' }, 5:{ halign:'left' }, 6:{ halign:'right', fontStyle:'bold' }, 7:{ halign:'right', fontStyle:'bold' } } });
-  pdfTotalRow(doc, ['Total', '', '', '', '', '', rupiah(tx.total.masuk), rupiah(tx.total.keluar)], { 0:'center', 6:'right', 7:'right' });
+  const head = ['No','Tanggal','Anggota','Kategori','Keterangan','Masuk','Keluar'];
+  const body = tx.rows.length ? tx.rows.map((r,i)=>[(i+1), String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.masuk?rupiah(r.masuk):'', r.keluar?rupiah(r.keluar):'']) : [['-','-','-','Tidak ada transaksi','-','-','-']];
+  doc.autoTable({ head:[head], body, startY:31, styles:{ fontSize:8, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:{ 0:{ halign:'center' }, 5:{ halign:'right', fontStyle:'bold' }, 6:{ halign:'right', fontStyle:'bold' } } });
+  pdfTotalRow(doc, ['Total', '', '', '', '', rupiah(tx.total.masuk), rupiah(tx.total.keluar)], { 0:'center', 5:'right', 6:'right' });
   doc.save(sanitizeFileName('Laporan Transaksi '+namaBulan)+'.pdf');
   toast('File PDF berhasil diunduh');
 }
 function exportLapTransBulanXLS(bulan){
   const tx = computeLapTransaksiBulanan(bulan);
   const namaBulan = LAP_MODAL_BULAN[Number(bulan.slice(5))-1] + ' ' + bulan.slice(0,4);
-  const rows = tx.rows.map(r=>[String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.oleh||'', r.masuk||0, r.keluar||0]);
-  rows.push({ tot:['Total', '', '', '', '', tx.total.masuk, tx.total.keluar] });
+  const rows = tx.rows.map(r=>[String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.masuk||0, r.keluar||0]);
+  rows.push({ tot:['Total', '', '', '', tx.total.masuk, tx.total.keluar] });
   xlsxDok({ file:'Laporan Transaksi '+namaBulan, landscape:true,
-    sheets:[{ name:'Transaksi '+namaBulan, judul:'Laporan Transaksi Bulanan', sub:'Periode '+namaBulan, headers:['Tanggal','Anggota','Kategori','Keterangan','Oleh','Masuk','Keluar'], rows }] });
+    sheets:[{ name:'Transaksi '+namaBulan, judul:'Laporan Transaksi Bulanan', sub:'Periode '+namaBulan, headers:['Tanggal','Anggota','Kategori','Keterangan','Masuk','Keluar'], rows }] });
 }
 const LAP_RINGKAS_CATATAN = 'Angsuran Masuk = total nominal angsuran (pokok + margin) yang diterima pada bulan tsb. Angsuran Macet = kondisi real-time saat laporan dibuka (bukan histori per bulan), memakai definisi yang sama dengan daftar "Telat Bayar" di Beranda. SHU Tabungan, SHU Saham, dan pool lain dihitung dari alokasi persentase margin angsuran yang diterima, sesuai pengaturan di menu Pengaturan &rarr; Aturan Keuangan.';
 function renderAdminLaporanRingkas(user){
