@@ -919,20 +919,25 @@ function pdfTotalRow(doc, cells, alignMap){
   if(!at || !at.columns || !at.finalY) return;
   const h = 9;
   const y = at.finalY;
+  const left = (at.settings && at.settings.margin && at.settings.margin.left) || 14;
+  let x = left;
   doc.setFillColor(11,61,46);
+  at.columns.forEach(c=>{ doc.rect(x, y, c.width, h, 'F'); x += c.width; });
+  doc.setDrawColor(255);
+  x = left;
+  at.columns.forEach(c=>{ doc.rect(x, y, c.width, h, 'S'); x += c.width; });
   doc.setTextColor(255);
   doc.setFont('helvetica','bold');
   doc.setFontSize(8);
-  doc.setDrawColor(255);
-  let x = (at.settings && at.settings.margin && at.settings.margin.left) || 14;
+  x = left;
   at.columns.forEach((c,i)=>{
     const v = (cells && cells[i] !== undefined && cells[i] !== null) ? String(cells[i]) : '';
-    doc.rect(x, y, c.width, h, 'FD');
     const hal = (alignMap && alignMap[i]) || 'left';
-    if(!v) { x += c.width; return; }
-    if(hal==='center') doc.text(v, x + c.width/2, y + h/2 + 1.4, { align:'center' });
-    else if(hal==='right') doc.text(v, x + c.width - 2.5, y + h/2 + 1.4, { align:'right' });
-    else doc.text(v, x + 2.5, y + h/2 + 1.4);
+    if(v){
+      if(hal==='center') doc.text(v, x + c.width/2, y + h/2 + 1.4, { align:'center' });
+      else if(hal==='right') doc.text(v, x + c.width - 2.5, y + h/2 + 1.4, { align:'right' });
+      else doc.text(v, x + 2.5, y + h/2 + 1.4);
+    }
     x += c.width;
   });
   doc.setDrawColor(0);
