@@ -901,6 +901,10 @@ async function loadDB() {
 }
 function fmtDate(iso){ const d = new Date(iso); return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
 function fmtDateShort(iso){ const d = new Date(iso); return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'}); }
+function setA4Page(ws, landscape){
+  try{ ws['!pageSetup'] = Object.assign(ws['!pageSetup']||{}, { paperSize: 9, orientation: landscape ? 'landscape' : 'portrait', fitToWidth: 1, fitToHeight: 0 }); }catch(e){}
+  return ws;
+}
 function initials(name){ return (name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
 
 // ---- Transform snake_case (DB) to camelCase (JS) ----
@@ -3502,7 +3506,7 @@ function exportToPDF(type, kelompokId){
   const tgl = new Date().toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   groups.forEach((k, idx)=>{
     setTimeout(()=>{
-      const doc = new jsPDF();
+      const doc = new jsPDF({ format:'a4' });
       const rows = meta.rows(k.id);
       doc.setFontSize(13);
       doc.text(orgName, 14, 16);
@@ -3534,7 +3538,7 @@ function exportToXLS(type, kelompokId){
   groups.forEach(k=>{
     const rows = meta.rows(k.id);
     const body = rows.length ? rows : [meta.headers.map((h,i)=> i===1 ? 'Tidak ada data' : '')];
-    const ws = XLSX.utils.aoa_to_sheet([meta.headers, ...body]);
+    const ws = setA4Page(XLSX.utils.aoa_to_sheet([meta.headers, ...body]), false);
     let sheetName = sanitizeFileName(k.nama).slice(0,28) || 'Kelompok';
     if(usedNames[sheetName]){ usedNames[sheetName]++; sheetName = (sheetName+'_'+usedNames[sheetName]).slice(0,31); }
     else usedNames[sheetName] = 1;
@@ -3642,7 +3646,7 @@ function downloadTabunganPDF(userId){
   const allTx = txForUser(userId);
   if(!accs.length){ toast('Belum ada rekening tabungan'); return; }
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF({ format:'a4' });
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'UB Rukun Barokah';
   const tgl = new Date().toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   doc.setFontSize(13);
@@ -4299,7 +4303,7 @@ function downloadAngsuranPDF(pembId){
   const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
   const riwayat = (p.riwayatAngsuran || []).slice().reverse();
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF({ format:'a4' });
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'UB Rukun Barokah';
   const tgl = new Date().toLocaleString('id-ID', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   doc.setFontSize(13);
@@ -5114,7 +5118,7 @@ function cetakLapModal(tahun){
   const cols = LAP_MODAL_COLS, totalKeys = LAP_MODAL_TOTAL_KEYS;
   const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
-  const doc = new jsPDF({ orientation:'landscape' });
+  const doc = new jsPDF({ orientation:'landscape', format:'a4' });
   doc.setFontSize(13);
   doc.text(orgName.toUpperCase(), 14, 14);
   doc.setFontSize(10.5);
@@ -5163,7 +5167,7 @@ function exportLapModalXLS(tahun){
       return v===null||v===undefined ? '' : v;
     })]);
   }
-  const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
+  const ws = setA4Page(XLSX.utils.aoa_to_sheet([header, ...body]), true);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Posisi Modal ' + yd.tahun);
   XLSX.writeFile(wb, sanitizeFileName('Posisi Modal Berjalan ' + yd.tahun) + '.xlsx');
@@ -5246,7 +5250,7 @@ function cetakLapNeraca(){
   body.push(['  SHU & Cadangan', fmt(n.shu)]);
   body.push(['TOTAL KEWAJIBAN & EKUITAS', fmt(n.totalSimpanan + n.saham + n.shu)]);
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF({ format:'a4' });
   doc.setFontSize(13);
   doc.text(orgName.toUpperCase(), 14, 16);
   doc.setFontSize(11);
@@ -5290,7 +5294,7 @@ function exportLapNeracaXLS(){
   rows.push(['Modal Saham', n.saham]);
   rows.push(['SHU & Cadangan', n.shu]);
   rows.push(['TOTAL KEWAJIBAN & EKUITAS', n.totalSimpanan + n.saham + n.shu]);
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = setA4Page(XLSX.utils.aoa_to_sheet(rows), false);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Neraca');
   XLSX.writeFile(wb, sanitizeFileName('Neraca') + '.xlsx');
@@ -5439,7 +5443,7 @@ function cetakLapLabaRugi(tahun){
   const fmt = v => rupiah(v);
   const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
-  const doc = new jsPDF({ orientation:'landscape' });
+  const doc = new jsPDF({ orientation:'landscape', format:'a4' });
   doc.setFontSize(13);
   doc.text(orgName.toUpperCase(), 14, 14);
   doc.setFontSize(10.5);
@@ -5516,7 +5520,7 @@ function exportLapLabaRugiXLS(tahun){
   rows.push(['RINCIAN PER BULAN','']);
   rows.push(['Bulan','Pendapatan Margin','Total Beban','Laba Bersih','Laba Kumulatif']);
   yd.rows.forEach(r=>rows.push([LAP_MODAL_BULAN[r.bulan-1], r.pendapatan, r.totalBeban, r.laba, r.kumLaba]));
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = setA4Page(XLSX.utils.aoa_to_sheet(rows), true);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laba Rugi '+tahun);
   XLSX.writeFile(wb, sanitizeFileName('Laba Rugi '+tahun) + '.xlsx');
@@ -5642,7 +5646,7 @@ function cetakLapTransBulan(bulan){
   const { jsPDF } = window.jspdf;
   const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
-  const doc = new jsPDF({ orientation:'landscape' });
+  const doc = new jsPDF({ orientation:'landscape', format:'a4' });
   doc.setFontSize(13); doc.text(orgName.toUpperCase(), 14, 14);
   doc.setFontSize(10.5); doc.text('LAPORAN TRANSAKSI BULANAN \u2014 '+namaBulan.toUpperCase(), 14, 20.5);
   doc.setFontSize(8.5); doc.setTextColor(120);
@@ -5666,7 +5670,7 @@ function exportLapTransBulanXLS(bulan){
   rows.push(['','']);
   rows.push(['Tanggal','Anggota','Kategori','Keterangan','Masuk','Keluar']);
   tx.rows.forEach(r=>rows.push([String(r.tanggalString||'').slice(0,10), r.nama, r.kategori, r.ket||'', r.masuk||0, r.keluar||0]));
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = setA4Page(XLSX.utils.aoa_to_sheet(rows), true);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Transaksi '+namaBulan);
   XLSX.writeFile(wb, sanitizeFileName('Laporan Transaksi '+namaBulan)+'.xlsx');
@@ -5804,7 +5808,7 @@ function cetakLapRingkas(tahun){
   const fmt = v => rupiah(v);
   const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
-  const doc = new jsPDF({ orientation:'landscape' });
+  const doc = new jsPDF({ orientation:'landscape', format:'a4' });
   doc.setFontSize(13);
   doc.text(orgName.toUpperCase(), 14, 14);
   doc.setFontSize(10.5);
@@ -5871,7 +5875,7 @@ function exportLapRingkasXLS(tahun){
     r.angsuranMasuk||0,
     ...bebanPools.map(p=>(r.bebanBulan&&r.bebanBulan[p.id])||0)
   ]));
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = setA4Page(XLSX.utils.aoa_to_sheet(rows), true);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan Ringkas '+tahun);
   XLSX.writeFile(wb, sanitizeFileName('Laporan Ringkas '+tahun) + '.xlsx');
@@ -5890,7 +5894,7 @@ function cetakLapRingkasBulan(tahun, bulan){
   const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
   const namaBulan = LAP_MODAL_BULAN[r.bulan-1];
-  const doc = new jsPDF();
+  const doc = new jsPDF({ format:'a4' });
   doc.setFontSize(13);
   doc.text(orgName.toUpperCase(), 14, 14);
   doc.setFontSize(10.5);
@@ -5933,7 +5937,7 @@ function exportLapRingkasBulanXLS(tahun, bulan){
   rows.push(['','']);
   rows.push(['Angsuran Masuk', r.angsuranMasuk||0]);
   bebanPools.forEach(p=>rows.push([poolLabel(p), (r.bebanBulan&&r.bebanBulan[p.id])||0]));
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = setA4Page(XLSX.utils.aoa_to_sheet(rows), false);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, namaBulan+' '+tahun);
   XLSX.writeFile(wb, sanitizeFileName('Laporan Ringkas '+namaBulan+' '+tahun) + '.xlsx');
@@ -6799,7 +6803,7 @@ function unduhPdfSHU(){
   if(!rows.length){ toast('Tidak ada data untuk diunduh'); return; }
   const { jsPDF } = window.jspdf;
   const tgl = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
-  const doc = new jsPDF({ orientation:'portrait' });
+  const doc = new jsPDF({ orientation:'portrait', format:'a4' });
   doc.setFontSize(13);
   doc.text((DB.koperasi.nama||'Koperasi').toUpperCase(), 14, 14);
   doc.setFontSize(10.5);
@@ -6824,7 +6828,7 @@ function unduhExcelSHU(){
   if(!rows.length){ toast('Tidak ada data untuk diunduh'); return; }
   const header = ['No', kolomNama, 'SHU'];
   const body = rows.map((r,i)=>[i+1, r[0], r[1]]);
-  const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
+  const ws = setA4Page(XLSX.utils.aoa_to_sheet([header, ...body]), false);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, label.slice(0,31));
   XLSX.writeFile(wb, sanitizeFileName('Daftar ' + label) + '.xlsx');
