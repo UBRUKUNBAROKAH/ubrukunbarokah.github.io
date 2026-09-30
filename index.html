@@ -2673,7 +2673,7 @@ function bspSelectPemb(){
     const totalKew = p.jumlahPinjaman + marginNominalOf(p);
     const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
     const sisaTagihan = Math.max(totalKew-totalDibayar,0);
-    infoEl.innerHTML = 'Angsuran ke-' + (p.tenor - p.sisaAngsuran + 1) + ' dari ' + p.tenor +
+    infoEl.innerHTML = 'Nomor Akad : <b>' + (nomorAkadOf(p)||'-') + '</b><br>Angsuran ke-' + (p.tenor - p.sisaAngsuran + 1) + ' dari ' + p.tenor +
       '<br>Angsuran/bulan : <b>' + rupiah(p.angsuranPerBulan) + '</b> &middot; Sisa tagihan : <b>' + rupiah(sisaTagihan) + '</b>';
     const jm = document.getElementById('bsp-jumlah');
     if(jm && !jm.value){ jm.value = Math.min(p.angsuranPerBulan, sisaTagihan); }
@@ -2922,7 +2922,8 @@ function setNomorAkadPembiayaan(p){
 }
 function akadBadge(p){
   const a = nomorAkadOf(p);
-  return a ? '<span class="badge badge-gold" style="font-size:9px;margin-left:6px;">'+a+'</span>' : '';
+  if(!a) return '';
+  return '<span style="display:inline-flex;align-items:center;gap:4px;font-family:\'IBM Plex Mono\',monospace;font-size:12px;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:2px 8px 2px 10px;border-radius:7px;margin-left:7px;vertical-align:middle;white-space:nowrap;">'+a+'<button style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--primary);padding:1px 6px;font-size:9.5px;font-weight:700;line-height:1.4;cursor:pointer;flex-shrink:0;" title="Salin nomor akad" onclick="event.stopPropagation();copyText(\''+a+'\',\'Nomor akad\')">Salin</button></span>';
 }
 function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
@@ -4427,7 +4428,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
     <div class="card balance-card">
       <div class="label">${nas.nama}${akadBadge(p)}</div>
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
-      <div class="rekening">${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; ${rupiah(p.angsuranPerBulan)}/bln</div>
+      <div class="rekening">AKAD ${nomorAkadOf(p)||'-'} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; ${rupiah(p.angsuranPerBulan)}/bln</div>
     </div>
     <div class="stat-grid" style="margin-bottom:0;">
       <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(totalKew)}</div><div class="l">Total kewajiban</div></div>
@@ -9294,7 +9295,7 @@ function renderNasPembiayaan(user){
       return `
       <div class="card">
         <div class="flex-between" style="margin-bottom:10px;">
-          <div><div style="font-weight:700;font-size:16px;">${rupiah(p.jumlahPinjaman)}${nomorAkadOf(p)?' <span class="badge badge-gold" style="font-size:11px;vertical-align:2px;">'+nomorAkadOf(p)+'</span>':''}</div><div class="hint">Mulai ${fmtDateShort(p.mulai)}</div></div>
+          <div><div style="font-weight:700;font-size:16px;">${rupiah(p.jumlahPinjaman)}${akadBadge(p)}</div><div class="hint">Mulai ${fmtDateShort(p.mulai)}</div></div>
           <span class="badge ${pembBadge(p).cls}">${pembBadge(p).label}</span>
         </div>
         <div class="bar-row"><div class="lbl"><span>Progres angsuran</span><span>${p.tenor-p.sisaAngsuran}/${p.tenor}</span></div><div class="bar-track"><div class="bar-fill" style="width:${((p.tenor-p.sisaAngsuran)/p.tenor*100).toFixed(0)}%"></div></div></div>
