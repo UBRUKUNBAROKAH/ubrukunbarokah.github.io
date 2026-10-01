@@ -2282,6 +2282,13 @@ function groupByKelompokId(items, getKelompokIdFn){
   return Object.keys(groups).sort((a,b)=>a.localeCompare(b,'id')).map(nama=>({nama, items:groups[nama]}));
 }
 function userById(id){ return DB.users?.find(u=>u.id===id) || { nama:'-', kelompokId:null, role:'-', noRekening:'-' }; }
+function pembUser(p){
+  const u = pembUser(p);
+  if(u.id) return u;
+  const k = String(p.keterangan||'');
+  const m = k.match(/\bAKD-\d+\s*·\s*([^·]+?)\s*·\s*Import pembiayaan/);
+  return { id:null, nama: m ? m[1].trim() : '-', kelompokId:null, role:'-', noRekening:'-' };
+}
 function findUserByNama(nama){
   if(!nama) return null;
   const n = String(nama).trim().toLowerCase();
@@ -2705,7 +2712,7 @@ function confirmBayarSP(){
   if(srcAcc.saldo < jumlah){ toast('Saldo rekening sumber tidak mencukupi'); return; }
   const ket = String(document.getElementById('bsp-ket').value||'').trim();
   confirmDialog('Bayar ' + rupiah(jumlah) + ' dari tabungan?',
-    'Pembiayaan : ' + userById(p.userId).nama + ' (Akad ' + (nomorAkadOf(p)||'-') + ') &middot; sisa ' + p.sisaAngsuran + ' angsuran' +
+    'Pembiayaan : ' + pembUser(p).nama + ' (Akad ' + (nomorAkadOf(p)||'-') + ') &middot; sisa ' + p.sisaAngsuran + ' angsuran' +
     '<br>Sumber : ' + jenisName(srcJenis),
     'warning',
     ()=>{ prosesBayarSP(uid, pembId, srcJenis, jumlah, ket); },
@@ -2952,11 +2959,11 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
     });
   }
   persist();
-  addLog('Bayar angsuran', userById(p.userId).nama + ' - Akad ' + (nomorAkadOf(p)||'-') + ' - Angsuran ke-'+angsuranKe+' - '+rupiah(jumlah));
+  addLog('Bayar angsuran', pembUser(p).nama + ' - Akad ' + (nomorAkadOf(p)||'-') + ' - Angsuran ke-'+angsuranKe+' - '+rupiah(jumlah));
   const sisaPokok = Math.max(0, p.jumlahPinjaman - p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah,0));
   if(isAdmin){
     notifUserWA(p.userId, waHeader('PEMBAYARAN ANGSURAN DICATAT')
-      + waAnggotaInfo(userById(p.userId))
+      + waAnggotaInfo(pembUser(p))
       + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
       + '\nAngsuran ke-' + angsuranKe + ' dari ' + p.tenor + ' bulan'
       + '\nNominal : ' + rupiah(jumlah)
@@ -2967,7 +2974,7 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
       + waFooter());
   } else {
     notifAdminWA(waHeader('PEMBERITAHUAN ANGSURAN')
-      + waAnggotaInfo(userById(p.userId))
+      + waAnggotaInfo(pembUser(p))
       + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
       + '\nAngsuran ke-' + angsuranKe + ' dari ' + p.tenor + ' bulan'
       + '\nNominal : ' + rupiah(jumlah)
@@ -3080,7 +3087,7 @@ function renderAdminBeranda(user){
       ${pendingPemb.map(p=>`
         <div class="list-row">
           <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.finance}</div>
-          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama}${akadBadge(p)} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
+          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${pembUser(p).nama}${akadBadge(p)} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(pembUser(p).kelompokId))}</div></div>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
             <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
@@ -3219,8 +3226,8 @@ function renderNotifSaldoKoordinator(){
           ${r.penarikanItems.map(p=>`
             <div class="list-row" style="padding:6px 0;">
               <div class="info">
-                <div class="title" style="font-size:13px;">${p.keterangan || (p.userId ? 'Penarikan tunai '+userById(p.userId).nama : 'Penarikan')}</div>
-                <div class="sub">${p.userId ? userById(p.userId).nama+' &middot; ' : ''}${fmtDateShort(p.tanggal)}</div>
+                <div class="title" style="font-size:13px;">${p.keterangan || (p.userId ? 'Penarikan tunai '+pembUser(p).nama : 'Penarikan')}</div>
+                <div class="sub">${p.userId ? pembUser(p).nama+' &middot; ' : ''}${fmtDateShort(p.tanggal)}</div>
               </div>
               <div class="amt minus mono">${rupiah(p.jumlah)}</div>
             </div>
@@ -3604,8 +3611,8 @@ const EXPORT_META = {
     label: 'Pembiayaan',
     headers: ['No','Nama','Nomor Akad','Jumlah Pinjaman','Tenor','Sisa Angsuran','Status Pengajuan','Status'],
     rows: function(kelompokId){
-      const list = DB.pembiayaan.filter(p=>userById(p.userId).kelompokId===kelompokId);
-      return list.map((p,i)=>[i+1, userById(p.userId).nama, nomorAkadOf(p)||'-', rupiah(p.jumlahPinjaman), p.tenor+' bln', p.sisaAngsuran+'/'+p.tenor,
+      const list = DB.pembiayaan.filter(p=>pembUser(p).kelompokId===kelompokId);
+      return list.map((p,i)=>[i+1, pembUser(p).nama, nomorAkadOf(p)||'-', rupiah(p.jumlahPinjaman), p.tenor+' bln', p.sisaAngsuran+'/'+p.tenor,
         p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak'),
         p.status==='lunas'?'Lunas':'Berjalan']);
     }
@@ -4156,8 +4163,8 @@ function renderAdminPembiayaan(user){
   const q = (currentSubState.q||'').toLowerCase();
   const kelFilter = currentSubState.kelFilter || '';
   let list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
-  if(kelFilter) list = list.filter(p=>userById(p.userId).kelompokId===kelFilter);
-  if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q));
+  if(kelFilter) list = list.filter(p=>pembUser(p).kelompokId===kelFilter);
+  if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const pending = list.filter(p=>p.statusPengajuan==='pending');
   const groups = groupByKelompok(list, p=>p.userId);
   let i = 0;
@@ -4205,7 +4212,7 @@ function renderAdminPembiayaan(user){
     <div class="card" style="padding:6px 18px;">
       ${pending.map(p=>`
         <div class="list-row">
-          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${userById(p.userId).nama}${akadBadge(p)} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(userById(p.userId).kelompokId))}</div></div>
+          <div class="info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="title">${pembUser(p).nama}${akadBadge(p)} <span class="badge badge-gold" style="font-size:9px;">Detail</span></div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(pembUser(p).kelompokId))}</div></div>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button>
             <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button>
@@ -4221,7 +4228,7 @@ function renderAdminPembiayaan(user){
         ${g.items.map(p=>{ i++; return `
         <div class="list-row ${p.status==='lunas'?'lunas':''}">
           <div class="row-num">${i}</div>
-          <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
+          <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
           <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
           <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
           <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
@@ -4252,9 +4259,9 @@ async function accPengajuan(pembId){
     renderContent();
     return;
   }
-  addLog('ACC pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' disetujui');
+  addLog('ACC pembiayaan', pembUser(p).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' disetujui');
   notifUserWA(p.userId, waHeader('PEMBIAYAAN DISETUJUI')
-    + waAnggotaInfo(userById(p.userId))
+    + waAnggotaInfo(pembUser(p))
     + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
     + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
     + '\nJangka Waktu : ' + p.tenor + ' bulan'
@@ -4262,8 +4269,8 @@ async function accPengajuan(pembId){
     + '\nAngsuran / Bulan : ' + rupiah(p.angsuranPerBulan)
     + '\nDisetujui pada : ' + waTanggal()
     + waFooter());
-  notifKoordinatorKelompokWA(userById(p.userId).kelompokId, waHeader('PEMBIAYAAN DISETUJUI')
-    + waAnggotaInfo(userById(p.userId))
+  notifKoordinatorKelompokWA(pembUser(p).kelompokId, waHeader('PEMBIAYAAN DISETUJUI')
+    + waAnggotaInfo(pembUser(p))
     + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
     + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
     + '\nJangka Waktu : ' + p.tenor + ' bulan'
@@ -4275,7 +4282,7 @@ async function accPengajuan(pembId){
 async function tolakPengajuan(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.statusPengajuan!=='pending') return;
-  confirmDialog('Tolak pengajuan?', 'Pengajuan pembiayaan '+userById(p.userId).nama+' akan ditolak.', 'danger', async ()=>{
+  confirmDialog('Tolak pengajuan?', 'Pengajuan pembiayaan '+pembUser(p).nama+' akan ditolak.', 'danger', async ()=>{
     const s = getSession();
     const oldMulai = p.mulai;
     p.statusPengajuan = 'rejected';
@@ -4293,16 +4300,16 @@ async function tolakPengajuan(pembId){
       renderContent();
       return;
     }
-    addLog('Tolak pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' ditolak');
+    addLog('Tolak pembiayaan', pembUser(p).nama + ' - ' + rupiah(p.jumlahPinjaman) + ' ditolak');
     notifUserWA(p.userId, waHeader('PEMBERITAHUAN PENOLAKAN PEMBIAYAAN')
-      + waAnggotaInfo(userById(p.userId))
+      + waAnggotaInfo(pembUser(p))
       + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
       + '\nJangka Waktu : ' + p.tenor + ' bulan'
       + '\nStatus : DITOLAK'
       + '\n\nSilakan menghubungi koordinator/admin untuk keterangan lebih lanjut.'
       + waFooter());
-    notifKoordinatorKelompokWA(userById(p.userId).kelompokId, waHeader('PEMBIAYAAN DITOLAK')
-      + waAnggotaInfo(userById(p.userId))
+    notifKoordinatorKelompokWA(pembUser(p).kelompokId, waHeader('PEMBIAYAAN DITOLAK')
+      + waAnggotaInfo(pembUser(p))
       + '\nJumlah Pembiayaan : ' + rupiah(p.jumlahPinjaman)
       + '\nJangka Waktu : ' + p.tenor + ' bulan'
       + waFooter());
@@ -4313,7 +4320,7 @@ async function tolakPengajuan(pembId){
 function hapusPembiayaan(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p) return;
-  confirmDialog('Hapus pembiayaan?', 'Data pembiayaan '+userById(p.userId).nama+' ('+rupiah(p.jumlahPinjaman)+') akan dihapus permanen, termasuk riwayat angsuran.', 'danger', ()=>{
+  confirmDialog('Hapus pembiayaan?', 'Data pembiayaan '+pembUser(p).nama+' ('+rupiah(p.jumlahPinjaman)+') akan dihapus permanen, termasuk riwayat angsuran.', 'danger', ()=>{
     confirmDialog('Konfirmasi lagi', 'Yakin ingin menghapus pembiayaan ini? Data tidak bisa dikembalikan.', 'danger', ()=>{
       DB.pembiayaan = DB.pembiayaan.filter(x=>x.id!==pembId);
       DB.setoran = DB.setoran.filter(s=>s.pembiayaanId!==pembId);
@@ -4322,7 +4329,7 @@ function hapusPembiayaan(pembId){
       supabaseClient.from(TABLES.pembiayaan).delete().eq('id', pembId).then();
       supabaseClient.from(TABLES.setoran).delete().eq('pembiayaan_id', pembId).then();
       supabaseClient.from(TABLES.angsuran).delete().eq('pembiayaan_id', pembId).then();
-      addLog('Hapus pembiayaan', userById(p.userId).nama + ' - ' + rupiah(p.jumlahPinjaman));
+      addLog('Hapus pembiayaan', pembUser(p).nama + ' - ' + rupiah(p.jumlahPinjaman));
       bigSuccess('Pembiayaan berhasil dihapus');
       if(currentPage.includes('detail')) go('admin_pembiayaan');
       else renderContent();
@@ -4332,7 +4339,7 @@ function hapusPembiayaan(pembId){
 function detailPengajuanModal(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p) return;
-  const nas = userById(p.userId);
+  const nas = pembUser(p);
   const koor = koordinatorForKelompok(nas.kelompokId);
   openModal(`
     <h3>Detail Pengajuan Pembiayaan</h3>
@@ -4360,8 +4367,8 @@ function renderAdminPembiayaanLunas(user){
   const q = (currentSubState.q||'').toLowerCase();
   const kelFilter = currentSubState.kelFilter || '';
   let list = DB.pembiayaan.filter(p=>p.status==='lunas').slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
-  if(kelFilter) list = list.filter(p=>userById(p.userId).kelompokId===kelFilter);
-  if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q));
+  if(kelFilter) list = list.filter(p=>pembUser(p).kelompokId===kelFilter);
+  if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const groups = groupByKelompok(list, p=>p.userId);
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   const totalNilai = list.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
@@ -4383,7 +4390,7 @@ function renderAdminPembiayaanLunas(user){
         ${g.items.map(p=>{ i++; return `
         <div class="list-row">
           <div class="row-num">${i}</div>
-          <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan</div></div>
+          <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan</div></div>
           <span class="badge badge-green">Lunas</span>
         </div>
       `; }).join('')}
@@ -4394,7 +4401,7 @@ function renderAdminPembiayaanLunas(user){
 function renderAdminPembiayaanTerlambat(user){
   const q = (currentSubState.q||'').toLowerCase();
   let overdue = computeOverdueLoans();
-  if(q) overdue = overdue.filter(o=>{ const u=userById(o.p.userId); return u && u.nama.toLowerCase().includes(q); });
+  if(q) overdue = overdue.filter(o=>{ const u=pembUser(o.p); return u && u.nama.toLowerCase().includes(q); });
   const totalSisaTelat = overdue.reduce((s,o)=>{const p=o.p;const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
   return `
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
@@ -4406,7 +4413,7 @@ function renderAdminPembiayaanTerlambat(user){
     ${overdue.length ? `
     <div class="card" style="padding:6px 18px;border-left:3px solid var(--danger);">
       ${overdue.map(function(o){
-        const u = userById(o.p.userId);
+        const u = pembUser(o.p);
         return '<div class="list-row" style="cursor:pointer;" onclick="go(\'admin_pembiayaan_detail\',{pembId:\''+o.p.id+'\'})"><div class="info"><div class="title">'+(u?u.nama:'-')+(o.p?akadBadge(o.p):'')+'</div><div class="sub">Telat '+o.telat+' angsuran &middot; '+rupiah(o.p.angsuranPerBulan)+'/bln &middot; Jatuh tempo '+o.tglJatuh.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+'</div></div><span class="badge badge-red">Telat</span></div>';
       }).join('')}
     </div>` : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">✅</div><div class="t">Tidak ada</div><div class="d">Tidak ada pembiayaan terlambat${q?' untuk kata kunci tersebut':''}</div></div></div>`}
@@ -4415,7 +4422,7 @@ function renderAdminPembiayaanTerlambat(user){
 function renderPembiayaanDetailPage(pembId, backPage){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p) return `<div class="empty-state">Pembiayaan tidak ditemukan</div>`;
-  const nas = userById(p.userId);
+  const nas = pembUser(p);
   const angsuranBayar = p.riwayatAngsuran.length;
   const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
@@ -4457,7 +4464,7 @@ function renderPembiayaanDetailPage(pembId, backPage){
 function downloadAngsuranPDF(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p) return;
-  const nas = userById(p.userId);
+  const nas = pembUser(p);
   const totalKew = (p.jumlahPinjaman||0) + marginNominalOf(p);
   const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
   const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
@@ -7415,7 +7422,7 @@ function suratSPOverdue(){
 }
 function suratSPOverdueAktif(){
   return computeOverdueLoans().map(o=>{
-    const u = userById(o.p.userId);
+    const u = pembUser(o.p);
     const pokok = o.p.jumlahPinjaman||0;
     const laba = marginNominalOf(o.p);
     const jumlah = pokok + laba;
@@ -8536,7 +8543,7 @@ const anggota = nasabahOfKelompok(user.kelompokId);
    const anggotaIds = anggota.map(u=>u.id);
    const q = (currentSubState.q||'').toLowerCase();
    let list = DB.pembiayaan.filter(p=>anggotaIds.includes(p.userId)).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
-   if(q) list = list.filter(p=>userById(p.userId).nama.toLowerCase().includes(q));
+   if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const totalPembiayaan = list.length;
   const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
   const belumLunas = list.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
@@ -8559,7 +8566,7 @@ const anggota = nasabahOfKelompok(user.kelompokId);
       ${list.length ? list.map((p,i)=>`
         <div class="list-row">
           <div class="row-num">${i+1}</div>
-          <div class="info" style="cursor:pointer;" onclick="go('koor_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${userById(p.userId).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; angsuran ${rupiah(p.angsuranPerBulan)}/bln &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
+          <div class="info" style="cursor:pointer;" onclick="go('koor_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; angsuran ${rupiah(p.angsuranPerBulan)}/bln &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
           ${p.status==='lunas'
             ? `<span class="badge badge-green">Lunas</span>`
             : p.statusPengajuan==='approved' ? `<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();bayarAngsuranPrompt('${p.id}')">Bayar angsuran</button>`
@@ -8724,7 +8731,7 @@ function bayarAngsuranPrompt(pembId){
   openModal(`
     <h3>Bayar Angsuran</h3>
     <div class="card" style="margin-bottom:14px;">
-      <div class="list-row"><div class="info"><div class="title">${userById(p.userId).nama}${akadBadge(p)}</div><div class="sub">Angsuran ke-${angsuranKe} dari ${p.tenor} &middot; Sisa tagihan ${rupiah(sisaTagihan)}</div></div></div>
+      <div class="list-row"><div class="info"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">Angsuran ke-${angsuranKe} dari ${p.tenor} &middot; Sisa tagihan ${rupiah(sisaTagihan)}</div></div></div>
     </div>
     <div class="form-row"><label>Jumlah bayar (Rp)</label><input type="number" id="bayar-angsuran-jumlah" min="0" step="5000" value="${Math.min(p.angsuranPerBulan, sisaTagihan)}"></div>
     <div class="form-row"><label>Tanggal bayar</label><input type="date" id="bayar-angsuran-tanggal" max="${todayStr}" value="${todayStr}"></div>
