@@ -2283,7 +2283,7 @@ function groupByKelompokId(items, getKelompokIdFn){
 }
 function userById(id){ return DB.users?.find(u=>u.id===id) || { nama:'-', kelompokId:null, role:'-', noRekening:'-' }; }
 function pembUser(p){
-  const u = pembUser(p);
+  const u = userById(p.userId);
   if(u.id) return u;
   const k = String(p.keterangan||'');
   const m = k.match(/\bAKD-\d+\s*·\s*([^·]+?)\s*·\s*Import pembiayaan/);
