@@ -2914,8 +2914,9 @@ async function bayarHutangKoorUI(hutangId){
 function _akadRe(){ return /AKD-\d+/; }
 function nomorAkadOf(p){
   if(!p) return '';
-  const m = p.nomorAkad ? String(p.nomorAkad) : String(p.keterangan||'').match(_akadRe());
-  return m ? (Array.isArray(m) ? 'AKD-' + m[0].replace('AKD-','') : String(m)) : '';
+  const raw = p.nomorAkad ? String(p.nomorAkad) : (String(p.keterangan||'').match(_akadRe()) || [])[0] || '';
+  const m = String(raw).match(/(\d+)/);
+  return m ? m[1] : '';
 }
 function setNomorAkadPembiayaan(p){
   if(!p || p.keterangan && _akadRe().test(String(p.keterangan))) return;
@@ -4163,6 +4164,7 @@ function renderAdminPembiayaan(user){
   const q = (currentSubState.q||'').toLowerCase();
   const kelFilter = currentSubState.kelFilter || '';
   let list = DB.pembiayaan.slice().sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
+  list = [...list.filter(p=>p.status!=='lunas'), ...list.filter(p=>p.status==='lunas')];
   if(kelFilter) list = list.filter(p=>pembUser(p).kelompokId===kelFilter);
   if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const pending = list.filter(p=>p.statusPengajuan==='pending');
@@ -8543,6 +8545,7 @@ const anggota = nasabahOfKelompok(user.kelompokId);
    const anggotaIds = anggota.map(u=>u.id);
    const q = (currentSubState.q||'').toLowerCase();
    let list = DB.pembiayaan.filter(p=>anggotaIds.includes(p.userId)).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai));
+   list = [...list.filter(p=>p.status!=='lunas'), ...list.filter(p=>p.status==='lunas')];
    if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const totalPembiayaan = list.length;
   const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
@@ -9283,7 +9286,8 @@ function renderNasTabungan(user){
    NASABAH: PEMBIAYAAN
 ========================================================= */
 function renderNasPembiayaan(user){
-  const list = pembiayaanForUser(user.id);
+  let list = pembiayaanForUser(user.id);
+  list = [...list.filter(p=>p.status!=='lunas'), ...list.filter(p=>p.status==='lunas')];
   if(!list.length){
     return `
       <div class="page-title">Pembiayaan<span class="sub">${user.nama}</span></div>
