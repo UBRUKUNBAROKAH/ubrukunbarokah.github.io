@@ -4168,7 +4168,8 @@ function renderAdminPembiayaan(user){
   if(kelFilter) list = list.filter(p=>pembUser(p).kelompokId===kelFilter);
   if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const pending = list.filter(p=>p.statusPengajuan==='pending');
-  const groups = groupByKelompok(list, p=>p.userId);
+  const groups = groupByKelompok(list.filter(p=>p.status!=='lunas'), p=>p.userId);
+  const lunasAll = list.filter(p=>p.status==='lunas');
   let i = 0;
   const totalPembiayaan = list.length;
   const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
@@ -4224,20 +4225,32 @@ function renderAdminPembiayaan(user){
         </div>
       `).join('')}
     </div>` : ''}
-    ${list.length ? groups.map(g=>`
+    ${groups.length ? groups.map(g=>`
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
       <div class="card" style="padding:6px 18px;margin-bottom:14px;">
         ${g.items.map(p=>{ i++; return `
-        <div class="list-row ${p.status==='lunas'?'lunas':''}">
+        <div class="list-row">
           <div class="row-num">${i}</div>
           <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; sisa ${p.sisaAngsuran} <span class="badge ${p.statusPengajuan==='pending'?'badge-gold':(p.statusPengajuan==='approved'?'badge-green':'badge-red')}">${p.statusPengajuan==='pending'?'Menunggu ACC':(p.statusPengajuan==='approved'?'Disetujui':'Ditolak')}</span></div></div>
-          <span class="badge ${p.status==='lunas'?'badge-green':'badge-gold'}">${p.status==='lunas'?'Lunas':'Berjalan'}</span>
+          <span class="badge badge-gold">Berjalan</span>
           <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
           <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
         </div>
       `; }).join('')}
       </div>
     `).join('') : `<div class="card" style="padding:6px 18px;"><div class="empty-state"><div class="ic">🔍</div><div class="t">Tidak ditemukan</div><div class="d">${q?'Coba kata kunci lain':'Belum ada pembiayaan'}</div></div></div>`}
+    ${lunasAll.length ? `<div class="section-label">Pembiayaan Lunas (${lunasAll.length})</div>
+    <div class="card" style="padding:6px 18px;margin-bottom:14px;">
+      ${lunasAll.map(p=>{ i++; return `
+        <div class="list-row lunas">
+          <div class="row-num">${i}</div>
+          <div class="info" style="cursor:pointer;" onclick="go('admin_pembiayaan_detail',{pembId:'${p.id}'})"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan</div></div>
+          <span class="badge badge-green">Lunas</span>
+          <button class="icon-btn-sm ic-primary" onclick="event.stopPropagation();openEditPengajuanModal('${p.id}')" title="Edit">✎</button>
+          <button class="icon-btn-sm ic-danger" onclick="event.stopPropagation();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
+        </div>
+      `; }).join('')}
+    </div>` : ''}
   `;
 }
 async function accPengajuan(pembId){
