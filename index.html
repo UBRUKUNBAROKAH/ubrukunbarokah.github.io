@@ -1090,8 +1090,9 @@ async function checkTabunganNonaktifCol(){
 }
 
 // Saldo rekening wajib cocok dengan riwayat transaksinya. Perbaiki otomatis
-// bila ada selisih (mis. penarikan/setoran yang baris riwayatnya gagal
-// tersinkron ke server) supaya saldo tidak "kembali" ke angka yang salah.
+// bila saldo KURANG dari riwayat (mis. penarikan/setoran yang baris riwayatnya
+// gagal tersinkron). ASUPAN AMAN: hanya menaikkan, tidak pernah menurunkan
+// saldo, dan tidak pernah menghasilkan saldo negatif.
 function rekonsiliasiSaldoTabungan(){
   const changed = [];
   (DB.tabunganAccounts||[]).forEach(acc => {
@@ -1099,8 +1100,9 @@ function rekonsiliasiSaldoTabungan(){
     const rows = (DB.tabunganTx||[]).filter(t =>
       (t.userId ?? t.user_id) === acc.userId && (t.jenisId ?? t.jenis_id) === acc.jenisId);
     if(!rows.length) return;
+    const cur = Number(acc.saldo)||0;
     const ledgerSum = rows.reduce((s,t)=> s + (txIsPlus(t) ? (Number(t.jumlah)||0) : -(Number(t.jumlah)||0)), 0);
-    if(ledgerSum !== (Number(acc.saldo)||0)){
+    if(ledgerSum > cur && ledgerSum >= 0){
       acc.saldo = ledgerSum;
       changed.push(toSnake({ id: acc.id, saldo: acc.saldo }));
     }
