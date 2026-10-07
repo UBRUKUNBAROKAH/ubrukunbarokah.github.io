@@ -1089,6 +1089,25 @@ async function checkTabunganNonaktifCol(){
   }catch(e){ TABUNGAN_NONAKTIF_COL = false; }
 }
 
+// Saldo rekening wajib cocok dengan riwayat transaksinya. Perbaiki otomatis
+// bila ada selisih (mis. penarikan/setoran yang baris riwayatnya gagal
+// tersinkron ke server) supaya saldo tidak "kembali" ke angka yang salah.
+function rekonsiliasiSaldoTabungan(){
+  const changed = [];
+  (DB.tabunganAccounts||[]).forEach(acc => {
+    if(!acc || !acc.userId) return;
+    const rows = (DB.tabunganTx||[]).filter(t =>
+      (t.userId ?? t.user_id) === acc.userId && (t.jenisId ?? t.jenis_id) === acc.jenisId);
+    if(!rows.length) return;
+    const ledgerSum = rows.reduce((s,t)=> s + (txIsPlus(t) ? (Number(t.jumlah)||0) : -(Number(t.jumlah)||0)), 0);
+    if(ledgerSum !== (Number(acc.saldo)||0)){
+      acc.saldo = ledgerSum;
+      changed.push(toSnake({ id: acc.id, saldo: acc.saldo }));
+    }
+  });
+  return changed;
+}
+
 // ---- Initialize DB from Supabase ----
 async function initSupabaseDB() {
   if (DB_LOADED) return DB;
@@ -1231,6 +1250,17 @@ async function initSupabaseDB() {
 
     // Ensure defaults
     ensureDefaults();
+
+    // Rekonsiliasi saldo dari riwayat transaksi (perbaiki yang kena bug sinkron)
+    try{
+      const healedSaldo = rekonsiliasiSaldoTabungan();
+      if(healedSaldo.length){
+        supabaseClient.from(TABLES.tabungan_accounts).upsert(healedSaldo, { onConflict: 'id' }).then(r=>{
+          if(r.error) console.error('Heal saldo push error:', r.error);
+        }).catch(e=> console.error('Heal saldo push exception:', e));
+      }
+    }catch(e){ console.error('Rekonsiliasi saldo gagal:', e); }
+
     DB_LOADED = true;
     checkTabunganNonaktifCol();
 
