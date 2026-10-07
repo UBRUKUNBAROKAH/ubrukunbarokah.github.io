@@ -8807,6 +8807,7 @@ async function confirmBayarAngsuran(pembId){
 ========================================================= */
 const IKLAN_LS_KEY = 'ub_iklan_cache_v1';
 let DB_IKLAN = loadIklanCache();
+let _iklanBusy = false;
 function loadIklanCache(){
   try{ const c = JSON.parse(localStorage.getItem(IKLAN_LS_KEY)||'null'); if(Array.isArray(c)) return c; }catch(e){}
   return [];
@@ -8836,6 +8837,7 @@ function iklanAktifSekarang(){
   });
 }
 function refreshIklanQuiet(){
+  if(_iklanBusy) return;
   const now = Date.now();
   const last = window._iklanLastF || 0;
   if(now - last < 15000) return;
@@ -8916,7 +8918,7 @@ function _openIklanTautan(id){
 /* ---- Admin: halaman kelola iklan ---- */
 let iklanLastFetch = 0;
 function renderAdminIklan(){
-  if(Date.now() - iklanLastFetch > 30000){
+  if(Date.now() - iklanLastFetch > 30000 && !_iklanBusy){
     iklanLastFetch = Date.now();
     loadIklan().then(()=>{ if(currentPage==='admin_iklan') renderContent(); });
   }
@@ -9031,6 +9033,8 @@ function saveIklan(){
   const sampai = document.getElementById('ik-sampai').value || null;
   const aktif = document.getElementById('ik-aktif') ? document.getElementById('ik-aktif').checked : true;
   if(!gambar && !judul){ toast('Isi teks iklan atau unggah gambar poster'); return; }
+  if(_iklanBusy) return;
+  _iklanBusy = true;
   const id = ikEditTarget ? ikEditTarget.id : uid('ik');
   let urutan = ikEditTarget ? ikEditTarget.urutan : 0;
   if(!ikEditTarget){ urutan = (DB_IKLAN||[]).reduce((m,x)=>Math.max(m, x.urutan||0), 0)+1; }
@@ -9044,7 +9048,9 @@ function saveIklan(){
   upsertToSupabase(TABLES.iklan, toSnake(rec)).then(res => {
     if(res.error){ toast('Gagal simpan ke server: '+(res.error.message||'coba lagi')); return; }
     addLog(ikEditTarget?'Edit iklan':'Tambah iklan', judul||'(tanpa judul)');
-  });
+  }).catch(e=>{
+    toast('Gagal simpan ke server: '+(e.message||'coba lagi'));
+  }).finally(()=>{ _iklanBusy = false; });
   ikEditTarget = null;
   closeModal();
   bigSuccess('Iklan disimpan');
@@ -9057,13 +9063,18 @@ function toggleIklanAktif(id){
     x.aktif?'Iklan berhenti muncul di Beranda nasabah sampai diaktifkan lagi.':'Iklan tampil kembali (mengikuti periode waktunya).',
     x.aktif?'danger':'warning',
     ()=>{
+      if(_iklanBusy) return;
+      _iklanBusy = true;
       x.aktif = !x.aktif;
       try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
-      upsertToSupabase(TABLES.iklan, { id, aktif: x.aktif }).then(r=>{ if(r.error) toast('Gagal: '+r.error.message); });
+      upsertToSupabase(TABLES.iklan, { id, aktif: x.aktif }).then(r=>{ if(r.error) toast('Gagal: '+r.error.message); })
+        .catch(e=>{ toast('Gagal: '+(e.message||'coba lagi')); })
+        .finally(()=>{ _iklanBusy = false; });
       renderContent();
     });
 }
 function urutIklan(id, dir){
+  if(_iklanBusy) return;
   const list = (DB_IKLAN||[]).slice();
   const i = list.findIndex(x=>x.id===id);
   const j = i + dir;
@@ -9072,17 +9083,27 @@ function urutIklan(id, dir){
   DB_IKLAN = list;
   try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
   const rows = [list[i], list[j]].map(x=>({ id: x.id, urutan: x.urutan }));
-  upsertToSupabase(TABLES.iklan, rows).then(r=>{ if(r.error) toast('Gagal urutkan: '+r.error.message); });
+  _iklanBusy = true;
+  upsertToSupabase(TABLES.iklan, rows).then(r=>{ if(r.error) toast('Gagal urutkan: '+r.error.message); })
+    .catch(e=>{ toast('Gagal urutkan: '+(e.message||'coba lagi')); })
+    .finally(()=>{ _iklanBusy = false; });
   renderContent();
 }
 function hapusIklan(id){
   const x = (DB_IKLAN||[]).find(i=>i.id===id);
+  if(!x) return;
   confirmDialog('Hapus iklan?', 'Iklan "'+((x&&x.judul)||'tanpa judul')+'" akan dihapus permanen dari database.', 'danger', ()=>{
-    DB_IKLAN = (DB_IKLAN||[]).filter(i=>i.id!==id);
-    try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
-    deleteFromSupabase(TABLES.iklan, id).then(r=>{ if(r.error) toast('Gagal hapus: '+r.error.message); });
-    addLog('Hapus iklan', (x&&x.judul)||'(tanpa judul)');
-    renderContent();
+    if(_iklanBusy) return;
+    _iklanBusy = true;
+    deleteFromSupabase(TABLES.iklan, id).then(r => {
+      if(r.error){ toast('Gagal hapus: '+r.error.message); return; }
+      DB_IKLAN = (DB_IKLAN||[]).filter(i=>i.id!==id);
+      try{ localStorage.setItem(IKLAN_LS_KEY, JSON.stringify(DB_IKLAN)); }catch(e){}
+      addLog('Hapus iklan', (x&&x.judul)||'(tanpa judul)');
+      renderContent();
+    }).catch(e=>{
+      toast('Gagal hapus: '+(e.message||'coba lagi'));
+    }).finally(()=>{ _iklanBusy = false; });
   });
 }
 
