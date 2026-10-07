@@ -2678,7 +2678,7 @@ function openBayarSPModal(prefUserId){
     <div class="form-row"><label>Pembiayaan (SP)</label><select id="bsp-pemb" onchange="bspSelectPemb()"></select></div>
     <div id="bsp-info" style="background:var(--gold-soft);border-radius:6px;padding:8px 10px;font-size:12.5px;margin-bottom:12px;"></div>
     <div class="form-row"><label>Rekening tabungan sumber</label><select id="bsp-asal-jenis"></select></div>
-    <div class="form-row"><label>Nominal bayar (Rp)</label><input type="number" id="bsp-jumlah" min="0" step="5000" placeholder="cth. 38000"></div>
+    <div class="form-row"><label>Nominal bayar (Rp) <span style="font-weight:400;color:var(--muted);">(bebas, sampai sisa tagihan)</span></label><input type="number" id="bsp-jumlah" min="0" step="5000" placeholder="cth. 38000"></div>
     <div class="form-row"><label>Keterangan (opsional)</label><input type="text" id="bsp-ket"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -2733,7 +2733,6 @@ function confirmBayarSP(){
   if(!p){ toast('Pilih pembiayaan'); return; }
   if(!srcJenis){ toast('Pilih rekening tabungan sumber'); return; }
   if(!jumlah || jumlah<=0){ toast('Masukkan nominal yang valid'); return; }
-  if(jumlah < p.angsuranPerBulan){ toast('Minimal bayar 1 angsuran : ' + rupiah(p.angsuranPerBulan)); return; }
   const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
   const sisaTagihan = Math.max(totalKew-totalDibayar,0);
@@ -2973,9 +2972,10 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   const tgl = tanggal || nowISO();
   const angsuranKe = p.tenor - p.sisaAngsuran + 1;
   p.riwayatAngsuran.push({id:uid('ang'), tanggal:tgl, jumlah, oleh, angsuranKe});
-  p.sisaAngsuran--;
   const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
+  const sisaTagihan = Math.max(0, totalKew - totalDibayar);
+  p.sisaAngsuran = sisaTagihan>0 ? (p.angsuranPerBulan>0 ? Math.ceil(sisaTagihan / p.angsuranPerBulan) : 1) : 0;
   if(totalDibayar >= totalKew || p.sisaAngsuran<=0) p.status='lunas';
   const olehUser = userById(oleh);
   const isAdmin = olehUser && olehUser.role==='admin';
