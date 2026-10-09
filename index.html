@@ -861,6 +861,7 @@ async function fetchAllRows(table, select = '*') {
 function uid(prefix){ return (prefix||'id') + '_' + Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
 function rupiah(n){ n = Math.round(Number(n)||0); return 'Rp' + n.toLocaleString('id-ID'); }
+function rpSld(v){ v = Math.round(Number(v)||0); return (v<0?'-':'') + 'Rp' + Math.abs(v).toLocaleString('id-ID'); }
 // Parse IDR: hapus titik (pemisah ribuan), ganti koma jadi titik (desimal)
 function parseIdr(v){ if(typeof v==='number') return v; if(!v) return 0; return parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0; }
 // Daftar pembiayaan berjalan yang telat bayar (kondisi saat ini/real-time).
@@ -5821,6 +5822,41 @@ function computeLapTransaksiBulanan(bulan){
     const uidH = (userById(h.userId) && userById(h.userId).nama && userById(h.userId).nama!=='-') ? h.userId : h.koorId;
     rows.push({tanggalString:h.tanggal, nama:nm(h.userId)||nm(h.koorId), kelompok:kg(uidH), kategori:'Kekurangan Kas Koor', ket:h.keterangan||'', masuk:0, keluar:h.jumlah||0});
   });
+  // Saldo berjalan (mutasi nyambung antar bulan): akumulasi semua transaksi
+  // pada bulan-bulan SEBELUM bulan terpilih jadi "Saldo Awal Bulan".
+  let saldoAwal = 0, masukSebelum = 0, keluarSebelum = 0;
+  const monthKey = d => String(d||'').slice(0,7);
+  // Titik mulai saldo berjalan = bulan terawal pada buku tabungan (saat aplikasi
+  // mulai mencatat). Bulan-bulan di bawahnya adalah histori lama sebelum buku
+  // tabungan ada, jadi tidak ikut dijumlahkan dan Saldo Awal bulan pertama = Rp0.
+  let firstMonth = null;
+  (DB.tabunganTx||[]).forEach(t=>{ const mk = monthKey(t.tanggal); if(mk && mk<'2100-01' && (firstMonth===null || mk<firstMonth)) firstMonth = mk; });
+  const before = d => { const mk = monthKey(d); return !!(mk && firstMonth && mk>=firstMonth && mk<bulan && mk<'2100-01'); };
+  (DB.tabunganTx||[]).forEach(t=>{
+    if(!before(t.tanggal)) return;
+    const isIn = (t.tipe==='setor'||t.tipe==='transfer_masuk');
+    const j = t.jumlah||0;
+    if(isIn) masukSebelum += j; else keluarSebelum += j;
+    saldoAwal += isIn ? j : -j;
+  });
+  (DB.pembiayaan||[]).forEach(p=>{
+    if(p.statusPengajuan==='approved' && before(p.mulai)){ keluarSebelum += p.jumlahPinjaman||0; saldoAwal -= (p.jumlahPinjaman||0); }
+    (p.riwayatAngsuran||[]).forEach(a=>{ if(before(a.tanggal)){ masukSebelum += a.jumlah||0; saldoAwal += a.jumlah||0; } });
+  });
+  (DB.kasPenarikan||[]).forEach(k=>{
+    if(!before(k.tanggal)) return;
+    const lunas = /pelunasan/i.test(String(k.keterangan||''));
+    if(lunas){ masukSebelum += k.jumlah||0; saldoAwal += k.jumlah||0; }
+    else{ keluarSebelum += k.jumlah||0; saldoAwal -= k.jumlah||0; }
+  });
+  (DB.hutangKoor||[]).forEach(h=>{
+    if(before(h.tanggal)){ keluarSebelum += h.jumlah||0; saldoAwal -= h.jumlah||0; }
+  });
+  // Hitung saldo berjalan tiap baris (urut naik dulu), lalu tampilkan tetap urut turun.
+  rows.sort((a,b)=>String(a.tanggalString||'').localeCompare(String(b.tanggalString||'')));
+  let run = saldoAwal;
+  rows.forEach(r=>{ run += (r.masuk||0) - (r.keluar||0); r.saldo = run; });
+  const saldoAkhir = run;
   rows.sort((a,b)=>String(b.tanggalString||'').localeCompare(String(a.tanggalString||'')));
   const total = {masuk:0, keluar:0};
   const byKategori = {};
@@ -5829,7 +5865,8 @@ function computeLapTransaksiBulanan(bulan){
     const k = byKategori[r.kategori] || (byKategori[r.kategori] = {masuk:0, keluar:0, n:0});
     k.masuk += r.masuk||0; k.keluar += r.keluar||0; k.n++;
   });
-  return { rows, total, byKategori };
+  const saldoOn = !!(firstMonth && bulan>=firstMonth && bulan<'2100-01');
+  return { rows, total, byKategori, saldoAwal, saldoAkhir, masukKum: masukSebelum + (total.masuk||0), keluarKum: keluarSebelum + (total.keluar||0), saldoOn };
 }
 function adminSetLapTransBulan(v){ currentSubState.lapTransBulan = v || null; renderContent(); }
 function adminSetLapTab(t){ currentSubState.lapTabs = t; renderContent(); }
@@ -5842,22 +5879,39 @@ function cetakLapTransBulan(bulan){
   const doc = new jsPDF({ orientation:'landscape', format:'a4' });
   pdfKop(doc, orgName, 'LAPORAN TRANSAKSI BULANAN \u2014 '+namaBulan.toUpperCase());
   doc.setFontSize(8.5); doc.setTextColor(120);
-  doc.text('Dicetak: '+tgl+'  |  Total Masuk: '+rupiah(tx.total.masuk)+'  |  Total Keluar: '+rupiah(tx.total.keluar), 14, 26);
+  if(tx.saldoOn){
+    doc.text('Dicetak: '+tgl+'  |  Saldo Awal: '+rpSld(tx.saldoAwal)+'  |  Saldo Akhir: '+rpSld(tx.saldoAkhir), 14, 26);
+    doc.text('Total Masuk: '+rupiah(tx.total.masuk)+'  |  Total Keluar: '+rupiah(tx.total.keluar), 14, 29.5);
+  } else {
+    doc.text('Dicetak: '+tgl+'  |  Total Masuk: '+rupiah(tx.total.masuk)+'  |  Total Keluar: '+rupiah(tx.total.keluar), 14, 26);
+  }
   doc.setTextColor(0);
   const head = ['No','Tanggal','Anggota','Kelompok','Kategori','Keterangan','Masuk','Keluar'];
-  const body = tx.rows.length ? tx.rows.map((r,i)=>[(i+1), String(r.tanggalString||'').slice(0,10), r.nama, r.kelompok||'-', r.kategori, r.ket||'', r.masuk?rupiah(r.masuk):'', r.keluar?rupiah(r.keluar):'']) : [['-','-','-','-','Tidak ada transaksi','-','-','-']];
-  doc.autoTable({ head:[head], body, startY:31, styles:{ fontSize:7.5, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:{ 0:{ halign:'center' }, 6:{ halign:'right', fontStyle:'bold' }, 7:{ halign:'right', fontStyle:'bold' } } });
-  pdfTotalRow(doc, ['Total', '', '', '', '', '', rupiah(tx.total.masuk), rupiah(tx.total.keluar)], { 0:'center', 6:'right', 7:'right' });
+  if(tx.saldoOn) head.push('Saldo');
+  const body = tx.rows.length ? tx.rows.map((r,i)=>{
+      const row=[(i+1), String(r.tanggalString||'').slice(0,10), r.nama, r.kelompok||'-', r.kategori, r.ket||'', r.masuk?rupiah(r.masuk):'', r.keluar?rupiah(r.keluar):''];
+      if(tx.saldoOn) row.push(rpSld(r.saldo));
+      return row;
+    }) : [['-','-','-','-','Tidak ada transaksi','-','-','-'].concat(tx.saldoOn?['-']:[])];
+  doc.autoTable({ head:[head], body, startY:33, styles:{ fontSize:7.5, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:Object.assign({ 0:{ halign:'center' }, 6:{ halign:'right', fontStyle:'bold' }, 7:{ halign:'right', fontStyle:'bold' } }, tx.saldoOn?{ 8:{ halign:'right', fontStyle:'bold' } }:{}) });
+  pdfTotalRow(doc, ['Total', '', '', '', '', '', rupiah(tx.total.masuk), rupiah(tx.total.keluar)].concat(tx.saldoOn?['']:[]), Object.assign({ 0:'center', 6:'right', 7:'right' }, tx.saldoOn?{ 8:'right' }:{}));
   doc.save(sanitizeFileName('Laporan Transaksi '+namaBulan)+'.pdf');
   toast('File PDF berhasil diunduh');
 }
 function exportLapTransBulanXLS(bulan){
   const tx = computeLapTransaksiBulanan(bulan);
   const namaBulan = LAP_MODAL_BULAN[Number(bulan.slice(5))-1] + ' ' + bulan.slice(0,4);
-  const rows = tx.rows.map(r=>[String(r.tanggalString||'').slice(0,10), r.nama, r.kelompok||'-', r.kategori, r.ket||'', r.masuk||0, r.keluar||0]);
-  rows.push({ tot:['Total', '', '', '', '', tx.total.masuk, tx.total.keluar] });
+  const rows = tx.rows.map(r=>{ const a=[String(r.tanggalString||'').slice(0,10), r.nama, r.kelompok||'-', r.kategori, r.ket||'', r.masuk||0, r.keluar||0]; if(tx.saldoOn) a.push(r.saldo||0); return a; });
+  if(tx.saldoOn){
+    rows.push({ tot:['Saldo Awal Bulan', '', '', '', '', '', '', tx.saldoAwal] });
+    rows.push({ tot:['Total bulan ini', '', '', '', '', tx.total.masuk, tx.total.keluar, ''] });
+    rows.push({ tot:['Saldo Akhir Bulan', '', '', '', '', '', '', tx.saldoAkhir] });
+  } else {
+    rows.push({ tot:['Total', '', '', '', '', tx.total.masuk, tx.total.keluar] });
+  }
+  const hs = ['Tanggal','Anggota','Kelompok','Kategori','Keterangan','Masuk','Keluar']; if(tx.saldoOn) hs.push('Saldo');
   xlsxDok({ file:'Laporan Transaksi '+namaBulan, landscape:true,
-    sheets:[{ name:'Transaksi '+namaBulan, judul:'Laporan Transaksi Bulanan', sub:'Periode '+namaBulan, headers:['Tanggal','Anggota','Kelompok','Kategori','Keterangan','Masuk','Keluar'], rows }] });
+    sheets:[{ name:'Transaksi '+namaBulan, judul:'Laporan Transaksi Bulanan', sub:'Periode '+namaBulan, headers:hs, rows }] });
 }
 const LAP_RINGKAS_CATATAN = 'Angsuran Masuk = total nominal angsuran (pokok + margin) yang diterima pada bulan tsb. Angsuran Macet = kondisi real-time saat laporan dibuka (bukan histori per bulan), memakai definisi yang sama dengan daftar "Telat Bayar" di Beranda. SHU Tabungan, SHU Saham, dan pool lain dihitung dari alokasi persentase margin angsuran yang diterima, sesuai pengaturan di menu Pengaturan &rarr; Aturan Keuangan.';
 function renderAdminLaporanRingkas(user){
@@ -5887,12 +5941,20 @@ function renderAdminLaporanRingkas(user){
   html += '<button class="btn btn-outline btn-sm" onclick="cetakLapTransBulan(\''+bln+'\')">'+(ICONS.pdf||'📄')+' PDF</button>';
   html += '<button class="btn btn-outline btn-sm" onclick="exportLapTransBulanXLS(\''+bln+'\')">'+(ICONS.xls||'')+' Excel</button>';
   html += '</div></div>';
-  html += '<div class="stat-grid cols-4" style="margin:0 0 12px;">';
+  html += '<div class="stat-grid cols-4" style="margin:0 0 6px;">';
   html += '<div class="stat-box stat-primary"><div class="n mono">'+tx.rows.length+'</div><div class="l">Transaksi</div></div>';
   html += '<div class="stat-box"><div class="n mono" style="color:var(--ok);">'+rupiah(tx.total.masuk)+'</div><div class="l">Total Masuk</div></div>';
   html += '<div class="stat-box"><div class="n mono" style="color:var(--danger);">'+rupiah(tx.total.keluar)+'</div><div class="l">Total Keluar</div></div>';
-  html += '<div class="stat-box stat-gold"><div class="n mono">'+rupiah(tx.total.masuk-tx.total.keluar)+'</div><div class="l">Selisih</div></div>';
+  html += '<div class="stat-box stat-gold"><div class="n mono">'+rupiah(tx.total.masuk-tx.total.keluar)+'</div><div class="l">Selisih (bulan ini)</div></div>';
   html += '</div>';
+  if(tx.saldoOn){
+  html += '<div class="stat-grid cols-4" style="margin:0 0 12px;">';
+  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rpSld(tx.saldoAwal)+'</div><div class="l">Saldo Awal Bulan</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.masukKum)+'</div><div class="l">Masuk kumulatif (s.d. bln ini)</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--danger);">'+rupiah(tx.keluarKum)+'</div><div class="l">Keluar kumulatif (s.d. bln ini)</div></div>';
+  html += '<div class="stat-box stat-gold"><div class="n mono" style="font-size:13px;">'+rpSld(tx.saldoAkhir)+'</div><div class="l">Saldo Akhir Bulan</div></div>';
+  html += '</div>';
+  }
   if(!tx.rows.length){
     html += '<div class="hint" style="padding:10px;text-align:center;">Tidak ada transaksi tercatat pada '+txNama+'.</div>';
   } else {
@@ -5904,10 +5966,10 @@ function renderAdminLaporanRingkas(user){
     html += '<div style="font-size:11px;color:var(--muted);margin:12px 0 6px;">SEMUA TRANSAKSI</div>';
     tx.rows.forEach(r=>{
       const dStr = String(r.tanggalString||'').slice(0,10)||'-';
-      html += '<div class="list-row"><div class="info"><div class="title">'+r.nama+' <span style="font-weight:400;color:var(--muted);font-size:11px;">&middot; '+(r.kelompok&&r.kelompok!=='-'?escapeHtml(r.kelompok):'-')+'</span></div><div class="sub">'+fmtDateShort(dStr)+' &middot; '+r.kategori+(r.ket?' &mdash; '+escapeHtml(r.ket):'')+'</div></div><div class="amt mono" style="font-weight:700;color:'+(r.keluar?'var(--danger)':'var(--ok)')+';">'+(r.keluar?'&minus;':'+')+rupiah(r.masuk||r.keluar)+'</div></div>';
+      html += '<div class="list-row"><div class="info"><div class="title">'+r.nama+' <span style="font-weight:400;color:var(--muted);font-size:11px;">&middot; '+(r.kelompok&&r.kelompok!=='-'?escapeHtml(r.kelompok):'-')+'</span></div><div class="sub">'+fmtDateShort(dStr)+' &middot; '+r.kategori+(r.ket?' &mdash; '+escapeHtml(r.ket):'')+'</div></div><div style="text-align:right;flex-shrink:0;"><div class="amt mono" style="font-weight:700;color:'+(r.keluar?'var(--danger)':'var(--ok)')+';">'+(r.keluar?'&minus;':'+')+rupiah(r.masuk||r.keluar)+'</div>'+(tx.saldoOn?'<div class="mono" style="font-size:10px;color:var(--muted);margin-top:1px;">Saldo '+rpSld(r.saldo)+'</div>':'')+'</div></div>';
     });
   }
-  html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.5;">Transaksi yang dirinci: setoran &amp; penarikan tabungan, transfer antar rekening, pembayaran angsuran, pencairan pembiayaan, serta penarikan/pengembalian kas koordinator. Pembelian saham dan setoran koordinator tidak dirinci terpisah agar tidak dihitung dua kali (sudah tercermin pada pos setoran tabungan / tanpa tanggal tercatat).</div>';
+  html += '<div class="hint" style="margin-top:10px;font-size:11px;line-height:1.5;">Transaksi yang dirinci: setoran &amp; penarikan tabungan, transfer antar rekening, pembayaran angsuran, pencairan pembiayaan, serta penarikan/pengembalian kas koordinator. Pembelian saham dan setoran koordinator tidak dirinci terpisah agar tidak dihitung dua kali (sudah tercermin pada pos setoran tabungan / tanpa tanggal tercatat). Saldo Awal Bulan = akumulasi bulan-bulan sebelumnya, jadi tiap baris "Saldo" adalah saldo berjalan setelah transaksi tsb (mutasi nyambung terus antar bulan).</div>';
   html += '</div>';
   return html;
   }
