@@ -5881,9 +5881,9 @@ function cetakLapTransBulan(bulan){
   doc.setFontSize(8.5); doc.setTextColor(120);
   if(tx.saldoOn){
     doc.text('Dicetak: '+tgl+'  |  Saldo Awal: '+rpSld(tx.saldoAwal)+'  |  Saldo Akhir: '+rpSld(tx.saldoAkhir), 14, 26);
-    doc.text('Total Masuk: '+rupiah(tx.total.masuk)+'  |  Total Keluar: '+rupiah(tx.total.keluar), 14, 29.5);
+    doc.text('Total Masuk (bulan ini): '+rupiah(tx.total.masuk)+'  |  Total Keluar (bulan ini): '+rupiah(tx.total.keluar), 14, 29.5);
   } else {
-    doc.text('Dicetak: '+tgl+'  |  Total Masuk: '+rupiah(tx.total.masuk)+'  |  Total Keluar: '+rupiah(tx.total.keluar), 14, 26);
+    doc.text('Dicetak: '+tgl+'  |  Total Masuk (bulan ini): '+rupiah(tx.total.masuk)+'  |  Total Keluar (bulan ini): '+rupiah(tx.total.keluar), 14, 26);
   }
   doc.setTextColor(0);
   const head = ['No','Tanggal','Anggota','Kelompok','Kategori','Keterangan','Masuk','Keluar'];
@@ -5943,8 +5943,8 @@ function renderAdminLaporanRingkas(user){
   html += '</div></div>';
   html += '<div class="stat-grid cols-4" style="margin:0 0 6px;">';
   html += '<div class="stat-box stat-primary"><div class="n mono">'+tx.rows.length+'</div><div class="l">Transaksi</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="color:var(--ok);">'+rupiah(tx.total.masuk)+'</div><div class="l">Total Masuk</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="color:var(--danger);">'+rupiah(tx.total.keluar)+'</div><div class="l">Total Keluar</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="color:var(--ok);">'+rupiah(tx.total.masuk)+'</div><div class="l">Total Masuk (bulan ini)</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="color:var(--danger);">'+rupiah(tx.total.keluar)+'</div><div class="l">Total Keluar (bulan ini)</div></div>';
   html += '<div class="stat-box stat-gold"><div class="n mono">'+rupiah(tx.total.masuk-tx.total.keluar)+'</div><div class="l">Selisih (bulan ini)</div></div>';
   html += '</div>';
   if(tx.saldoOn){
