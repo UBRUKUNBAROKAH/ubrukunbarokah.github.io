@@ -6034,18 +6034,16 @@ function renderAdminLaporanRingkas(user){
   html += '<div class="stat-box" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:72px;"><div class="n mono" style="color:var(--danger);font-size:16px;">'+rupiah(tx.total.keluar)+'</div><div class="l">Total Keluar (bulan ini)</div></div>';
   html += '</div>';
 
-  // Row 2: Piutang Awal, Piutang Akhir, Tabungan Awal, Tabungan Akhir
-  html += '<div class="stat-grid cols-4" style="margin:0 0 6px;">';
-  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rupiah(tx.piutangAwal||0)+'</div><div class="l">Piutang Awal Bulan</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.piutangAkhir||0)+'</div><div class="l">Piutang Akhir Bulan</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rupiah(tx.tabSaldoAwal||0)+'</div><div class="l">Tabungan Awal Bulan</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.tabSaldoAkhir||0)+'</div><div class="l">Tabungan Akhir Bulan</div></div>';
   html += '</div>';
 
-  // Row 2: Piutang Awal, Piutang Akhir, Tabungan Awal, Tabungan Akhir
-  html += '<div class="stat-grid cols-4" style="margin:0 0 6px;">';
+  // Row 2: Piutang Awal, Piutang Akhir
+  html += '<div class="stat-grid cols-2" style="margin:0 0 6px;">';
   html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rupiah(tx.piutangAwal||0)+'</div><div class="l">Piutang Awal Bulan</div></div>';
   html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.piutangAkhir||0)+'</div><div class="l">Piutang Akhir Bulan</div></div>';
+  html += '</div>';
+
+  // Row 3: Tabungan Awal, Tabungan Akhir
+  html += '<div class="stat-grid cols-2" style="margin:0 0 6px;">';
   html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rupiah(tx.tabSaldoAwal||0)+'</div><div class="l">Tabungan Awal Bulan</div></div>';
   html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.tabSaldoAkhir||0)+'</div><div class="l">Tabungan Akhir Bulan</div></div>';
   html += '</div>';
