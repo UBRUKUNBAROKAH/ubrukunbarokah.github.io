@@ -6020,11 +6020,26 @@ function renderAdminLaporanRingkas(user){
   let nMasuk = 0, nKeluar = 0;
   tx.rows.forEach(r=>{ if(r.masuk>0) nMasuk++; else if(r.keluar>0) nKeluar++; });
 
-  // Row 1: Transaksi, Total Masuk, Total Keluar (tanpa Selisih)
-  html += '<div class="stat-grid cols-3" style="margin:0 0 6px;">';
-  html += '<div class="stat-box stat-primary"><div class="n mono">'+tx.rows.length+'</div><div class="l">Transaksi <span class="mono" style="font-size:11px;color:var(--muted);">(M:'+nMasuk+' K:'+nKeluar+')</span></div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="color:var(--ok);">'+rupiah(tx.total.masuk)+'</div><div class="l">Total Masuk (bulan ini)</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="color:var(--danger);">'+rupiah(tx.total.keluar)+'</div><div class="l">Total Keluar (bulan ini)</div></div>';
+  // Row 1: Transaksi (split M/K), Total Masuk, Total Keluar (tanpa Selisih)
+  html += '<div class="stat-grid cols-3" style="margin:0 0 6px;align-items:stretch;">';
+  html += '<div class="stat-box stat-primary" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px 10px;min-height:72px;">';
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Transaksi</div>';
+  html += '<div class="n mono" style="font-size:24px;line-height:1.05;font-weight:800;">'+tx.rows.length+'</div>';
+  html += '<div style="display:flex;justify-content:space-between;width:100%;margin-top:6px;font-size:11px;color:var(--muted);gap:8px;">';
+  html += '<div style="flex:1;text-align:left;">Masuk: <span class="mono">'+nMasuk+'</span></div>';
+  html += '<div style="flex:1;text-align:right;">Keluar: <span class="mono">'+nKeluar+'</span></div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div class="stat-box" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:72px;"><div class="n mono" style="color:var(--ok);font-size:16px;">'+rupiah(tx.total.masuk)+'</div><div class="l">Total Masuk (bulan ini)</div></div>';
+  html += '<div class="stat-box" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:72px;"><div class="n mono" style="color:var(--danger);font-size:16px;">'+rupiah(tx.total.keluar)+'</div><div class="l">Total Keluar (bulan ini)</div></div>';
+  html += '</div>';
+
+  // Row 2: Piutang Awal, Piutang Akhir, Tabungan Awal, Tabungan Akhir
+  html += '<div class="stat-grid cols-4" style="margin:0 0 6px;">';
+  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rupiah(tx.piutangAwal||0)+'</div><div class="l">Piutang Awal Bulan</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.piutangAkhir||0)+'</div><div class="l">Piutang Akhir Bulan</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rupiah(tx.tabSaldoAwal||0)+'</div><div class="l">Tabungan Awal Bulan</div></div>';
+  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.tabSaldoAkhir||0)+'</div><div class="l">Tabungan Akhir Bulan</div></div>';
   html += '</div>';
 
   // Row 2: Piutang Awal, Piutang Akhir, Tabungan Awal, Tabungan Akhir
