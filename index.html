@@ -5950,8 +5950,6 @@ function renderAdminLaporanRingkas(user){
   if(tx.saldoOn){
   html += '<div class="stat-grid cols-4" style="margin:0 0 12px;">';
   html += '<div class="stat-box"><div class="n mono" style="font-size:13px;">'+rpSld(tx.saldoAwal)+'</div><div class="l">Saldo Awal Bulan</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--ok);">'+rupiah(tx.masukKum)+'</div><div class="l">Masuk kumulatif (s.d. bln ini)</div></div>';
-  html += '<div class="stat-box"><div class="n mono" style="font-size:13px;color:var(--danger);">'+rupiah(tx.keluarKum)+'</div><div class="l">Keluar kumulatif (s.d. bln ini)</div></div>';
   html += '<div class="stat-box stat-gold"><div class="n mono" style="font-size:13px;">'+rpSld(tx.saldoAkhir)+'</div><div class="l">Saldo Akhir Bulan</div></div>';
   html += '</div>';
   }
