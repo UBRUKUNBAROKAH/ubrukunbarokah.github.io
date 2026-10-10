@@ -5850,11 +5850,12 @@ function computeLapTransaksiBulanan(bulan){
   // kasPenarikan & hutangKoor TIDAK termasuk dalam rumus KAS (bukan tabungan/angsuran)
   // Hitung saldo berjalan tiap baris (urut naik dulu), lalu tampilkan tetap urut turun.
   // Hanya hitung saldo KAS untuk bulan >= KAS_SALDO_START.
+  let saldoAkhir = 0;
   if(isKasMonth){
     rows.sort((a,b)=>String(a.tanggalString||'').localeCompare(String(b.tanggalString||'')));
     let run = saldoAwal;
     rows.forEach(r=>{ run += (r.masuk||0) - (r.keluar||0); r.saldo = run; });
-    const saldoAkhir = run;
+    saldoAkhir = run;
     rows.sort((a,b)=>String(b.tanggalString||'').localeCompare(String(a.tanggalString||'')));
   } else {
     // Bulan sebelum KAS_SALDO_START: tidak ada saldo berjalan
