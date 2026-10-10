@@ -5799,12 +5799,7 @@ function cetakLapTransBulan(bulan){
   const doc = new jsPDF({ orientation:'landscape', format:'a4' });
   pdfKop(doc, orgName, 'LAPORAN TRANSAKSI BULANAN \u2014 '+namaBulan.toUpperCase());
   doc.setFontSize(8.5); doc.setTextColor(120);
-  if(tx.saldoOn){
-    doc.text('Dicetak: '+tgl+'  |  Saldo Awal: '+rpSld(tx.saldoAwal)+'  |  Saldo Akhir: '+rpSld(tx.saldoAkhir), 14, 26);
-    doc.text('Total Masuk (bulan ini): '+rupiah(tx.total.masuk)+'  |  Total Keluar (bulan ini): '+rupiah(tx.total.keluar), 14, 29.5);
-  } else {
-    doc.text('Dicetak: '+tgl+'  |  Total Masuk (bulan ini): '+rupiah(tx.total.masuk)+'  |  Total Keluar (bulan ini): '+rupiah(tx.total.keluar), 14, 26);
-  }
+  doc.text('Dicetak: '+tgl, 14, 26);
   doc.setTextColor(0);
   const head = ['No','Tanggal','Anggota','Kelompok','Kategori','Keterangan','Masuk','Keluar'];
   if(tx.saldoOn) head.push('Saldo');
@@ -5813,8 +5808,49 @@ function cetakLapTransBulan(bulan){
       if(tx.saldoOn) row.push(rpSld(r.saldo));
       return row;
     }) : [['-','-','-','-','Tidak ada transaksi','-','-','-'].concat(tx.saldoOn?['-']:[])];
-  doc.autoTable({ head:[head], body, startY:33, styles:{ fontSize:7.5, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:Object.assign({ 0:{ halign:'center' }, 6:{ halign:'right', fontStyle:'bold' }, 7:{ halign:'right', fontStyle:'bold' } }, tx.saldoOn?{ 8:{ halign:'right', fontStyle:'bold' } }:{}) });
+  doc.autoTable({ head:[head], body, startY:31, styles:{ fontSize:7.5, cellPadding:2.5 }, headStyles:{ fillColor:[11,61,46], textColor:255 }, columnStyles:Object.assign({ 0:{ halign:'center' }, 6:{ halign:'right', fontStyle:'bold' }, 7:{ halign:'right', fontStyle:'bold' } }, tx.saldoOn?{ 8:{ halign:'right', fontStyle:'bold' } }:{}) });
   pdfTotalRow(doc, ['Total', '', '', '', '', '', rupiah(tx.total.masuk), rupiah(tx.total.keluar)].concat(tx.saldoOn?['']:[]), Object.assign({ 0:'center', 6:'right', 7:'right' }, tx.saldoOn?{ 8:'right' }:{}));
+
+  // ---------- Tabel Ringkasan (di bawah tabel transaksi) ----------
+  const rk = [];
+  if(tx.saldoOn) rk.push(['Saldo Awal Bulan', rpSld(tx.saldoAwal)]);
+  rk.push(['Total Masuk (bulan ini)', rupiah(tx.total.masuk)]);
+  rk.push(['Total Keluar (bulan ini)', rupiah(tx.total.keluar)]);
+  if(tx.saldoOn) rk.push(['Saldo Akhir Bulan', rpSld(tx.saldoAkhir)]);
+  rk.push(['Piutang Awal Bulan', rupiah(tx.piutangAwal||0)]);
+  rk.push(['Piutang Akhir Bulan', rupiah(tx.piutangAkhir||0)]);
+  rk.push(['Tabungan Awal Bulan', rupiah(tx.tabSaldoAwal||0)]);
+  rk.push(['Tabungan Akhir Bulan', rupiah(tx.tabSaldoAkhir||0)]);
+
+  const lastY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 33;
+  const pageH = doc.internal.pageSize.getHeight();
+  const tinggiButuh = 16 + (rk.length * 8) + 14;
+  let yJudul = lastY + 12;
+  // Kalau tidak cukup ruang di halaman ini, pindah ke halaman baru
+  if(yJudul + tinggiButuh > pageH - 16){
+    doc.addPage();
+    pdfKop(doc, orgName, 'LAPORAN TRANSAKSI BULANAN \u2014 '+namaBulan.toUpperCase()+' (LANJUTAN)');
+    yJudul = 31;
+  }
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9); doc.setTextColor(11,61,46);
+  doc.text('RINGKASAN', 14, yJudul);
+  doc.setFont('helvetica','normal'); doc.setTextColor(0);
+  doc.autoTable({
+    head:[['Keterangan','Nilai']],
+    body:rk,
+    startY:yJudul + 3,
+    styles:{ fontSize:8.5, cellPadding:3 },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'left' },
+    columnStyles:{ 0:{ halign:'left', cellWidth:120 }, 1:{ halign:'right', fontStyle:'bold' } },
+    margin:{ left:14, right:14 }
+  });
+  const akhirY = (doc.lastAutoTable && doc.lastAutoTable.finalY) || 0;
+  if(akhirY + 18 <= pageH - 16){
+    doc.setFontSize(7.5); doc.setTextColor(120);
+    doc.text('Keterangan: Saldo KAS dihitung mulai September 2026 (Angsuran Masuk + Tabungan Masuk - Penarikan Tabungan - Realisasi).', 14, akhirY + 6);
+    doc.text('Saldo Awal bulan ini sama dengan Saldo Akhir bulan sebelumnya. Tabungan & Piutang dihitung dari data yang tercatat di aplikasi.', 14, akhirY + 9.5);
+  }
   doc.save(sanitizeFileName('Laporan Transaksi '+namaBulan)+'.pdf');
   toast('File PDF berhasil diunduh');
 }
