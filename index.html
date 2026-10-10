@@ -772,6 +772,7 @@ const SUPABASE_URL = 'https://nuczywforbwbctwxbfky.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51Y3p5d2ZvcmJ3YmN0d3hiZmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjY5NTAsImV4cCI6MjA5ODkwMjk1MH0.4xQPbzS8EQ3NAdwzkU5Q5Fjbxi2Q0rlRDWYaYBCQ8Ic';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const TG_FN_URL = SUPABASE_URL + '/functions/v1/telegram';
+const WA_FN_URL = SUPABASE_URL + '/functions/v1/wa-notif';
 let SUPABASE_ENABLED = true;
 
 const TABLES = {
@@ -1568,11 +1569,12 @@ async function mergePembiayaanForSync(){
   return out;
 }
 
-// ================== WA Fonnte ==================
+// ================== WA Gateway (relay via Supabase Edge Function) ==================
+// API key TIDAK disimpan di browser — disimpan di server (Edge Function wa-notif).
 function waSettings(){
   const info = DB.koperasi.info || {};
   const cfg = info.notifWA || {};
-  return { enabled: !!cfg.enabled, token: cfg.token || '', adminNumbers: Array.isArray(cfg.adminNumbers) ? cfg.adminNumbers : [] };
+  return { enabled: cfg.enabled !== undefined ? !!cfg.enabled : true, adminNumbers: Array.isArray(cfg.adminNumbers) ? cfg.adminNumbers : [] };
 }
 function normalizeNoHp(no){
   if(!no) return '';
@@ -1584,16 +1586,15 @@ function normalizeNoHp(no){
 async function kirimWA(nomor, pesan){
   const cfg = waSettings();
   if(!cfg.enabled) return;
-  if(!cfg.token){ console.warn('WA token belum diisi'); return; }
   if(!nomor){ console.warn('No HP kosong'); return; }
   try {
-    const res = await fetch('https://api.fonnte.com/send', {
+    const res = await fetch(WA_FN_URL, {
       method: 'POST',
-      headers: { 'Authorization': cfg.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target: normalizeNoHp(nomor), message: pesan })
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ to: normalizeNoHp(nomor), message: pesan })
     });
-    const data = await res.json();
-    if(!data.status) console.warn('Fonnte error:', data);
+    const data = await res.json().catch(()=>({}));
+    if(!data || data.success === false) console.warn('WA gateway error:', data);
     return data;
   } catch(e){
     console.warn('WA gagal:', e);
@@ -6352,13 +6353,15 @@ function renderPengaturanWA(){
   const tgTestDefault = (tg.adminChatIds||[])[0] || '';
   const waContent = `
     <div class="hint" style="margin-bottom:10px;">Notifikasi otomatis dikirim ke admin & koordinator saat setoran, konfirmasi, pengajuan pinjaman, dan penarikan.</div>
-    <div class="form-row"><label>Token API Fonnte</label><input type="text" id="wa-token" value="${cfg.token||''}" placeholder="Token dari dashboard fonnte.com"></div>
+    <div style="background:var(--primary-soft);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.5;margin-bottom:12px;">
+      <b>Gateway WhatsApp</b> — memakai layanan <b>ws.perumpnri.com</b>. Kunci API disimpan aman di server (Edge Function <b>wa-notif</b>), tidak bisa dibaca dari browser.
+    </div>
     <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${(cfg.adminNumbers||[]).join(', ')}" placeholder="081234567890, 082198765432"><span class="hint">Pisahkan dengan koma jika lebih dari satu.</span></div>
     <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" ${cfg.enabled?'checked':''}> Notifikasi WhatsApp aktif</label></div>
     <button class="btn btn-primary btn-block" onclick="savePengaturanWA()">Simpan pengaturan WhatsApp</button>
     <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">
       <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Uji Kirim WA</div>
-      <div class="hint" style="margin-bottom:10px;">Kirim pesan tes untuk memastikan token & koneksi ke Fonnte berfungsi sebelum dipakai notifikasi asli.</div>
+      <div class="hint" style="margin-bottom:10px;">Kirim pesan tes untuk memastikan gateway WhatsApp terhubung sebelum dipakai notifikasi asli.</div>
       <div class="form-row"><label>Nomor tujuan tes</label><input type="text" id="wa-test-number" value="${testDefault}" placeholder="081234567890"></div>
       <button class="btn btn-primary btn-block" onclick="testNotifWA()">Kirim WA Tes</button>
       <div id="wa-test-result" style="margin-top:10px;font-size:13px;"></div>
@@ -6396,7 +6399,7 @@ function renderPengaturanWA(){
     </div>`;
   return `
     <div>
-      ${accordion('wa','Pengaturan WhatsApp Admin','Token Fonnte, nomor admin, & uji kirim WA', sub==='wa', waContent)}
+      ${accordion('wa','Pengaturan WhatsApp Admin','Nomor admin & uji kirim WA', sub==='wa', waContent)}
       <div style="height:12px;"></div>
       ${accordion('tg','Pengaturan ID Telegram Admin','Token bot, Chat ID admin, & uji kirim Telegram', sub==='tg', tgContent)}
       <div style="height:12px;"></div>
@@ -6445,7 +6448,6 @@ function renderPengaturanProfil(){
 }
 function savePengaturanWA(){
   const cfg = DB.koperasi.info.notifWA || {};
-  cfg.token = document.getElementById('wa-token').value.trim();
   cfg.adminNumbers = document.getElementById('wa-admin-numbers').value.split(',').map(s=>s.trim()).filter(Boolean);
   cfg.enabled = document.getElementById('wa-enabled').checked;
   DB.koperasi.info.notifWA = cfg;
@@ -6462,21 +6464,19 @@ async function testNotifWA(){
   const resultEl = document.getElementById('wa-test-result');
   if(resultEl) resultEl.innerHTML = '';
   const cfg = DB.koperasi.info.notifWA || {};
-  const token = (document.getElementById('wa-token').value.trim()) || cfg.token || '';
-  if(!token){ toast('Isi token API Fonnte dulu, lalu simpan'); return; }
   const no = (document.getElementById('wa-test-number').value.trim()) || (cfg.adminNumbers||[])[0] || '';
   if(!no){ toast('Isi nomor tujuan tes'); return; }
   const target = normalizeNoHp(no);
   if(!target){ toast('Nomor tidak valid'); return; }
   if(resultEl){ resultEl.innerHTML = '<span style="color:var(--muted);">Mengirim ke <b>'+no+'</b>...</span>'; }
   try {
-    const res = await fetch('https://api.fonnte.com/send', {
+    const res = await fetch(WA_FN_URL, {
       method: 'POST',
-      headers: { 'Authorization': token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target, message: '🔔 [Tes Notifikasi] Aplikasi Koperasi '+DB.koperasi.nama+' berhasil terhubung ke Fonnte. Pesan uji dari Pengaturan WhatsApp.' })
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ to: target, message: '🔔 [Tes Notifikasi] Aplikasi Koperasi '+DB.koperasi.nama+' berhasil terhubung ke gateway WhatsApp. Pesan uji dari Pengaturan WhatsApp.' })
     });
-    const data = await res.json();
-    if(data && data.status){
+    const data = await res.json().catch(()=>({}));
+    if(data && data.success){
       if(resultEl) resultEl.innerHTML = '<span style="color:#1B7F3B;">✔ Pesan tes terkirim ke '+no+'.</span>';
       bigSuccess('WA tes terkirim');
     } else {
@@ -6486,7 +6486,7 @@ async function testNotifWA(){
     }
   } catch(e){
     if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+e.message+'</span>';
-    toast('Gagal kirim WA tes');
+    toast('Gagal kirim WA tes — Edge Function wa-notif belum ter-deploy?');
   }
 }
 async function testNotifTG(){
