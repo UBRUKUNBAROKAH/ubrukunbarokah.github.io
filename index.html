@@ -5822,42 +5822,44 @@ function computeLapTransaksiBulanan(bulan){
     const uidH = (userById(h.userId) && userById(h.userId).nama && userById(h.userId).nama!=='-') ? h.userId : h.koorId;
     rows.push({tanggalString:h.tanggal, nama:nm(h.userId)||nm(h.koorId), kelompok:kg(uidH), kategori:'Kekurangan Kas Koor', ket:h.keterangan||'', masuk:0, keluar:h.jumlah||0});
   });
-  // Saldo berjalan (mutasi nyambung antar bulan): akumulasi semua transaksi
-  // pada bulan-bulan SEBELUM bulan terpilih jadi "Saldo Awal Bulan".
   let saldoAwal = 0, masukSebelum = 0, keluarSebelum = 0;
   const monthKey = d => String(d||'').slice(0,7);
-  // Titik mulai saldo berjalan = bulan terawal pada buku tabungan (saat aplikasi
-  // mulai mencatat). Bulan-bulan di bawahnya adalah histori lama sebelum buku
-  // tabungan ada, jadi tidak ikut dijumlahkan dan Saldo Awal bulan pertama = Rp0.
-  let firstMonth = null;
-  (DB.tabunganTx||[]).forEach(t=>{ const mk = monthKey(t.tanggal); if(mk && mk<'2100-01' && (firstMonth===null || mk<firstMonth)) firstMonth = mk; });
-  const before = d => { const mk = monthKey(d); return !!(mk && firstMonth && mk>=firstMonth && mk<bulan && mk<'2100-01'); };
+  // Titik mulai saldo KAS = September 2026 (abaikan Agustus & histori lama).
+  // Rumus KAS: Angsuran Masuk + Tabungan Masuk − Penarikan Tabungan − Realisasi (Pencairan).
+  // Hanya dihitung untuk bulan >= KAS_SALDO_START.
+  const KAS_SALDO_START = '2026-09';
+  const isKasMonth = bulan >= KAS_SALDO_START && bulan < '2100-01';
+  const before = d => { const mk = monthKey(d); return !!(mk && mk>=KAS_SALDO_START && mk<bulan && mk<'2100-01'); };
+  // Akumulasi bulan-bulan sebelum bulan terpilih (mulai Sep 2026) pakai rumus KAS.
+  // MASUK: Angsuran (riwayatAngsuran) + Tabungan Masuk (setor, transfer_masuk)
+  // KELUAR: Penarikan Tabungan (tarik, transfer_keluar) + Realisasi/Pencairan (pembiayaan.mulai)
   (DB.tabunganTx||[]).forEach(t=>{
     if(!before(t.tanggal)) return;
-    const isIn = (t.tipe==='setor'||t.tipe==='transfer_masuk');
+    const isMasuk = (t.tipe==='setor'||t.tipe==='transfer_masuk');
+    const isKeluar = (t.tipe==='tarik'||t.tipe==='transfer_keluar');
     const j = t.jumlah||0;
-    if(isIn) masukSebelum += j; else keluarSebelum += j;
-    saldoAwal += isIn ? j : -j;
+    if(isMasuk){ masukSebelum += j; saldoAwal += j; }
+    else if(isKeluar){ keluarSebelum += j; saldoAwal -= j; }
   });
   (DB.pembiayaan||[]).forEach(p=>{
-    if(p.statusPengajuan==='approved' && before(p.mulai)){ keluarSebelum += p.jumlahPinjaman||0; saldoAwal -= (p.jumlahPinjaman||0); }
-    (p.riwayatAngsuran||[]).forEach(a=>{ if(before(a.tanggal)){ masukSebelum += a.jumlah||0; saldoAwal += a.jumlah||0; } });
+    if(p.statusPengajuan==='approved'){
+      if(before(p.mulai)){ keluarSebelum += p.jumlahPinjaman||0; saldoAwal -= (p.jumlahPinjaman||0); } // Realisasi/Pencairan
+      (p.riwayatAngsuran||[]).forEach(a=>{ if(before(a.tanggal)){ masukSebelum += a.jumlah||0; saldoAwal += a.jumlah||0; } }); // Angsuran
+    }
   });
-  (DB.kasPenarikan||[]).forEach(k=>{
-    if(!before(k.tanggal)) return;
-    const lunas = /pelunasan/i.test(String(k.keterangan||''));
-    if(lunas){ masukSebelum += k.jumlah||0; saldoAwal += k.jumlah||0; }
-    else{ keluarSebelum += k.jumlah||0; saldoAwal -= k.jumlah||0; }
-  });
-  (DB.hutangKoor||[]).forEach(h=>{
-    if(before(h.tanggal)){ keluarSebelum += h.jumlah||0; saldoAwal -= h.jumlah||0; }
-  });
+  // kasPenarikan & hutangKoor TIDAK termasuk dalam rumus KAS (bukan tabungan/angsuran)
   // Hitung saldo berjalan tiap baris (urut naik dulu), lalu tampilkan tetap urut turun.
-  rows.sort((a,b)=>String(a.tanggalString||'').localeCompare(String(b.tanggalString||'')));
-  let run = saldoAwal;
-  rows.forEach(r=>{ run += (r.masuk||0) - (r.keluar||0); r.saldo = run; });
-  const saldoAkhir = run;
-  rows.sort((a,b)=>String(b.tanggalString||'').localeCompare(String(a.tanggalString||'')));
+  // Hanya hitung saldo KAS untuk bulan >= KAS_SALDO_START.
+  if(isKasMonth){
+    rows.sort((a,b)=>String(a.tanggalString||'').localeCompare(String(b.tanggalString||'')));
+    let run = saldoAwal;
+    rows.forEach(r=>{ run += (r.masuk||0) - (r.keluar||0); r.saldo = run; });
+    const saldoAkhir = run;
+    rows.sort((a,b)=>String(b.tanggalString||'').localeCompare(String(a.tanggalString||'')));
+  } else {
+    // Bulan sebelum KAS_SALDO_START: tidak ada saldo berjalan
+    rows.sort((a,b)=>String(b.tanggalString||'').localeCompare(String(a.tanggalString||'')));
+  }
   const total = {masuk:0, keluar:0};
   const byKategori = {};
   rows.forEach(r=>{
@@ -5865,7 +5867,7 @@ function computeLapTransaksiBulanan(bulan){
     const k = byKategori[r.kategori] || (byKategori[r.kategori] = {masuk:0, keluar:0, n:0});
     k.masuk += r.masuk||0; k.keluar += r.keluar||0; k.n++;
   });
-  const saldoOn = !!(firstMonth && bulan>=firstMonth && bulan<'2100-01');
+  const saldoOn = isKasMonth;
   return { rows, total, byKategori, saldoAwal, saldoAkhir, masukKum: masukSebelum + (total.masuk||0), keluarKum: keluarSebelum + (total.keluar||0), saldoOn };
 }
 function adminSetLapTransBulan(v){ currentSubState.lapTransBulan = v || null; renderContent(); }
