@@ -442,6 +442,9 @@ input,select{font-family:inherit;}
 .ledger-row .d{font-size:11px;color:var(--muted);}
 .ledger-row .k{font-size:12px;}
 .ledger-row .j{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;font-weight:600;}
+/* varian 5 kolom: tambah kolom aksi (edit/hapus) di ledger riwayat angsuran */
+.ledger-head.act,.ledger-row.act{grid-template-columns:.35fr 1fr 1.2fr 1fr auto;}
+.ledger-row.act .j{margin-right:6px;}
 
 /* bottom nav */
 .bottom-nav{
@@ -2868,6 +2871,130 @@ function akadBadge(p){
   if(!a) return '';
   return '<span style="display:inline-flex;align-items:center;gap:4px;font-family:\'IBM Plex Mono\',monospace;font-size:12px;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:2px 8px 2px 10px;border-radius:7px;margin-left:7px;vertical-align:middle;white-space:nowrap;">'+a+'<button style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--primary);padding:1px 6px;font-size:9.5px;font-weight:700;line-height:1.4;cursor:pointer;flex-shrink:0;" title="Salin nomor akad" onclick="event.stopPropagation();copyText(\''+a+'\',\'Nomor akad\')">Salin</button></span>';
 }
+// ============ KOREKSI / REKONSILIASI PEMBIAYAAN ============
+// Hitung ulang sisa angsuran + status berdasarkan riwayat pembayaran.
+// Hormati status manual (p.statusManual) bila admin pernah menetapkannya.
+function rekomputasiPembiayaan(p){
+  const totalKew = (p.jumlahPinjaman||0) + marginNominalOf(p);
+  const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+(a.jumlah||0),0);
+  const sisaTagihan = Math.max(0, totalKew - totalDibayar);
+  p.sisaAngsuran = sisaTagihan>0 ? (p.angsuranPerBulan>0 ? Math.ceil(sisaTagihan / p.angsuranPerBulan) : 1) : 0;
+  const otomatis = (sisaTagihan === 0) ? 'lunas' : 'berjalan';
+  p.status = (p.statusManual === 'lunas' || p.statusManual === 'berjalan') ? p.statusManual : otomatis;
+  return { totalKew, totalDibayar, sisaTagihan, otomatis };
+}
+// Batalkan alokasi SHU satu angsuran (Kebalikan dari alokasi saat bayar).
+function batalkanAlokasiShu(p){
+  const atur = DB.koperasi.aturKeuangan;
+  if(!atur || !atur.pools || !atur.dana || !marginNominalOf(p) || !p.tenor) return;
+  const marginPerAngsuran = Math.round(marginNominalOf(p) / p.tenor);
+  atur.pools.forEach(pool=>{
+    const alokasi = Math.round(marginPerAngsuran * pool.persen / 100);
+    atur.dana[pool.id] = Math.max(0, (atur.dana[pool.id]||0) - alokasi);
+  });
+}
+// Buka modal koreksi satu baris riwayat angsuran.
+function modalKoreksiAngsuran(pembId, angsuranId){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p) return;
+  const a = (p.riwayatAngsuran||[]).find(x=>x.id===angsuranId);
+  if(!a){ toast('Data angsuran tidak ditemukan'); return; }
+  const tglVal = String(a.tanggal||'').slice(0,10);
+  openModal(`
+    <h3>Koreksi Angsuran</h3>
+    <div class="card" style="padding:12px 14px;font-size:13px;margin-bottom:12px;">
+      <b>${pembUser(p).nama}</b> &middot; AKAD ${nomorAkadOf(p)||'-'}
+      <div style="color:var(--muted);margin-top:4px;">Total kewajiban ${rupiah(p.jumlahPinjaman + marginNominalOf(p))} &middot; angsuran ${rupiah(p.angsuranPerBulan)}/bln</div>
+    </div>
+    <div class="form-row"><label>Nominal (Rp)</label><input type="number" id="ka-jumlah" min="0" step="1000" value="${a.jumlah}"></div>
+    <div class="form-row"><label>Tanggal bayar</label><input type="date" id="ka-tanggal" max="${hariIniStr()}" value="${tglVal}"><span class="hint">Ganti bila tanggal transaksinya salah catat.</span></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanKoreksiAngsuran('${pembId}','${angsuranId}')">Simpan</button>
+    </div>
+  `);
+}
+function simpanKoreksiAngsuran(pembId, angsuranId){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p) return;
+  const a = (p.riwayatAngsuran||[]).find(x=>x.id===angsuranId);
+  if(!a){ toast('Data angsuran tidak ditemukan'); return; }
+  const jumlah = parseIdr(document.getElementById('ka-jumlah').value);
+  if(!jumlah || jumlah<=0){ toast('Nominal harus lebih dari 0'); return; }
+  const cekTgl = cekTanggalTransaksi(document.getElementById('ka-tanggal').value);
+  if(!cekTgl.ok){ toast(cekTgl.msg); return; }
+  const lama = a.jumlah + ' @ ' + String(a.tanggal||'').slice(0,10);
+  a.jumlah = jumlah;
+  a.tanggal = cekTgl.iso;
+  // Samakan record setoran terkait (khusus angsuran dari koordinator)
+  (DB.setoran||[]).forEach(st=>{
+    if(st.jenis==='angsuran' && st.pembiayaanId===p.id && st.tanggal===a.tanggal && st.jumlah!==jumlah){
+      st.jumlah = jumlah;
+    }
+  });
+  const r = rekomputasiPembiayaan(p);
+  persist();
+  addLog('Koreksi angsuran', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - ' + lama + ' → ' + rupiah(jumlah) + ' @ ' + String(a.tanggal).slice(0,10));
+  closeModal();
+  bigSuccess('Angsuran dikoreksi');
+  renderContent();
+  toast('Sisa tagihan kini ' + rupiah(r.sisaTagihan));
+}
+// Hapus satu baris riwayat angsuran yang keliru input.
+function hapusAngsuran(pembId, angsuranId){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p){ toast('Pembiayaan tidak ditemukan'); return; }
+  const a = (p.riwayatAngsuran||[]).find(x=>x.id===angsuranId);
+  if(!a){ toast('Data angsuran tidak ditemukan'); return; }
+  const nama = pembUser(p).nama;
+  const ket = 'Hapus angsuran ke-' + (a.angsuranKe||'-') + ' (' + rupiah(a.jumlah) + ', ' + String(a.tanggal||'').slice(0,10) + ') dari ' + nama + ' — sisa tagihan & status akan dihitung ulang';
+  confirmDialog('Hapus data angsuran ini?', ket, 'danger',
+    ()=>{ hapusAngsuranProses(pembId, angsuranId); }, 'Ya, hapus');
+}
+function hapusAngsuranProses(pembId, angsuranId){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p) return;
+  const idx = (p.riwayatAngsuran||[]).findIndex(x=>x.id===angsuranId);
+  if(idx<0){ toast('Data angsuran tidak ditemukan'); return; }
+  const a = p.riwayatAngsuran[idx];
+  p.riwayatAngsuran.splice(idx,1);
+  // Hapus record setoran pasangan agar kas koordinator & daftar setoran tidak dobel
+  let hapusSetoran = 0;
+  DB.setoran = (DB.setoran||[]).filter(st=>{
+    const cocok = st.jenis==='angsuran' && st.pembiayaanId===p.id && String(st.tanggal||'')===String(a.tanggal||'') && (st.jumlah===a.jumlah);
+    if(cocok) hapusSetoran++;
+    return !cococ;
+  });
+  batalkanAlokasiShu(p);
+  const r = rekomputasiPembiayaan(p);
+  persist();
+  addLog('Hapus angsuran', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - ' + rupiah(a.jumlah) + ' tanggal ' + String(a.tanggal||'').slice(0,10) + ' | sisa tagihan ' + rupiah(r.sisaTagihan));
+  bigSuccess('Angsuran dihapus');
+  renderContent();
+  if(hapusSetoran) toast('Record setoran terkait ikut dihapus (' + hapusSetoran + ')');
+  toast('Sisa tagihan kini ' + rupiah(r.sisaTagihan));
+}
+// Tandai status manuelle (lunas / belum lunas) mengikuti rekap manual.
+function setStatusManualPembiayaan(pembId, status){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p){ toast('Pembiayaan tidak ditemukan'); return; }
+  if(status === 'otomatis'){
+    delete p.statusManual;
+    const r = rekomputasiPembiayaan(p);
+    persist();
+    addLog('Status pembiayaan (otomatis)', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - kembali dihitung otomatis: ' + (r.otomatis==='lunas'?'Lunas':'Berjalan'));
+    bigSuccess('Status kembali otomatis');
+    renderContent();
+    return;
+  }
+  p.statusManual = status;
+  rekomputasiPembiayaan(p);
+  persist();
+  addLog('Status pembiayaan (manual)', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - ditandai ' + (status==='lunas'?'LUNAS':'BERJALAN') + ' sesuai rekap manual');
+  bigSuccess('Status ditandai ' + (status==='lunas'?'LUNAS':'BERJALAN'));
+  renderContent();
+}
+
 function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.status==='lunas') return {ok:false, msg:'Pembiayaan tidak ditemukan atau sudah lunas.'};
@@ -2880,7 +3007,8 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
   const sisaTagihan = Math.max(0, totalKew - totalDibayar);
   p.sisaAngsuran = sisaTagihan>0 ? (p.angsuranPerBulan>0 ? Math.ceil(sisaTagihan / p.angsuranPerBulan) : 1) : 0;
-  if(totalDibayar >= totalKew || p.sisaAngsuran<=0) p.status='lunas';
+  // Status manual (hasil koreksi rekap) tidak ditimpa oleh pembayaran baru.
+  p.status = (p.statusManual === 'lunas' || p.statusManual === 'berjalan') ? p.statusManual : ((totalDibayar >= totalKew || sisaTagihan === 0) ? 'lunas' : 'berjalan');
   const olehUser = userById(oleh);
   const isAdmin = olehUser && olehUser.role==='admin';
   const st = {id:uid('st'), userId:p.userId, jenis:'angsuran', pembiayaanId:p.id, jumlah, keterangan:'Angsuran ke-'+angsuranKe, tanggal:tgl, dibuatOleh:oleh, status: isAdmin ? 'sudah_di_admin' : 'di_koordinator'};
@@ -4410,11 +4538,24 @@ function renderPembiayaanDetailPage(pembId, backPage){
     </div>
     <div class="section-label">Riwayat Angsuran</div>
     <div class="ledger">
-      <div class="ledger-head"><div>No</div><div>Tanggal</div><div>Angsuran ke</div><div style="text-align:right;">Jumlah</div></div>
+      <div class="ledger-head act"><div>No</div><div>Tanggal</div><div>Angsuran ke</div><div style="text-align:right;">Jumlah</div><div></div></div>
       ${p.riwayatAngsuran.length ? p.riwayatAngsuran.slice().reverse().map((a,i)=>`
-        <div class="ledger-row"><div class="d">${i+1}</div><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div></div>
+        <div class="ledger-row act"><div class="d">${i+1}</div><div class="d">${fmtDateShort(a.tanggal)}</div><div class="k">Ke-${a.angsuranKe}</div><div class="j">${rupiah(a.jumlah)}</div><div style="display:flex;gap:4px;justify-content:flex-end;">
+          <button class="icon-btn-sm ic-primary" style="width:26px;height:26px;" onclick="modalKoreksiAngsuran('${p.id}','${a.id}')" title="Koreksi nominal / tanggal">✎</button>
+          <button class="icon-btn-sm ic-danger" style="width:26px;height:26px;" onclick="hapusAngsuran('${p.id}','${a.id}')" title="Hapus angsuran ini">✕</button>
+        </div></div>
       `).join('') : `<div class="ledger-row" style="grid-template-columns:1fr;justify-content:center;color:var(--muted);font-size:12px;">Belum ada angsuran dibayar</div>`}
       ${sisaTagihan>0 && p.riwayatAngsuran.length>0 ? `<div class="ledger-row" style="grid-template-columns:1fr 1fr 1fr;font-weight:700;border-top:2px solid var(--border);"><div>Sisa</div><div></div><div style="text-align:right;" class="mono">${rupiah(sisaTagihan)}</div></div>` : ''}
+    </div>
+    <div class="card" style="padding:12px 14px;margin-top:16px;">
+      <div class="section-label" style="margin-top:0;">Koreksi Status (rekap manual)</div>
+      <div class="hint" style="margin-bottom:10px;">Status di atas mengikuti perhitungan otomatis aplikasi. Kalau berbeda dengan rekap manual, tandai di sini — catatan ke mana pun tidak ikut berubah.</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn ${p.statusManual==='lunas'?'btn-primary':'btn-outline'}" style="flex:1;font-size:12px;" onclick="setStatusManualPembiayaan('${p.id}','lunas')">Tandai Lunas</button>
+        <button class="btn ${p.statusManual==='berjalan'?'btn-primary':'btn-outline'}" style="flex:1;font-size:12px;" onclick="setStatusManualPembiayaan('${p.id}','berjalan')">Tandai Belum Lunas</button>
+        <button class="btn btn-outline" style="flex:1;font-size:12px;" onclick="setStatusManualPembiayaan('${p.id}','otomatis')">Otomatis</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:8px;">Status saat ini: <b>${p.status==='lunas'?'LUNAS':'BERJALAN'}</b>${p.statusManual?' — ditandai manual':' — otomatis dari '+rupiah(totalDibayar)+' terbayar dari kewajiban '+rupiah(totalKew)}</div>
     </div>` : `
     <div class="hint" style="text-align:center;margin-top:10px;">${p.statusPengajuan==='pending'?'Pengajuan menunggu ACC admin':'Pengajuan ditolak'}</div>`}
     ${backPage==='admin_pembiayaan' ? `<button class="btn btn-danger btn-block" style="margin-top:16px;" onclick="hapusPembiayaan('${p.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg> Hapus pembiayaan ini</button>` : ''}
@@ -4632,7 +4773,7 @@ function submitEditPengajuan(pembId){
    if(p.statusPengajuan==='pending' && sudahBayar===0){
      if(tenor>0) p.status = 'pending';
    } else if(p.statusPengajuan==='approved'){
-     p.status = p.sisaAngsuran<=0 ? 'lunas' : 'berjalan';
+     rekomputasiPembiayaan(p);
    }
    persist();
    addLog('Edit pengajuan pembiayaan', userById(userId).nama + ' - ' + rupiah(jumlah) + ' / ' + tenor + ' bulan (keuntungan '+rupiah(mp)+')');
