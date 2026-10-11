@@ -883,9 +883,13 @@ function cekTanggalTransaksi(v){
   if(!v) return { ok:false, msg:'Pilih tanggal transaksi' };
   const s = String(v).split('-').map(Number);
   if(s.length!==3 || !s[0] || !s[1] || !s[2]) return { ok:false, msg:'Tanggal transaksi tidak valid' };
-  const d = new Date(s[0], s[1]-1, s[2], 23, 59, 59);
+  // Bandingkan HANYA tanggalnya (jam diabaikan), supaya transaksi bertanggal hari ini
+  // tetap sah walau jamnya belum/lewat 23:59.
   const now = new Date();
-  if(d > now) return { ok:false, msg:'Tanggal transaksi tidak boleh di masa depan' };
+  const hariIni = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d = new Date(s[0], s[1]-1, s[2]);
+  if(isNaN(d.getTime())) return { ok:false, msg:'Tanggal transaksi tidak valid' };
+  if(d > hariIni) return { ok:false, msg:'Tanggal transaksi tidak boleh di masa depan' };
   return { ok:true, iso:tglDariInput(v) };
 }
 function rupiah(n){ n = Math.round(Number(n)||0); return 'Rp' + n.toLocaleString('id-ID'); }
