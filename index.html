@@ -860,6 +860,31 @@ async function fetchAllRows(table, select = '*') {
 
 function uid(prefix){ return (prefix||'id') + '_' + Math.random().toString(36).slice(2,9); }
 function nowISO(){ return new Date().toISOString(); }
+// Tanggal hari ini dalam format YYYY-MM-DD berdasarkan waktu LOKAL (bukan UTC),
+// supaya tidak bergeser sehari saat dinyalakan sekitar tengah malam WIB.
+function hariIniStr(){
+  const n = new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+}
+// Ubah nilai <input type="date"> (YYYY-MM-DD) menjadi timestamp ISO untuk disimpan.
+// Dipakai jam 12:00 waktu lokal supaya tanggalnya tidak pernah bergeser ke bulan
+// sebelumnya/berikutnya saat dikonversi ke UTC (penting untuk pengelompokan laporan bulanan).
+function tglDariInput(v){
+  if(!v) return nowISO();
+  const p = String(v).split('-').map(Number);
+  if(p.length!==3 || !p[0] || !p[1] || !p[2]) return nowISO();
+  return new Date(p[0], p[1]-1, p[2], 12, 0, 0).toISOString();
+}
+// Validasi tanggal transaksi: wajib diisi, tidak boleh di masa depan.
+function cekTanggalTransaksi(v){
+  if(!v) return { ok:false, msg:'Pilih tanggal transaksi' };
+  const s = String(v).split('-').map(Number);
+  if(s.length!==3 || !s[0] || !s[1] || !s[2]) return { ok:false, msg:'Tanggal transaksi tidak valid' };
+  const d = new Date(s[0], s[1]-1, s[2], 23, 59, 59);
+  const now = new Date();
+  if(d > now) return { ok:false, msg:'Tanggal transaksi tidak boleh di masa depan' };
+  return { ok:true, iso:tglDariInput(v) };
+}
 function rupiah(n){ n = Math.round(Number(n)||0); return 'Rp' + n.toLocaleString('id-ID'); }
 function rpSld(v){ v = Math.round(Number(v)||0); return (v<0?'-':'') + 'Rp' + Math.abs(v).toLocaleString('id-ID'); }
 // Parse IDR: hapus titik (pemisah ribuan), ganti koma jadi titik (desimal)
@@ -2204,21 +2229,22 @@ function koordinatorForKelompok(kelompokId){
   return k && k.koordinatorId ? userById(k.koordinatorId) : null;
 }
 
-function doSetor(userId, jenisId, jumlah, keterangan){
+function doSetor(userId, jenisId, jumlah, keterangan, tglIso){
   const acc = getAccount(userId, jenisId);
   if(!acc) throw new Error('Rekening tabungan belum dibuka untuk jenis ini.');
   if(acc.nonaktif) throw new Error('Rekening tabungan dinonaktifkan, tidak dapat bertransaksi.');
   acc.saldo += jumlah;
   const s = getSession();
-  DB.tabunganTx.push({id:uid('tx'), userId, jenisId, tipe:'setor', jumlah, saldoSetelah:acc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: keterangan||'Setoran tunai'});
+  DB.tabunganTx.push({id:uid('tx'), userId, jenisId, tipe:'setor', jumlah, saldoSetelah:acc.saldo, tanggal: tglIso || nowISO(), oleh:s.userId, keterangan: keterangan||'Setoran tunai'});
   persist();
   addLog('Setor tabungan', userById(userId).nama + ' - ' + jenisName(jenisId) + ' - ' + rupiah(jumlah));
 }
-function doSetorKoordinator(userId, jenisId, jumlah, keterangan){
+function doSetorKoordinator(userId, jenisId, jumlah, keterangan, tglIso){
   const s = getSession();
-  doSetor(userId, jenisId, jumlah, keterangan);
-  DB.setoran.push({id:uid('st'), userId, jenisId, jumlah, keterangan: keterangan||'Setoran tunai', tanggal:nowISO(), dibuatOleh:s.userId, status:'di_koordinator'});
-  autoLunasiHutangDariSetoran(s.userId);
+  const tgl = tglIso || nowISO();
+  doSetor(userId, jenisId, jumlah, keterangan, tgl);
+  DB.setoran.push({id:uid('st'), userId, jenisId, jumlah, keterangan: keterangan||'Setoran tunai', tanggal:tgl, dibuatOleh:s.userId, status:'di_koordinator'});
+  autoLunasiHutangDariSetoran(s.userId, tgl);
   persist();
   const nasabahSetor = userById(userId);
   notifAdminWA(waHeader('PEMBERITAHUAN SETORAN')
@@ -2273,14 +2299,14 @@ async function confirmSetoran(setoranId){
     + waFooter());
   return {ok:true};
 }
-function doTarik(userId, jenisId, jumlah, keterangan){
+function doTarik(userId, jenisId, jumlah, keterangan, tglIso){
   const acc = getAccount(userId, jenisId);
   if(!acc) return {ok:false, msg:'Rekening tabungan belum dibuka untuk jenis ini.'};
   if(acc.nonaktif) return {ok:false, msg:'Rekening tabungan dinonaktifkan, tidak dapat bertransaksi.'};
   if(acc.saldo < jumlah) return {ok:false, msg:'Saldo tidak mencukupi.'};
   acc.saldo -= jumlah;
   const s = getSession();
-  DB.tabunganTx.push({id:uid('tx'), userId, jenisId, tipe:'tarik', jumlah, saldoSetelah:acc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: keterangan||'Penarikan tunai'});
+  DB.tabunganTx.push({id:uid('tx'), userId, jenisId, tipe:'tarik', jumlah, saldoSetelah:acc.saldo, tanggal: tglIso || nowISO(), oleh:s.userId, keterangan: keterangan||'Penarikan tunai'});
   persist();
   addLog('Tarik tabungan', userById(userId).nama + ' - ' + jenisName(jenisId) + ' - ' + rupiah(jumlah));
   return {ok:true};
@@ -2440,6 +2466,7 @@ function openTransferModal(prefUserId){
       <div class="form-row" id="trsf-tujuan-jenis-row" style="display:none;"><label>Rekening tujuan</label><select id="trsf-tujuan-jenis"></select></div>
     </div>
     <div class="form-row"><label>Nominal (Rp)</label><input type="number" id="trsf-jumlah" min="0" step="1000" placeholder="cth. 50000"></div>
+    <div class="form-row"><label>Tanggal transaksi</label><input type="date" id="trsf-tanggal" max="${hariIniStr()}" value="${hariIniStr()}"><span class="hint">Isi tanggal saat transaksi terjadi, bila mencatat transaksi dari bulan sebelumnya.</span></div>
     <div class="form-row"><label>Keterangan (opsional)</label><input type="text" id="trsf-ket" placeholder="cth. Transfer ke Ani"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -2485,27 +2512,32 @@ function confirmTransfer(){
   if(!dstAcc){ toast('Rekening tujuan tidak ditemukan'); return; }
   if(dstAcc.nonaktif){ toast('Rekening tujuan dinonaktifkan'); return; }
   const ket = String(document.getElementById('trsf-ket').value||'').trim();
+  const cekTglTrsf = cekTanggalTransaksi(document.getElementById('trsf-tanggal').value);
+  if(!cekTglTrsf.ok){ toast(cekTglTrsf.msg); return; }
+  const tglSingkat = String(document.getElementById('trsf-tanggal').value||'');
   confirmDialog('Transfer ' + rupiah(jumlah) + '?',
     'Dari : ' + userById(srcUserId).nama + ' (' + jenisName(srcJenisId) + ')' +
     '<br>Ke : ' + dstNama + ' (' + dstJenisNama + ')' +
+    (tglSingkat ? '<br>Tanggal : ' + tglSingkat : '') +
     (ket ? '<br>Keterangan : ' + ket : ''),
     'warning',
-    ()=>{ prosesTransfer(srcUserId, srcJenisId, dstUserId, dstJenisId, jumlah, ket); },
+    ()=>{ prosesTransfer(srcUserId, srcJenisId, dstUserId, dstJenisId, jumlah, ket, cekTglTrsf.iso); },
     'Ya, transfer');
 }
-function prosesTransfer(srcUserId, srcJenisId, dstUserId, dstJenisId, jumlah, ket){
+function prosesTransfer(srcUserId, srcJenisId, dstUserId, dstJenisId, jumlah, ket, tglIso){
   const srcAcc = getAccount(srcUserId, srcJenisId);
   const dstAcc = getAccount(dstUserId, dstJenisId);
   if(!srcAcc || !dstAcc){ toast('Rekening tidak ditemukan'); return; }
   if(srcAcc.nonaktif || dstAcc.nonaktif){ toast('Rekening nonaktif, tidak dapat transfer'); return; }
   if(srcAcc.saldo < jumlah){ toast('Saldo tidak mencukupi'); return; }
   const s = getSession();
+  const tgl = tglIso || nowISO();
   const srcNama = userById(srcUserId).nama;
   const dstNama = userById(dstUserId).nama;
   srcAcc.saldo -= jumlah;
   dstAcc.saldo += jumlah;
-  DB.tabunganTx.push({id:uid('tx'), userId:srcUserId, jenisId:srcJenisId, tipe:'transfer_keluar', jumlah, saldoSetelah:srcAcc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: 'Transfer ke ' + dstNama + ' (' + jenisName(dstJenisId) + ')' + (ket?' - '+ket:'')});
-  DB.tabunganTx.push({id:uid('tx'), userId:dstUserId, jenisId:dstJenisId, tipe:'transfer_masuk', jumlah, saldoSetelah:dstAcc.saldo, tanggal:nowISO(), oleh:s.userId, keterangan: 'Transfer dari ' + srcNama + ' (' + jenisName(srcJenisId) + ')' + (ket?' - '+ket:'')});
+  DB.tabunganTx.push({id:uid('tx'), userId:srcUserId, jenisId:srcJenisId, tipe:'transfer_keluar', jumlah, saldoSetelah:srcAcc.saldo, tanggal:tgl, oleh:s.userId, keterangan: 'Transfer ke ' + dstNama + ' (' + jenisName(dstJenisId) + ')' + (ket?' - '+ket:'')});
+  DB.tabunganTx.push({id:uid('tx'), userId:dstUserId, jenisId:dstJenisId, tipe:'transfer_masuk', jumlah, saldoSetelah:dstAcc.saldo, tanggal:tgl, oleh:s.userId, keterangan: 'Transfer dari ' + srcNama + ' (' + jenisName(srcJenisId) + ')' + (ket?' - '+ket:'')});
   persist();
   addLog('Transfer tabungan', srcNama + ' (' + jenisName(srcJenisId) + ') &rarr; ' + dstNama + ' (' + jenisName(dstJenisId) + ') - ' + rupiah(jumlah) + (ket?' ('+ket+')':''));
   notifUserWA(srcUserId, waHeader('TRANSFER KELUAR')
@@ -2740,7 +2772,8 @@ function ringkasanSaldoKoordinator(){
 // Dicatat sebagai "penarikan" dari kas koordinator (memakai mekanisme yang
 // sama dgn penarikan nasabah) supaya jumlah yg dipakai tidak lagi dihitung
 // sbg kas yg masih harus disetor ke admin.
-function autoLunasiHutangDariSetoran(koorId){
+function autoLunasiHutangDariSetoran(koorId, tglIso){
+  const tglLunas = tglIso || nowISO();
   let tersedia = kasKoordinator(koorId);
   if(tersedia<=0) return 0;
   const hutangAktif = (DB.hutangKoor||[]).filter(h=>h.koorId===koorId && h.status==='belum_lunas')
@@ -2754,7 +2787,7 @@ function autoLunasiHutangDariSetoran(koorId){
     const bayar = Math.min(tersedia, sisaHutang);
     h.dibayar = (h.dibayar||0) + bayar;
     if(h.dibayar >= h.jumlah){ h.status = 'lunas'; h.waktuLunas = nowISO(); }
-    DB.kasPenarikan.push({id:uid('kp'), koorId, userId:h.userId||null, jumlah:bayar, tanggal:nowISO(), keterangan:'Pelunasan hutang admin (otomatis dari setoran baru)'});
+    DB.kasPenarikan.push({id:uid('kp'), koorId, userId:h.userId||null, jumlah:bayar, tanggal:tglLunas, keterangan:'Pelunasan hutang admin (otomatis dari setoran baru)'});
     tersedia -= bayar;
     totalDilunasi += bayar;
   }
@@ -2763,8 +2796,8 @@ function autoLunasiHutangDariSetoran(koorId){
   }
   return totalDilunasi;
 }
-function doTarikKoordinator(userId, jenisId, jumlah, keterangan){
-  const r = doTarik(userId, jenisId, jumlah, keterangan);
+function doTarikKoordinator(userId, jenisId, jumlah, keterangan, tglIso){
+  const r = doTarik(userId, jenisId, jumlah, keterangan, tglIso);
   if(!r.ok) return r;
   const s = getSession();
   const koorId = s.userId;
@@ -3789,6 +3822,7 @@ function openSetorTarikModal(prefUserId, defaultTipe){
     <div id="tx-passbook"></div>
     <input type="hidden" id="tx-jenis-selected" value="">
     <div class="form-row" style="margin-top:14px;"><label>Jumlah (Rp)</label><input type="number" id="tx-jumlah" placeholder="cth. 50000" min="1000" step="1000"></div>
+    <div class="form-row"><label>Tanggal transaksi</label><input type="date" id="tx-tanggal" max="${hariIniStr()}" value="${hariIniStr()}"><span class="hint">Isi tanggal saat transaksi terjadi, bila mencatat transaksi dari bulan sebelumnya.</span></div>
     <div class="form-row"><label>Keterangan (opsional)</label><input type="text" id="tx-ket" placeholder="cth. Setoran bulan Juli"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -3843,14 +3877,16 @@ function submitTx(tipe){
   const ket = document.getElementById('tx-ket').value;
   if(!jenisId){ toast('Pilih rekening tabungan terlebih dahulu'); return; }
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
+  const cekTgl = cekTanggalTransaksi(document.getElementById('tx-tanggal').value);
+  if(!cekTgl.ok){ toast(cekTgl.msg); return; }
   const s = getSession();
   if(tipe==='setor'){
     try {
       if(s.role==='koordinator'){
-        doSetorKoordinator(userId, jenisId, jumlah, ket);
+        doSetorKoordinator(userId, jenisId, jumlah, ket, cekTgl.iso);
         bigSuccess('Setoran dicatat, menunggu konfirmasi admin');
       } else {
-        doSetor(userId, jenisId, jumlah, ket);
+        doSetor(userId, jenisId, jumlah, ket, cekTgl.iso);
         const nasabahSetor2 = userById(userId);
         notifAdminWA(waHeader('PEMBERITAHUAN SETORAN')
           + waAnggotaInfo(nasabahSetor2)
@@ -3881,7 +3917,7 @@ function submitTx(tipe){
     }
   } else {
     if(s.role==='koordinator'){
-      const r = doTarikKoordinator(userId, jenisId, jumlah, ket);
+      const r = doTarikKoordinator(userId, jenisId, jumlah, ket, cekTgl.iso);
       if(!r.ok){ toast(r.msg); return; }
       if(r.kurang > 0){
         bigSuccess('Penarikan dicatat. '+rupiah(r.kurang)+' tercatat sebagai hutang admin ke Anda');
@@ -3889,7 +3925,7 @@ function submitTx(tipe){
         bigSuccess('Penarikan berhasil dicatat');
       }
     } else {
-      const r = doTarik(userId, jenisId, jumlah, ket);
+      const r = doTarik(userId, jenisId, jumlah, ket, cekTgl.iso);
       if(!r.ok){ toast(r.msg); return; }
       notifAdminWA(waHeader('PEMBERITAHUAN PENARIKAN')
         + waAnggotaInfo(userById(userId))
@@ -4152,14 +4188,16 @@ function renderAdminPembiayaan(user){
     </div>` : ''}
   `;
 }
-async function accPengajuan(pembId){
+async function accPengajuan(pembId, tglCair){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.statusPengajuan!=='pending') return;
+  const cekTglCair = cekTanggalTransaksi(tglCair || hariIniStr());
+  if(!cekTglCair.ok){ toast(cekTglCair.msg); return; }
   const s = getSession();
   const oldMulai = p.mulai;
   p.statusPengajuan = 'approved';
   p.status = 'berjalan';
-  p.mulai = nowISO();
+  p.mulai = cekTglCair.iso;
   p.disetujuiOleh = s.userId;
   p.waktuAcc = nowISO();
   const result = await persistNow();
@@ -4250,6 +4288,12 @@ function hapusPembiayaan(pembId){
     });
   });
 }
+function accPengajuanDlg(pembId){
+  const el = document.getElementById('acc-tanggal-cair');
+  const v = el ? el.value : hariIniStr();
+  closeModal();
+  accPengajuan(pembId, v);
+}
 function detailPengajuanModal(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p) return;
@@ -4269,9 +4313,10 @@ function detailPengajuanModal(pembId){
 <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Diajukan oleh</span><br><b>${koor?koor.nama:'-'} (Koordinator)</b></div>
        </div>
     </div>
+    <div class="form-row"><label>Tanggal pencairan</label><input type="date" id="acc-tanggal-cair" max="${hariIniStr()}" value="${hariIniStr()}"><span class="hint">Isi tanggal dana benar-benar dicairkan, supaya laporan bulanan tepat.</span></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Tutup</button>
-      <button class="btn btn-primary" onclick="closeModal();accPengajuan('${p.id}')">ACC</button>
+      <button class="btn btn-primary" onclick="accPengajuanDlg('${p.id}')">ACC</button>
       <button class="btn btn-danger" onclick="closeModal();tolakPengajuan('${p.id}')">Tolak</button>
       <button class="btn btn-outline" style="border-color:var(--danger);color:var(--danger);padding:8px 10px;" onclick="closeModal();hapusPembiayaan('${p.id}')" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button>
     </div>
@@ -4457,6 +4502,7 @@ function openPengajuanModal(prefUserId){
       <label>Keuntungan koperasi (Rp) &mdash; kesepakatan ${rupiah(mMin)}&ndash;${rupiah(mMax)}</label>
       <input type="number" id="pemb-margin" value="${mMin}" min="${mMin}" max="${mMax}" step="1000" oninput="updatePengajuanPreview()">
     </div>
+    <div class="form-row"><label>Tanggal pencairan</label><input type="date" id="pemb-tanggal-cair" max="${hariIniStr()}" value="${hariIniStr()}"><span class="hint">Tanggal dana benar-benar dicairkan. Boleh diisi tanggal sebelumnya bila pencairan terlambat dicatat.</span></div>
     <div class="hint" id="pemb-preview">Angsuran per bulan dihitung otomatis: (pokok + keuntungan) &divide; jangka waktu.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -4494,7 +4540,9 @@ async function submitPengajuan(){
    if(!jumlah || !tenor){ toast('Lengkapi jumlah dan jangka waktu'); return; }
    if(mp < mMin || mp > mMax){ toast('Keuntungan harus antara '+rupiah(mMin)+'-'+rupiah(mMax)); return; }
    const total = jumlah + mp;
-   const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: nowISO(), sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved'};
+   const cekTglCair = cekTanggalTransaksi(document.getElementById('pemb-tanggal-cair').value);
+   if(!cekTglCair.ok){ toast(cekTglCair.msg); return; }
+   const p = {id:uid('pemb'), userId, jumlahPinjaman:jumlah, tenor, marginPersen:0, marginNominal:mp, angsuranPerBulan: Math.ceil(total/tenor/1000)*1000, mulai: cekTglCair.iso, sisaAngsuran:tenor, status:'berjalan', riwayatAngsuran:[], statusPengajuan:'approved'};
   DB.pembiayaan.push(p);
   setNomorAkadPembiayaan(p);
   const btn = document.querySelector('button[onclick="submitPengajuan()"]');
@@ -7647,7 +7695,7 @@ function bmBayarAngsuranPrompt(pembId){
   const k = f.k;
   const sisa = bmSisa(k);
   if(sisa<=0){ toast('Kartu ini sudah lunas'); return; }
-  const todayStr = new Date().toISOString().slice(0,10);
+  const todayStr = hariIniStr();
   openModal(`
     <h3>Bayar Angsuran — Piutang Bermasalah</h3>
     <div class="card" style="margin-bottom:14px;">
@@ -7667,10 +7715,9 @@ async function bmConfirmBayarAngsuran(pembId){
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
   const tglInput = document.getElementById('bm-bayar-tanggal').value;
   if(!tglInput){ toast('Pilih tanggal bayar'); return; }
-  const now = new Date();
-  const [ty,tm,td] = tglInput.split('-').map(Number);
-  const tglDate = new Date(ty, tm-1, td, now.getHours(), now.getMinutes(), now.getSeconds());
-  if(tglDate > now){ toast('Tanggal tidak boleh di masa depan'); return; }
+  const cekTgl = cekTanggalTransaksi(tglInput);
+  if(!cekTgl.ok){ toast(cekTgl.msg); return; }
+  const tglDate = new Date(cekTgl.iso);
   const arr = bmEnsureImported();
   const f = arr ? bmCardById(pembId) : null;
   if(!arr || !f){ toast('Data belum dimuat'); return; }
@@ -8763,7 +8810,7 @@ function bayarAngsuranPrompt(pembId){
   const totalKew = p.jumlahPinjaman + marginNominalOf(p);
   const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
   const sisaTagihan = totalKew - totalDibayar;
-  const todayStr = new Date().toISOString().slice(0,10);
+  const todayStr = hariIniStr();
   openModal(`
     <h3>Bayar Angsuran</h3>
     <div class="card" style="margin-bottom:14px;">
@@ -8782,10 +8829,9 @@ async function confirmBayarAngsuran(pembId){
   if(!jumlah || jumlah<=0){ toast('Masukkan jumlah yang valid'); return; }
   const tglInput = document.getElementById('bayar-angsuran-tanggal').value;
   if(!tglInput){ toast('Pilih tanggal bayar'); return; }
-  const now = new Date();
-  const [ty,tm,td] = tglInput.split('-').map(Number);
-  const tglDate = new Date(ty, tm-1, td, now.getHours(), now.getMinutes(), now.getSeconds());
-  if(tglDate > now){ toast('Tanggal tidak boleh di masa depan'); return; }
+  const cekTgl = cekTanggalTransaksi(tglInput);
+  if(!cekTgl.ok){ toast(cekTgl.msg); return; }
+  const tglDate = new Date(cekTgl.iso);
   const s = getSession();
   const p = DB.pembiayaan.find(x=>x.id===pembId);
   const snapshot = p ? {
