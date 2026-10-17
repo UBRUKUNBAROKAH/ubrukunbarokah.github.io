@@ -5194,53 +5194,57 @@ function hapusAnggota(userId){
 ========================================================= */
 function computeLapModalData(){
   const pemb = DB.pembiayaan || [];
-  const setoran = DB.setoran || [];
   const tx = DB.tabunganTx || [];
   function marginPerAngsuran(p){
     if(!p || !p.tenor) return 0;
     return Math.round(marginNominalOf(p) / p.tenor);
   }
+  // Laporan dimulai sejak aplikasi dipakai. Sebelum itu tidak ada pencatatan di
+  // aplikasi, jadi Agustus 2026 dianggap titik nol (saldo awal).
+  const MODAL_START = '2026-08';
+  const [startY, startM] = MODAL_START.split('-').map(Number);
   const now = new Date();
-  let minDate = now;
-  [].concat(pemb.map(p=>p.mulai), setoran.map(s=>s.tanggal), tx.map(t=>t.tanggal)).forEach(d=>{
-    if(!d) return;
-    const dt = new Date(d);
-    if(!isNaN(dt) && dt < minDate) minDate = dt;
-  });
-  const startY = minDate.getFullYear(), startM = minDate.getMonth();
   const endY = now.getFullYear(), endM = now.getMonth();
   const months = [];
-  let y = startY, m = startM;
+  let y = startY, m = startM - 1;
   while(y < endY || (y===endY && m<=endM)){
     months.push({y,m});
     m++; if(m>11){ m=0; y++; }
   }
   if(!months.length) return [];
-  let cumPokokRealisasi = 0, cumPokokTerbayar = 0, cumTabMasuk = 0, cumTabKeluar = 0, cumKas = 0;
+  let cumTabMasuk = 0, cumTabKeluar = 0, cumKas = 0;
   const totalSahamSaatIni = totalNilaiSahamSemua();
   const byYear = {};
   months.forEach(({y,m})=>{
+    const bulan = y + '-' + String(m+1).padStart(2,'0');
     const pembBulanIni = pemb.filter(p=>{ const d=new Date(p.mulai); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
     const pokokRealisasi = pembBulanIni.reduce((s,p)=>s+(p.jumlahPinjaman||0),0);
     const marginRealisasi = pembBulanIni.reduce((s,p)=>s+marginNominalOf(p),0);
-    const angsuranBulanIni = setoran.filter(s=>{ if(s.jenis!=='angsuran') return false; const d=new Date(s.tanggal); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
-    const totalAngsuran = angsuranBulanIni.reduce((s,a)=>s+(a.jumlah||0),0);
+    // Angsuran dibaca dari riwayatAngsuran (sumber yang benar), bukan DB.setoran.
+    const angsuranBulanIni = [];
+    pemb.forEach(p=>{ (p.riwayatAngsuran||[]).forEach(a=>{ const d=new Date(a.tanggal); if(!isNaN(d) && d.getFullYear()===y && d.getMonth()===m) angsuranBulanIni.push({a,p}); }); });
+    const totalAngsuran = angsuranBulanIni.reduce((s,x)=>s+(x.a.jumlah||0),0);
     let keuntungan = 0, pokokTerbayarBulanIni = 0;
-    angsuranBulanIni.forEach(a=>{
-      const p = pemb.find(pp=>pp.id===a.pembiayaanId);
-      const marginBagian = p ? Math.min(marginPerAngsuran(p), a.jumlah||0) : 0;
+    angsuranBulanIni.forEach(({a,p})=>{
+      const marginBagian = Math.min(marginPerAngsuran(p), a.jumlah||0);
       keuntungan += marginBagian;
       pokokTerbayarBulanIni += Math.max(0, (a.jumlah||0) - marginBagian);
     });
     const txBulanIni = tx.filter(t=>{ const d=new Date(t.tanggal); return !isNaN(d) && d.getFullYear()===y && d.getMonth()===m; });
     const tabMasuk = txBulanIni.filter(t=>t.tipe==='setor').reduce((s,t)=>s+(t.jumlah||0),0);
     const tabKeluar = txBulanIni.filter(t=>t.tipe==='tarik').reduce((s,t)=>s+(t.jumlah||0),0);
-    cumPokokRealisasi += pokokRealisasi;
-    cumPokokTerbayar += pokokTerbayarBulanIni;
     cumTabMasuk += tabMasuk;
     cumTabKeluar += tabKeluar;
     cumKas += (tabMasuk + totalAngsuran) - (tabKeluar + pokokRealisasi);
-    const piutang = Math.max(0, cumPokokRealisasi - cumPokokTerbayar);
+    // Piutang berjalan = sisa kewajiban SEMUA pembiayaan aktif sampai akhir bulan ini.
+    let piutang = 0;
+    pemb.forEach(p=>{
+      if(p.statusPengajuan!=='approved') return;
+      if(String(p.mulai||'').slice(0,7) > bulan) return;
+      const totalKew = (p.jumlahPinjaman||0) + marginNominalOf(p);
+      const dibayar = (p.riwayatAngsuran||[]).filter(a=>String(a.tanggal||'').slice(0,7) <= bulan).reduce((s,a)=>s+(a.jumlah||0),0);
+      piutang += Math.max(0, totalKew - dibayar);
+    });
     const tabSaldo = cumTabMasuk - cumTabKeluar;
     if(!byYear[y]) byYear[y] = { tahun:String(y), rows:[], total:{pokok:0,margin:0,totalAngsuran:0,keuntungan:0,tabMasuk:0,tabPenarikan:0} };
     byYear[y].rows.push({
@@ -5323,7 +5327,7 @@ const LAP_MODAL_COLS = [
   {k:'kas', l:'Kas'},
 ];
 const LAP_MODAL_TOTAL_KEYS = ['pokok','margin','totalAngsuran','keuntungan','tabMasuk','tabPenarikan'];
-const LAP_MODAL_CATATAN = 'Piutang Berjalan = sisa pokok pembiayaan aktif (realisasi pokok dikurangi pokok yang sudah terbayar lewat angsuran). Kas = akumulasi (Tabungan Masuk + Total Angsuran) &minus; (Tabungan Penarikan + Realisasi Pokok); belum memperhitungkan beban/pengeluaran operasional lain karena belum ada pencatatan khusus untuk itu di aplikasi. Saham menampilkan nilai total saat ini (aplikasi belum menyimpan riwayat perubahan saham per tanggal).';
+const LAP_MODAL_CATATAN = 'Laporan dimulai sejak Agustus 2026 (saat aplikasi dipakai); bulan sebelumnya tidak ada pencatatan di aplikasi. Piutang Berjalan = sisa kewajiban semua pembiayaan aktif sampai akhir bulan. Kas = akumulasi (Tabungan Masuk + Total Angsuran) - (Tabungan Penarikan + Realisasi Pokok); belum memperhitungkan beban/pengeluaran operasional lain karena belum ada pencatatan khusus untuk itu di aplikasi. Saham menampilkan nilai total saat ini (aplikasi belum menyimpan riwayat perubahan saham per tanggal).';
 function renderLapModal(){
   const data = computeLapModalData();
   if(!data.length) return '<div class="hint" style="padding:10px;text-align:center;">Belum ada data transaksi untuk dilaporkan</div>';
