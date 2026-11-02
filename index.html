@@ -8769,7 +8769,7 @@ function renderAdminSuratSPLaporan(){
     .sp-report th{background:#eee;text-align:center;}
     .sp-report td.num{text-align:right;white-space:nowrap;}
     .sp-report .sign{margin:34px 8% 0 auto;text-align:center;width:220px;}
-    @media print{.app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}#content{overflow:visible!important;padding:0!important;}.sp-report{padding:0!important;}@page{size:A4 landscape;margin:12mm;}}
+    @media print{.app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}#content{display:block!important;visibility:visible!important;height:auto!important;overflow:visible!important;padding:0!important;}#content > section.sp-report{display:block!important;visibility:visible!important;position:static!important;width:100%!important;height:auto!important;overflow:visible!important;}.sp-report,.sp-report *{visibility:visible!important;}.sp-report{padding:0!important;}@page{size:A4 landscape;margin:12mm;}}
     @media screen{.sp-report{border:1px solid var(--border);}}
   </style>
   <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
