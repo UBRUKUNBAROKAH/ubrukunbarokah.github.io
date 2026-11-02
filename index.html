@@ -8180,7 +8180,10 @@ function renderAdminSuratSP(user){
                 <td>${rupiah(d.jumlah)}</td>
                 <td><b>${rupiah(d.sisaSekarang!=null?d.sisaSekarang:d.sisaKewajiban)}</b> ${d.lunas?'<span class="badge badge-green">LUNAS</span>':''}</td>
                 <td>${suratSPTanggal(d.jatuhTempo)}</td>
-                <td><button class="btn btn-outline btn-compact no-print" onclick="suratSPBuatSatu('${d.pembId}')">✉️ Surat</button></td>
+                <td style="white-space:nowrap;">
+                  <button class="btn btn-outline btn-compact no-print" onclick="suratSPBuatSatu('${d.pembId}')">✉️ Surat</button>
+                  ${d.lunas?'':`<button class="btn btn-gold btn-compact no-print" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${d.pembId}','bermasalah')">💵 Bayar</button>`}
+                </td>
               </tr>`).join('')}
             </tbody>
           </table>
@@ -8647,7 +8650,10 @@ function renderAdminSuratSPRiwayat(user){
           <div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${r.progres}% &middot; ${rupiah(r.dibayarSetelah)}</div>
         </td>
         <td><span class="badge ${meta.cls}">${meta.label}</span></td>
-        <td><button class="btn btn-outline btn-compact" onclick="suratSPRiwayatDetail('${r.id}')">Detail</button></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-outline btn-compact" onclick="suratSPRiwayatDetail('${r.id}')">Detail</button>
+          ${r.status!=='lunas' ? `<button class="btn btn-gold btn-compact" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Angsuran</button>` : ''}
+        </td>
       </tr>`;
   }).join('');
 
@@ -8778,7 +8784,8 @@ function suratSPRiwayatDetail(id){
       <button class="btn btn-outline" onclick="closeModal()">Tutup</button>
       <button class="btn btn-primary" onclick="suratSPRiwayatSimpanCatatan('${r.id}')">Simpan catatan</button>
     </div>
-    <div style="margin-top:10px;">
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+      ${r.status!=='lunas' ? `<button class="btn btn-gold btn-block" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Catat Bayar Angsuran</button>` : ''}
       <button class="btn btn-gold btn-block" onclick="suratSPRiwayatBuatLagi('${r.id}')">✍️ Buat SP Lagi untuk ${escapeHtml(r.nama||'-')}</button>
     </div>
     <style>
@@ -8818,6 +8825,20 @@ function suratSPRiwayatHapus(id){
       renderContent();
     }
   );
+}
+function suratSPBayarAngsuran(pembId, sumber){
+  if(sumber==='bermasalah'){
+    const f = bmCardById(pembId);
+    if(!f){ toast('Data pembiayaan bermasalah tidak ditemukan'); return; }
+    if(bmIsLunas(f.k)){ toast('Pembiayaan ini sudah lunas'); return; }
+    bmBayarAngsuranPrompt(pembId);
+    return;
+  }
+  const p = (DB.pembiayaan||[]).find(x=>x.id===pembId);
+  if(!p){ toast('Data pembiayaan tidak ditemukan'); return; }
+  if(p.status==='lunas' || p.statusManual==='lunas'){ toast('Pembiayaan ini sudah lunas'); return; }
+  if(p.statusPengajuan!=='approved'){ toast('Pembiayaan belum disetujui admin'); return; }
+  bayarAngsuranPrompt(pembId);
 }
 function suratSPRiwayatBuatLagi(id){
   const raw = suratSPRiwayatArr().find(r=>r.id===id);
