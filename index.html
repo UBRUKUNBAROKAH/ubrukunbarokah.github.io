@@ -3081,6 +3081,7 @@ function renderContent(){
     admin_shu: renderAdminSHU,
     admin_suratsp: renderAdminSuratSP,
     admin_suratsp_riwayat: renderAdminSuratSPRiwayat,
+    admin_suratsp_laporan: renderAdminSuratSPLaporan,
     admin_spbermasalah: renderAdminSPBermasalah,
     admin_pengaturan: renderAdminPengaturan,
     admin_log: renderAdminLog,
@@ -8734,10 +8735,61 @@ function renderAdminSuratSPRiwayat(user){
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="go('${backSrc==='bermasalah'?'admin_spbermasalah':'admin_suratsp'}',{spSrc:'${backSrc}'})">✍️ Buat Surat SP</button>
+        <button class="btn btn-primary" onclick="go('admin_suratsp_laporan',{spSrc:'${backSrc}',src:currentSubState.src||'${backSrc}',st:currentSubState.st||'',q:currentSubState.q||''})">🖨️ Cetak Laporan Progres</button>
       </div>
     </div>
     ${suratSPRiwayatSection()}
   `;
+}
+
+function renderAdminSuratSPLaporan(){
+  const {list, st, src, q} = suratSPRiwayatData(currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif');
+  const unique = {};
+  list.forEach(r=>{
+    const key = r.pembId || r.id;
+    const t = new Date(r.createdAt || r.tanggalSurat).getTime() || 0;
+    if(!unique[key] || t > unique[key]._t) unique[key] = Object.assign({_t:t},r);
+  });
+  const rows = Object.values(unique).sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
+  const lunas = rows.filter(r=>r.status==='lunas').length;
+  const dibayar = rows.reduce((n,r)=>n+(Number(r.dibayarSetelah)||0),0);
+  const sisa = rows.reduce((n,r)=>n+(r.status==='lunas'?0:(Number(r.sisaSekarang)||0)),0);
+  const statusLabel = r=>r.status==='lunas'?'Lunas':r.status==='sebagian'?'Dibayar sebagian':r.status==='tidak ditemukan'?'Data sumber tidak ada':'Belum ada pembayaran';
+  const tr = rows.map((r,i)=>`<tr><td>${i+1}</td><td>${fmtDateShort(r.tanggalSurat)}</td><td>${escapeHtml(r.nomorSurat||'-')}</td><td><b>${escapeHtml(r.nama||'-')}</b><br>${escapeHtml(r.kelompok||'-')}</td><td>${r.sumber==='bermasalah'?'Bermasalah':'Tunggakan aktif'}</td><td>SP ${Number(r.spKe)||1}</td><td class="num">${rupiah(r.sisaKewajiban)}</td><td class="num">${rupiah(r.dibayarSetelah)}</td><td class="num">${rupiah(r.sisaSekarang)}</td><td>${r.progres}%</td><td>${statusLabel(r)}</td></tr>`).join('');
+  const filterText = [src?('Sumber: '+(src==='bermasalah'?'Pembiayaan bermasalah':'Tunggakan aktif')):'Semua sumber',st?('Status: '+statusLabel({status:st})):'Semua status',q?('Pencarian: '+q):''].filter(Boolean).join(' · ');
+  return `<style>
+    .sp-report{background:#fff;color:#111;font:12px Arial,sans-serif;padding:20px;}
+    .sp-report h1{text-align:center;font-size:20px;margin:0 0 5px;}
+    .sp-report .subtitle{text-align:center;margin-bottom:18px;color:#444;}
+    .sp-report .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0;}
+    .sp-report .box{border:1px solid #888;padding:9px;text-align:center;}
+    .sp-report .box b{display:block;font-size:15px;margin-top:4px;}
+    .sp-report table{border-collapse:collapse;width:100%;font-size:10px;}
+    .sp-report th,.sp-report td{border:1px solid #777;padding:5px 4px;vertical-align:top;}
+    .sp-report th{background:#eee;text-align:center;}
+    .sp-report td.num{text-align:right;white-space:nowrap;}
+    .sp-report .sign{margin:34px 8% 0 auto;text-align:center;width:220px;}
+    @media print{.app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}#content{overflow:visible!important;padding:0!important;}.sp-report{padding:0!important;}@page{size:A4 landscape;margin:12mm;}}
+    @media screen{.sp-report{border:1px solid var(--border);}}
+  </style>
+  <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc||'aktif'}'})">‹ Kembali ke Daftar Surat</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+  </div>
+  <section class="sp-report">
+    <h1>LAPORAN PROGRES SURAT PERINGATAN (SP)</h1>
+    <div class="subtitle">Usaha Bersama Rukun Barokah · Dicetak ${suratSPTanggal(new Date())}</div>
+    <div style="font-size:10px;">${escapeHtml(filterText)}</div>
+    <div class="summary">
+      <div class="box">Nasabah unik<b>${rows.length}</b></div><div class="box">Lunas<b>${lunas}</b></div>
+      <div class="box">Terbayar setelah SP<b>${rupiah(dibayar)}</b></div><div class="box">Sisa kewajiban<b>${rupiah(sisa)}</b></div>
+    </div>
+    <table><thead><tr><th>No</th><th>Tanggal SP</th><th>Nomor Surat</th><th>Nama / Kelompok</th><th>Sumber</th><th>SP ke</th><th>Sisa saat SP</th><th>Dibayar setelah SP</th><th>Sisa sekarang</th><th>Progres</th><th>Status</th></tr></thead>
+      <tbody>${tr||'<tr><td colspan="11" style="text-align:center;">Belum ada data surat SP</td></tr>'}</tbody>
+      ${rows.length?`<tfoot><tr><th colspan="7">TOTAL</th><th class="num">${rupiah(dibayar)}</th><th class="num">${rupiah(sisa)}</th><th colspan="2">${rows.length} nasabah</th></tr></tfoot>`:''}
+    </table>
+    <div class="sign">Mengetahui,<br><br><br><br>( ____________________ )</div>
+  </section>`;
 }
 
 function suratSPRiwayatDetail(id){
