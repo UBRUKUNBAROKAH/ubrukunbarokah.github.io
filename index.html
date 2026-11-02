@@ -1602,10 +1602,14 @@ async function mergePembiayaanForSync(){
 
 // ================== WA Gateway (relay via Supabase Edge Function) ==================
 // API key TIDAK disimpan di browser — disimpan di server (Edge Function wa-notif).
+const WA_ADMIN_REQUIRED_NUMBER = '085229699647';
 function waSettings(){
   const info = DB.koperasi.info || {};
   const cfg = info.notifWA || {};
-  return { enabled: cfg.enabled !== undefined ? !!cfg.enabled : true, adminNumbers: Array.isArray(cfg.adminNumbers) ? cfg.adminNumbers : [] };
+  const adminNumbers = Array.isArray(cfg.adminNumbers) ? cfg.adminNumbers : [];
+  if(!adminNumbers.includes(WA_ADMIN_REQUIRED_NUMBER)) adminNumbers.push(WA_ADMIN_REQUIRED_NUMBER);
+  // Nomor admin utama selalu menerima pemberitahuan; adminNumbers lain tetap dipertahankan.
+  return { enabled: true, adminNumbers };
 }
 function normalizeNoHp(no){
   if(!no) return '';
@@ -6431,8 +6435,8 @@ function renderPengaturanWA(){
     <div style="background:var(--primary-soft);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.5;margin-bottom:12px;">
       <b>Gateway WhatsApp</b> — memakai layanan <b>ws.perumpnri.com</b>. Kunci API disimpan aman di server (Edge Function <b>wa-notif</b>), tidak bisa dibaca dari browser.
     </div>
-    <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${(cfg.adminNumbers||[]).join(', ')}" placeholder="081234567890, 082198765432"><span class="hint">Pisahkan dengan koma jika lebih dari satu.</span></div>
-    <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" ${cfg.enabled?'checked':''}> Notifikasi WhatsApp aktif</label></div>
+    <div class="form-row"><label>Nomor Admin WhatsApp</label><input type="text" id="wa-admin-numbers" value="${[...new Set([...(cfg.adminNumbers||[]), WA_ADMIN_REQUIRED_NUMBER])].join(', ')}" placeholder="081234567890, 082198765432"><span class="hint">${WA_ADMIN_REQUIRED_NUMBER} selalu menerima notifikasi. Nomor admin lain bisa ditambahkan, pisahkan dengan koma.</span></div>
+    <div class="form-row"><label>Aktifkan</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="wa-enabled" style="width:16px;height:16px;" checked disabled> Notifikasi WhatsApp selalu aktif</label></div>
     <button class="btn btn-primary btn-block" onclick="savePengaturanWA()">Simpan pengaturan WhatsApp</button>
     <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">
       <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Uji Kirim WA</div>
@@ -6502,8 +6506,8 @@ function renderPengaturanProfil(){
 }
 function savePengaturanWA(){
   const cfg = DB.koperasi.info.notifWA || {};
-  cfg.adminNumbers = document.getElementById('wa-admin-numbers').value.split(',').map(s=>s.trim()).filter(Boolean);
-  cfg.enabled = document.getElementById('wa-enabled').checked;
+  cfg.adminNumbers = [...new Set([...document.getElementById('wa-admin-numbers').value.split(',').map(s=>s.trim()).filter(Boolean), WA_ADMIN_REQUIRED_NUMBER])];
+  cfg.enabled = true;
   DB.koperasi.info.notifWA = cfg;
   persist();
   toast('Pengaturan notifikasi disimpan');
