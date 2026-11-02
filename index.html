@@ -8146,7 +8146,7 @@ function renderAdminSuratSP(user){
         <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}'})">📋 Daftar Surat SP${riwayatCount?(' ('+riwayatCount+')'):''}</button>
         <button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
         <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
-        <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
+        <button class="btn btn-outline no-print" onclick="go('admin_suratsp_laporan',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}',src:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}',st:'',q:''})">🖨️ Cetak Daftar</button>
       </div>
     </div>
     <div class="section-label" style="margin-top:0;">Daftar Surat SP yang Sudah Dibuat</div>
