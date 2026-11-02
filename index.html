@@ -8044,6 +8044,9 @@ function renderSPBermasalahLaporan(){
   `;
 }
 function renderAdminSuratSP(user){
+  // Sumber data mengikuti halaman: menu "Surat SP" = tunggakan aktif,
+  // menu "Piutang Bermasalah" = kartu pembiayaan bermasalah.
+  currentSubState.spSrc = (currentPage==='admin_spbermasalah') ? 'bermasalah' : 'aktif';
   const s = suratSPLoad();
   const q = (currentSubState.q||'').toLowerCase();
   const kel = currentSubState.kel || '';
@@ -8134,9 +8137,6 @@ function renderAdminSuratSP(user){
         ? `<div class="page-title">Surat SP — Pembiayaan Bermasalah<span class="sub">Data kartu pembiayaan bermasalah (2018–2023, diimpor terpisah, bukan data anggota aktif)</span></div>`
         : `<div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>`}
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn ${currentSubState.spSrc==='bermasalah'?'btn-primary':'btn-outline'}" style="flex:1;" onclick="suratSPSetSrc('bermasalah')">⚠️ Pembiayaan Bermasalah</button>
-        <button class="btn ${currentSubState.spSrc==='bermasalah'?'btn-outline':'btn-primary'}" style="flex:1;" onclick="suratSPSetSrc('aktif')">✅ Tunggakan Aktif</button>
-      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
         ${currentSubState.spSrc==='bermasalah' ? `
           <button class="btn btn-outline" onclick="spBermasalahImport()">📥 Muat Data Lama (${SP_BERMASALAH_SEED.length})${spBermasalahImported()?' <span style="opacity:.6">✓</span>':''}</button>
