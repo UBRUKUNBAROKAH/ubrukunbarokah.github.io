@@ -8142,7 +8142,7 @@ function renderAdminSuratSP(user){
           <button class="btn btn-outline" onclick="spBermasalahImport()">📥 Muat Data Lama (${SP_BERMASALAH_SEED.length})${spBermasalahImported()?' <span style="opacity:.6">✓</span>':''}</button>
         ` : ''}
         <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}'})">📋 Daftar Surat SP${riwayatCount?(' ('+riwayatCount+')'):''}</button>
-        <button class="btn btn-primary" style="flex:1;" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
+        <button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
         <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
         <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
       </div>
