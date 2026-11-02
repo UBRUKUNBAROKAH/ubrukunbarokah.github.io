@@ -8735,7 +8735,7 @@ function renderAdminSuratSPRiwayat(user){
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="go('${backSrc==='bermasalah'?'admin_spbermasalah':'admin_suratsp'}',{spSrc:'${backSrc}'})">✍️ Buat Surat SP</button>
-        <button class="btn btn-primary" onclick="go('admin_suratsp_laporan',{spSrc:'${backSrc}',src:currentSubState.src||'${backSrc}',st:currentSubState.st||'',q:currentSubState.q||''})">🖨️ Cetak Laporan Progres</button>
+        <button class="btn btn-primary" onclick="go('admin_suratsp_laporan',{spSrc:'${backSrc}',src:currentSubState.src||'${backSrc}',st:currentSubState.st||'',q:currentSubState.q||''})">🖨️ Cetak Daftar</button>
       </div>
     </div>
     ${suratSPRiwayatSection()}
@@ -8774,7 +8774,7 @@ function renderAdminSuratSPLaporan(){
   </style>
   <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
     <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc||'aktif'}'})">‹ Kembali ke Daftar Surat</button>
-    <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak Daftar</button>
   </div>
   <section class="sp-report">
     <h1>LAPORAN PROGRES SURAT PERINGATAN (SP)</h1>
