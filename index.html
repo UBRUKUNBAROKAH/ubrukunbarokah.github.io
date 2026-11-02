@@ -7608,6 +7608,7 @@ function escapeHtml(str){
 }
 const SURAT_SP_LS_KEY = 'ub_surat_sp_settings_v2';
 let suratSPSelected = [];
+let suratSPLastPreview = '';
 let suratSPLogo = (function(){ try{ const s=JSON.parse(localStorage.getItem(SURAT_SP_LS_KEY)||'null'); return (s&&s.logo)||''; }catch(e){ return ''; } })();
 const SURAT_SP_MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 const SURAT_SP_ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
@@ -8147,6 +8148,8 @@ function renderAdminSuratSP(user){
         <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
       </div>
     </div>
+    <div class="section-label" style="margin-top:0;">Daftar Surat SP yang Sudah Dibuat</div>
+    ${suratSPRiwayatSection(currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif')}
     ${currentSubState.spSrc==='bermasalah' ? (()=>{
       const bm = suratSPBermasalah();
       const totPokok = bm.reduce((t,d)=>t+d.pokok,0);
@@ -8192,7 +8195,7 @@ function renderAdminSuratSP(user){
     })() : ''}
     <div class="ssp-preview-wrap">
       <div class="card" style="padding:16px;">
-        <div id="ssp-preview"><div class="empty-state"><div class="ic">📄</div><div class="t">Belum ada surat</div><div class="d">Klik ${currentSubState.spSrc==='bermasalah'?'"Muat Data Lama" bila belum dimuat, lalu "Pilih &amp; Buat Surat" untuk memilih data bermasalah':'\"Pilih &amp; Buat Surat\" untuk memilih nasabah yang telat'} lalu membuat surat peringatan.</div></div></div>
+        <div id="ssp-preview">${suratSPLastPreview ? suratSPLastPreview : `<div class="empty-state"><div class="ic">📄</div><div class="t">Belum ada surat</div><div class="d">Klik ${currentSubState.spSrc==='bermasalah'?'"Muat Data Lama" bila belum dimuat, lalu "Pilih &amp; Buat Surat" untuk memilih data bermasalah':'"Pilih &amp; Buat Surat" untuk memilih nasabah yang telat'} lalu membuat surat peringatan.</div></div>`}</div>
       </div>
     </div>
   `;
@@ -8466,7 +8469,7 @@ function suratSPBuat(){
   suratSPSave(s);
   const isBm = currentSubState.spSrc==='bermasalah';
   const chosen = (isBm ? suratSPBermasalah() : suratSPOverdue()).filter(d=>suratSPSelected.includes(d.pembId)).sort((a,b)=>b.hariTelat-a.hariTelat);
-  let html = '<div class="ssp-toolbar no-print" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+  let html = '<div class="ssp-toolbar no-print" style="position:sticky;top:0;z-index:15;background:var(--bg);padding:10px 12px;border-radius:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
     '<div style="font-size:13px;color:var(--muted);"><b>'+chosen.length+' surat</b> siap dicetak</div></div>';
   let urut = suratSPNextUrut(s);
   const urutAwal = urut;
@@ -8476,6 +8479,7 @@ function suratSPBuat(){
     try{ addLog('Surat SP dibuat', chosen.length + ' surat - ' + chosen.map(d=>d.nama).join(', ')); }catch(e){}
   }
   const pv = document.getElementById('ssp-preview');
+  suratSPLastPreview = html;
   pv.innerHTML = html;
   const tb = pv.querySelector('.ssp-toolbar');
   if(tb){
@@ -8606,11 +8610,11 @@ function suratSPRiwayatStatusMeta(r){
   if(r.status==='tidak ditemukan') return {cls:'badge-red', label:'Data sumber tidak ada'};
   return {cls:'badge-soft', label:'Belum ada pembayaran'};
 }
-function renderAdminSuratSPRiwayat(user){
+function suratSPRiwayatData(defaultSrc){
   const all = suratSPRiwayatArr().map(suratSPRiwayatEnrich);
   const q = String(currentSubState.q||'').toLowerCase().trim();
   const st = currentSubState.st || '';
-  const src = currentSubState.src || '';
+  const src = currentSubState.src || defaultSrc || '';
   let list = all.slice();
   if(st) list = list.filter(r=>r.status===st);
   if(src) list = list.filter(r=>r.sumber===src);
@@ -8632,8 +8636,11 @@ function renderAdminSuratSPRiwayat(user){
   const jmlBerjalan = unik.length - jmlLunas;
   const totalSisa = unik.reduce((s,r)=>s + (r.status==='lunas' ? 0 : (Number(r.sisaSekarang)||0)), 0);
   const totalDibayar = unik.reduce((s,r)=>s + (Number(r.dibayarSetelah)||0), 0);
+  return {all, list, q, st, src, unik, jmlLunas, jmlBerjalan, totalSisa, totalDibayar};
+}
 
-  const backSrc = currentSubState.spSrc==='bermasalah' ? 'bermasalah' : 'aktif';
+function suratSPRiwayatSection(defaultSrc){
+  const {all, list, st, src, unik, jmlLunas, jmlBerjalan, totalSisa, totalDibayar} = suratSPRiwayatData(defaultSrc);
   const tr = list.map(r=>{
     const meta = suratSPRiwayatStatusMeta(r);
     return `
@@ -8658,19 +8665,6 @@ function renderAdminSuratSPRiwayat(user){
   }).join('');
 
   return `
-    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 8px;margin-bottom:10px;">
-      <div class="page-title" style="margin:0 0 10px;">
-        <span style="display:flex;align-items:center;gap:8px;">
-          <button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backSrc==='bermasalah'?'admin_spbermasalah':'admin_suratsp'}',{spSrc:'${backSrc}'})">${ICONS.chevronLeft}</button>
-          Daftar Surat SP
-        </span>
-        <span class="sub">Rekap surat yang sudah dibuat beserta progres pembayarannya</span>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-outline" onclick="go('${backSrc==='bermasalah'?'admin_spbermasalah':'admin_suratsp'}',{spSrc:'${backSrc}'})">✍️ Buat Surat SP</button>
-      </div>
-    </div>
-
     <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
       <div class="stat-box"><div class="n mono" style="font-size:20px;">${all.length}</div><div class="l">Total Surat Dibuat</div></div>
       <div class="stat-box"><div class="n mono" style="font-size:20px;">${unik.length}</div><div class="l">Nasabah</div></div>
@@ -8726,6 +8720,26 @@ function renderAdminSuratSPRiwayat(user){
     </style>
   `;
 }
+
+function renderAdminSuratSPRiwayat(user){
+  const backSrc = currentSubState.spSrc==='bermasalah' ? 'bermasalah' : 'aktif';
+  return `
+    <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 8px;margin-bottom:10px;">
+      <div class="page-title" style="margin:0 0 10px;">
+        <span style="display:flex;align-items:center;gap:8px;">
+          <button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backSrc==='bermasalah'?'admin_spbermasalah':'admin_suratsp'}',{spSrc:'${backSrc}'})">${ICONS.chevronLeft}</button>
+          Daftar Surat SP
+        </span>
+        <span class="sub">Rekap surat yang sudah dibuat beserta progres pembayarannya</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-outline" onclick="go('${backSrc==='bermasalah'?'admin_spbermasalah':'admin_suratsp'}',{spSrc:'${backSrc}'})">✍️ Buat Surat SP</button>
+      </div>
+    </div>
+    ${suratSPRiwayatSection()}
+  `;
+}
+
 function suratSPRiwayatDetail(id){
   const raw = suratSPRiwayatArr().find(r=>r.id===id);
   if(!raw){ toast('Catatan surat tidak ditemukan'); return; }
