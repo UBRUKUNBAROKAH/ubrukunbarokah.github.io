@@ -8182,7 +8182,7 @@ function renderAdminSuratSP(user){
                 <td>${suratSPTanggal(d.jatuhTempo)}</td>
                 <td style="white-space:nowrap;">
                   <button class="btn btn-outline btn-compact no-print" onclick="suratSPBuatSatu('${d.pembId}')">✉️ Surat</button>
-                  ${d.lunas?'':`<button class="btn btn-gold btn-compact no-print" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${d.pembId}','bermasalah')">💵 Bayar</button>`}
+                  ${d.lunas?'':`<button class="btn btn-gold btn-compact no-print" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${d.pembId}','bermasalah')">💵 Bayar Angsuran</button>`}
                 </td>
               </tr>`).join('')}
             </tbody>
@@ -8652,7 +8652,7 @@ function renderAdminSuratSPRiwayat(user){
         <td><span class="badge ${meta.cls}">${meta.label}</span></td>
         <td style="white-space:nowrap;">
           <button class="btn btn-outline btn-compact" onclick="suratSPRiwayatDetail('${r.id}')">Detail</button>
-          ${r.status!=='lunas' ? `<button class="btn btn-gold btn-compact" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Angsuran</button>` : ''}
+          ${r.status!=='lunas' ? `<button class="btn btn-gold btn-compact" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Bayar Angsuran</button>` : ''}
         </td>
       </tr>`;
   }).join('');
@@ -8785,7 +8785,7 @@ function suratSPRiwayatDetail(id){
       <button class="btn btn-primary" onclick="suratSPRiwayatSimpanCatatan('${r.id}')">Simpan catatan</button>
     </div>
     <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
-      ${r.status!=='lunas' ? `<button class="btn btn-gold btn-block" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Catat Bayar Angsuran</button>` : ''}
+      ${r.status!=='lunas' ? `<button class="btn btn-gold btn-block" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Bayar Angsuran</button>` : ''}
       <button class="btn btn-gold btn-block" onclick="suratSPRiwayatBuatLagi('${r.id}')">✍️ Buat SP Lagi untuk ${escapeHtml(r.nama||'-')}</button>
     </div>
     <style>
