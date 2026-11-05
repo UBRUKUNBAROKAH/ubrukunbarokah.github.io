@@ -8217,11 +8217,12 @@ function renderAdminSuratSP(user){
         </div>
       </div>`;
     })() : ''}
+    ${suratSPLastPreview ? `
     <div class="ssp-preview-wrap">
       <div class="card" style="padding:16px;">
-        <div id="ssp-preview">${suratSPLastPreview ? suratSPLastPreview : `<div class="empty-state"><div class="ic">📄</div><div class="t">Belum ada surat</div><div class="d">Klik ${currentSubState.spSrc==='bermasalah'?'"Muat Data Lama" bila belum dimuat, lalu "Pilih &amp; Buat Surat" untuk memilih data bermasalah':'"Pilih &amp; Buat Surat" untuk memilih nasabah yang telat'} lalu membuat surat peringatan.</div></div>`}</div>
+        <div id="ssp-preview">${suratSPLastPreview}</div>
       </div>
-    </div>
+    </div>` : ''}
     <div class="ssp-daftar-print" id="ssp-daftar-print">${suratSPDaftarCetakHTML(currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif')}</div>
   `;
 }
