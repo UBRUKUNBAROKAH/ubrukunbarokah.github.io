@@ -8685,6 +8685,7 @@ function suratSPRiwayatSection(defaultSrc){
         <td style="white-space:nowrap;">
           <button class="btn btn-outline btn-compact" onclick="suratSPRiwayatDetail('${r.id}')">Detail</button>
           ${r.status!=='lunas' ? `<button class="btn btn-gold btn-compact" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Bayar Angsuran</button>` : ''}
+          <button class="btn btn-outline btn-compact" style="margin-left:4px;color:var(--danger);border-color:var(--danger);" title="Hapus dari daftar SP" onclick="suratSPRiwayatHapus('${r.id}')">🗑️ Hapus</button>
         </td>
       </tr>`;
   }).join('');
