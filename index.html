@@ -3081,7 +3081,7 @@ function renderContent(){
     admin_shu: renderAdminSHU,
     admin_suratsp: renderAdminSuratSP,
     admin_suratsp_riwayat: renderAdminSuratSPRiwayat,
-    admin_suratsp_laporan: renderAdminSuratSPLaporan,
+    admin_suratsp_laporan: renderSuratSPLaporan,
     admin_spbermasalah: renderAdminSPBermasalah,
     admin_pengaturan: renderAdminPengaturan,
     admin_log: renderAdminLog,
@@ -8146,7 +8146,7 @@ function renderAdminSuratSP(user){
         <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}'})">📋 Daftar Surat SP${riwayatCount?(' ('+riwayatCount+')'):''}</button>
         <button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
         <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
-        <button class="btn btn-outline no-print" onclick="go('admin_suratsp_laporan',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}',src:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}',st:'',q:''})">🖨️ Cetak Daftar</button>
+        <button class="btn btn-outline no-print" onclick="go('admin_suratsp_laporan',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}',lapSrc:'semua'})">📈 Laporan Progres</button>
       </div>
     </div>
     <div class="section-label" style="margin-top:0;">Daftar Surat SP yang Sudah Dibuat</div>
@@ -8735,63 +8735,293 @@ function renderAdminSuratSPRiwayat(user){
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="go('${backSrc==='bermasalah'?'admin_spbermasalah':'admin_suratsp'}',{spSrc:'${backSrc}'})">✍️ Buat Surat SP</button>
-        <button class="btn btn-primary" onclick="go('admin_suratsp_laporan',{spSrc:'${backSrc}',src:currentSubState.src||'${backSrc}',st:currentSubState.st||'',q:currentSubState.q||''})">🖨️ Cetak Daftar</button>
+        <button class="btn btn-primary" onclick="go('admin_suratsp_laporan',{spSrc:'${backSrc}',lapSrc:'${backSrc}',lapSt:'${currentSubState.st||''}',lapQ:currentSubState.q||''})">🖨️ Cetak / Laporan</button>
       </div>
     </div>
     ${suratSPRiwayatSection()}
   `;
 }
 
-function renderAdminSuratSPLaporan(){
-  const {list, st, src, q} = suratSPRiwayatData(currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif');
-  const unique = {};
-  list.forEach(r=>{
-    const key = r.pembId || r.id;
-    const t = new Date(r.createdAt || r.tanggalSurat).getTime() || 0;
-    if(!unique[key] || t > unique[key]._t) unique[key] = Object.assign({_t:t},r);
-  });
-  const rows = Object.values(unique).sort((a,b)=>String(a.nama||'').localeCompare(String(b.nama||''),'id'));
-  const lunas = rows.filter(r=>r.status==='lunas').length;
-  const dibayar = rows.reduce((n,r)=>n+(Number(r.dibayarSetelah)||0),0);
-  const sisa = rows.reduce((n,r)=>n+(r.status==='lunas'?0:(Number(r.sisaSekarang)||0)),0);
-  const statusLabel = r=>r.status==='lunas'?'Lunas':r.status==='sebagian'?'Dibayar sebagian':r.status==='tidak ditemukan'?'Data sumber tidak ada':'Belum ada pembayaran';
-  const tr = rows.map((r,i)=>`<tr><td>${i+1}</td><td>${fmtDateShort(r.tanggalSurat)}</td><td>${escapeHtml(r.nomorSurat||'-')}</td><td><b>${escapeHtml(r.nama||'-')}</b><br>${escapeHtml(r.kelompok||'-')}</td><td>${r.sumber==='bermasalah'?'Bermasalah':'Tunggakan aktif'}</td><td>SP ${Number(r.spKe)||1}</td><td class="num">${rupiah(r.sisaKewajiban)}</td><td class="num">${rupiah(r.dibayarSetelah)}</td><td class="num">${rupiah(r.sisaSekarang)}</td><td>${r.progres}%</td><td>${statusLabel(r)}</td></tr>`).join('');
-  const filterText = [src?('Sumber: '+(src==='bermasalah'?'Pembiayaan bermasalah':'Tunggakan aktif')):'Semua sumber',st?('Status: '+statusLabel({status:st})):'Semua status',q?('Pencarian: '+q):''].filter(Boolean).join(' · ');
-  return `<style>
-    .sp-report{background:#fff;color:#111;font:12px Arial,sans-serif;padding:20px;}
-    .sp-report h1{text-align:center;font-size:20px;margin:0 0 5px;}
-    .sp-report .subtitle{text-align:center;margin-bottom:18px;color:#444;}
-    .sp-report .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0;}
-    .sp-report .box{border:1px solid #888;padding:9px;text-align:center;}
-    .sp-report .box b{display:block;font-size:15px;margin-top:4px;}
-    .sp-report table{border-collapse:collapse;width:100%;font-size:10px;}
-    .sp-report th,.sp-report td{border:1px solid #777;padding:5px 4px;vertical-align:top;}
-    .sp-report th{background:#eee;text-align:center;}
-    .sp-report td.num{text-align:right;white-space:nowrap;}
-    .sp-report .sign{margin:34px 8% 0 auto;text-align:center;width:220px;}
-    @media print{.app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}#content{display:block!important;visibility:visible!important;height:auto!important;overflow:visible!important;padding:0!important;}#content > section.sp-report{display:block!important;visibility:visible!important;position:static!important;width:100%!important;height:auto!important;overflow:visible!important;}.sp-report,.sp-report *{visibility:visible!important;}.sp-report{padding:0!important;}@page{size:A4 landscape;margin:12mm;}}
-    @media screen{.sp-report{border:1px solid var(--border);}}
-  </style>
-  <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-    <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc||'aktif'}'})">‹ Kembali ke Daftar Surat</button>
-    <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak Daftar</button>
-  </div>
-  <section class="sp-report">
-    <h1>LAPORAN PROGRES SURAT PERINGATAN (SP)</h1>
-    <div class="subtitle">Usaha Bersama Rukun Barokah · Dicetak ${suratSPTanggal(new Date())}</div>
-    <div style="font-size:10px;">${escapeHtml(filterText)}</div>
-    <div class="summary">
-      <div class="box">Nasabah unik<b>${rows.length}</b></div><div class="box">Lunas<b>${lunas}</b></div>
-      <div class="box">Terbayar setelah SP<b>${rupiah(dibayar)}</b></div><div class="box">Sisa kewajiban<b>${rupiah(sisa)}</b></div>
-    </div>
-    <table><thead><tr><th>No</th><th>Tanggal SP</th><th>Nomor Surat</th><th>Nama / Kelompok</th><th>Sumber</th><th>SP ke</th><th>Sisa saat SP</th><th>Dibayar setelah SP</th><th>Sisa sekarang</th><th>Progres</th><th>Status</th></tr></thead>
-      <tbody>${tr||'<tr><td colspan="11" style="text-align:center;">Belum ada data surat SP</td></tr>'}</tbody>
-      ${rows.length?`<tfoot><tr><th colspan="7">TOTAL</th><th class="num">${rupiah(dibayar)}</th><th class="num">${rupiah(sisa)}</th><th colspan="2">${rows.length} nasabah</th></tr></tfoot>`:''}
-    </table>
-    <div class="sign">Mengetahui,<br><br><br><br>( ____________________ )</div>
-  </section>`;
+/* =========================================================
+   LAPORAN PROGRES SURAT SP (cetak / PDF / Excel)
+========================================================= */
+function suratSPLaporanStatusText(r){
+  return suratSPRiwayatStatusMeta(r).label;
 }
+function suratSPLaporanPDF(){
+  const {list, src, dari, sampai} = suratSPLaporanRows();
+  if(!list.length){ toast('Tidak ada data pada rentang/filter ini'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', format:'a4' });
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  pdfKop(doc, orgName, 'LAPORAN PROGRES SURAT SP');
+  const tgl = new Date().toLocaleString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const rk = suratSPLaporanRingkas(list);
+  const per = [dari?('dari '+fmtDateShort(dari)):'', sampai?('s/d '+fmtDateShort(sampai)):''].filter(Boolean).join(' ');
+  doc.setFontSize(8.5); doc.setTextColor(120);
+  doc.text((per ? 'Periode '+per : 'Semua periode') + ' | Sumber: ' + (src==='semua'?'Semua':(src==='bermasalah'?'Pembiayaan bermasalah':'Tunggakan aktif')) + ' | Dicetak: '+tgl, 14, 26);
+  doc.setTextColor(0);
+  const progresTot = rk.totAwal>0 ? Math.min(100, Math.round(rk.totDibayar/rk.totAwal*100)) : 0;
+  const body = list.map((r,i)=>[
+    i+1, fmtDateShort(r.tanggalSurat), r.nomorSurat||'-', r.nama||'-', r.kelompok||'-',
+    r.sumber==='bermasalah'?'Bermasalah':'Aktif', Number(r.spKe)||1,
+    rupiah(r.sisaKewajiban), rupiah(r.dibayarSetelah), rupiah(r.sisaSekarang),
+    r.progres+'%', suratSPLaporanStatusText(r)
+  ]);
+  body.push(['','','','TOTAL','','','', rupiah(rk.totAwal), rupiah(rk.totDibayar), rupiah(rk.totSisa), progresTot+'%', '']);
+  doc.autoTable({
+    head: [['No','Tanggal','Nomor Surat','Nama','Kelompok','Sumber','SP','Sisa saat SP','Terbayar sesudah SP','Sisa sekarang','Progres','Status']],
+    body,
+    startY: 30,
+    styles:{ fontSize:7, cellPadding:2 },
+    headStyles:{ fillColor:[11,61,46], textColor:255, halign:'center' },
+    columnStyles:{
+      0:{halign:'center',cellWidth:12}, 1:{halign:'center',cellWidth:22}, 6:{halign:'center',cellWidth:16},
+      7:{halign:'right'}, 8:{halign:'right'}, 9:{halign:'right'}, 10:{halign:'center',cellWidth:20}, 11:{cellWidth:34}
+    },
+    alternateRowStyles:{ fillColor:[244,248,244] },
+    didParseCell: function(d){
+      if(d.section==='body' && d.row.index===body.length-1){ d.cell.styles.fillColor=[218,232,222]; d.cell.styles.fontStyle='bold'; }
+    }
+  });
+  doc.save(sanitizeFileName('Laporan Progres Surat SP ' + new Date().toISOString().slice(0,10)) + '.pdf');
+  toast('File PDF berhasil diunduh');
+}
+function suratSPLaporanXLS(){
+  const {list, src, dari, sampai} = suratSPLaporanRows();
+  if(!list.length){ toast('Tidak ada data pada rentang/filter ini'); return; }
+  const rk = suratSPLaporanRingkas(list);
+  const progresTot = rk.totAwal>0 ? Math.min(100, Math.round(rk.totDibayar/rk.totAwal*100)) : 0;
+  const headers = ['No','Tanggal','Nomor Surat','Nama','Kelompok','Sumber','SP ke','Sisa saat SP','Terbayar sesudah SP','Sisa sekarang','Progres %','Status','Catatan'];
+  const rows = [];
+  list.forEach((r,i)=>{
+    rows.push([i+1, fmtDateShort(r.tanggalSurat), r.nomorSurat||'-', r.nama||'-', r.kelompok||'-',
+      r.sumber==='bermasalah'?'Bermasalah':'Aktif', Number(r.spKe)||1,
+      Number(r.sisaKewajiban)||0, Number(r.dibayarSetelah)||0, Number(r.sisaSekarang)||0,
+      r.progres, suratSPLaporanStatusText(r), r.catatan||'']);
+  });
+  rows.push({tot:['','Total','','','','','', rk.totAwal, rk.totDibayar, rk.totSisa, progresTot, '', '']});
+  xlsxDok({ file:'Laporan Progres Surat SP', landscape:true,
+    sheets:[{ name:'Progres Surat SP', judul:'Laporan Progres Surat SP',
+      sub:(dari||sampai)?('Periode '+[dari?fmtDateShort(dari):'',sampai?fmtDateShort(sampai):''].filter(Boolean).join(' - ')+' | Sumber: '+(src==='semua'?'Semua':(src==='bermasalah'?'Pembiayaan bermasalah':'Tunggakan aktif'))):'Semua periode',
+      headers, rows }] });
+}
+function suratSPLaporanRowHTML(r){
+  const meta = suratSPRiwayatStatusMeta(r);
+  const cat = String(r.catatan||'').trim();
+  return `
+    <tr>
+      <td style="white-space:nowrap;">${fmtDateShort(r.tanggalSurat)}</td>
+      <td style="white-space:nowrap;font-size:11.5px;">${escapeHtml(r.nomorSurat||'-')}</td>
+      <td><b>${escapeHtml(r.nama||'-')}</b><br><span style="color:var(--muted);font-size:11px;">${escapeHtml(r.kelompok||'-')}</span></td>
+      <td><span class="badge ${r.sumber==='bermasalah'?'badge-gold':'badge-soft'}">${r.sumber==='bermasalah'?'Bermasalah':'Aktif'}</span></td>
+      <td style="white-space:nowrap;">SP ${r.spKe||1}</td>
+      <td class="mono" style="white-space:nowrap;">${rupiah(r.sisaKewajiban)}</td>
+      <td class="mono" style="white-space:nowrap;"><b>${rupiah(r.sisaSekarang)}</b></td>
+      <td class="mono" style="white-space:nowrap;color:var(--ok);">${rupiah(r.dibayarSetelah)}</td>
+      <td style="min-width:110px;">
+        <div class="bar-track" style="height:7px;"><div class="bar-fill" style="width:${r.progres}%;background:${r.status==='lunas'?'var(--ok)':'var(--gold)'};"></div></div>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${r.progres}%</div>
+      </td>
+      <td><span class="badge ${meta.cls}">${meta.label}</span></td>
+      <td style="max-width:160px;font-size:11px;">${cat?escapeHtml(cat):'<span style="color:var(--muted);">&ndash;</span>'}</td>
+    </tr>`;
+}
+function suratSPLaporanRows(){
+  const all = suratSPRiwayatArr().map(suratSPRiwayatEnrich);
+  const st = currentSubState.lapSt || '';
+  const src = currentSubState.lapSrc || 'semua';
+  const dari = currentSubState.lapDari || '';
+  const sampai = currentSubState.lapSampai || '';
+  const q = String(currentSubState.lapQ||'').toLowerCase().trim();
+  let list = all.slice();
+  if(st) list = list.filter(r=>r.status===st);
+  if(src && src!=='semua') list = list.filter(r=>r.sumber===src);
+  if(dari) list = list.filter(r=>String(r.tanggalSurat||'') >= dari);
+  if(sampai) list = list.filter(r=>String(r.tanggalSurat||'') <= sampai);
+  if(q) list = list.filter(r=>
+    String(r.nama||'').toLowerCase().includes(q) ||
+    String(r.nomorSurat||'').toLowerCase().includes(q) ||
+    String(r.kelompok||'').toLowerCase().includes(q)
+  );
+  list.sort((a,b)=> new Date(a.createdAt || a.tanggalSurat) - new Date(b.createdAt || b.tanggalSurat));
+  return {all, list, st, src, dari, sampai, q};
+}
+function suratSPLaporanRingkas(list){
+  const unik = {};
+  list.forEach(r=>{ if(!unik[r.pembId]) unik[r.pembId] = r; });
+  return {
+    unik: Object.values(unik),
+    jmlLunas: list.filter(r=>r.status==='lunas').length,
+    jmlSebagian: list.filter(r=>r.status==='sebagian').length,
+    jmlBerjalan: list.filter(r=>r.status==='berjalan').length,
+    jmlGagal: list.filter(r=>r.status==='tidak ditemukan').length,
+    totAwal: list.reduce((s,r)=>s+(Number(r.sisaKewajiban)||0),0),
+    totDibayar: list.reduce((s,r)=>s+(Number(r.dibayarSetelah)||0),0),
+    totSisa: list.reduce((s,r)=>s+(Number(r.sisaSekarang)||0),0)
+  };
+}
+function renderSuratSPLaporan(){
+  const {list, st, src, dari, sampai} = suratSPLaporanRows();
+  const rk = suratSPLaporanRingkas(list);
+  const progresTot = rk.totAwal>0 ? Math.min(100, Math.round(rk.totDibayar/rk.totAwal*100)) : 0;
+  const backSrc = (currentSubState.spSrc==='bermasalah') ? 'bermasalah' : 'aktif';
+  const backPage = (backSrc==='bermasalah') ? 'admin_spbermasalah' : 'admin_suratsp';
+  const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const s = suratSPLoad();
+  const per = [
+    dari ? 'dari ' + fmtDateShort(dari) : '',
+    sampai ? 's/d ' + fmtDateShort(sampai) : ''
+  ].filter(Boolean).join(' ');
+  const periode = per ? 'Periode ' + per : 'Semua Periode';
+  const tglCetakFull = new Date().toLocaleString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const rowsHTML = list.map((r,i)=>suratSPLaporanRowHTML(r,i)).join('');
 
+  const tableHead = `
+    <thead><tr>
+      <th>Tanggal</th><th>Nomor Surat</th><th>Nama</th><th>Sumber</th><th>SP</th>
+      <th>Sisa saat SP</th><th>Sisa sekarang</th><th>Terbayar sesudah SP</th><th>Progres</th><th>Status</th><th>Catatan</th>
+    </tr></thead>`;
+
+  const filterCard = `
+    <div class="card no-print" style="padding:14px;margin-bottom:14px;">
+      <div class="toolbar-row" style="flex-wrap:wrap;gap:10px;">
+        <div class="search-box" style="margin:0;">${ICONS.search}<input id="sp-lap-cari" placeholder="Cari nama / nomor surat / kelompok..." value="${escapeHtml(String(currentSubState.lapQ||''))}" oninput="currentSubState.lapQ=this.value;renderContent()"></div>
+        <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:3px;">Dari tanggal</label>
+          <input type="date" value="${escapeHtml(dari)}" onchange="currentSubState.lapDari=this.value;renderContent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;"></div>
+        <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:3px;">Sampai tanggal</label>
+          <input type="date" value="${escapeHtml(sampai)}" onchange="currentSubState.lapSampai=this.value;renderContent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;"></div>
+        <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:3px;">Sumber</label>
+          <select onchange="currentSubState.lapSrc=this.value;renderContent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;">
+            <option value="semua" ${src==='semua'?'selected':''}>Semua sumber</option>
+            <option value="aktif" ${src==='aktif'?'selected':''}>Tunggakan aktif</option>
+            <option value="bermasalah" ${src==='bermasalah'?'selected':''}>Pembiayaan bermasalah</option>
+          </select></div>
+        <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:3px;">Status</label>
+          <select onchange="currentSubState.lapSt=this.value;renderContent()" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;">
+            <option value="" ${st===''?'selected':''}>Semua status</option>
+            <option value="berjalan" ${st==='berjalan'?'selected':''}>Belum ada pembayaran</option>
+            <option value="sebagian" ${st==='sebagian'?'selected':''}>Dibayar sebagian</option>
+            <option value="lunas" ${st==='lunas'?'selected':''}>Lunas</option>
+            <option value="tidak ditemukan" ${st==='tidak ditemukan'?'selected':''}>Data sumber tidak ada</option>
+          </select></div>
+        <button class="btn btn-outline btn-sm" onclick="currentSubState.lapQ='';currentSubState.lapDari='';currentSubState.lapSampai='';currentSubState.lapSrc='semua';currentSubState.lapSt='';renderContent()">↺ Reset</button>
+      </div>
+    </div>`;
+
+  const statCards = `
+    <div class="stat-grid ssp-stat-grid no-print" style="margin-bottom:14px;">
+      <div class="stat-box"><div class="n mono" style="font-size:20px;">${list.length}</div><div class="l">Surat dalam periode</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:20px;">${rk.unik.length}</div><div class="l">Nasabah</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:20px;color:var(--ok);">${rk.jmlLunas}</div><div class="l">Surat lunas</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:20px;color:var(--gold);">${rk.jmlSebagian + rk.jmlBerjalan}</div><div class="l">Masih berjalan</div></div>
+      <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--primary);"><div class="n mono" style="font-size:20px;color:var(--primary);">${rupiah(rk.totDibayar)}</div><div class="l">Terbayar sesudah SP</div></div>
+      <div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--danger);"><div class="n mono" style="font-size:20px;color:var(--danger);">${rupiah(rk.totSisa)}</div><div class="l">Sisa tagihan saat ini</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:20px;">${progresTot}%</div><div class="l">Progres total</div></div>
+    </div>`;
+
+  return `
+    <style>
+      .lsp-print-kop{display:none;}
+      @page{size:A4 landscape;margin:10mm;}
+      @media print{
+        .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}
+        body{background:#fff!important;}
+        #app-screen{display:block!important;}
+        #content{display:block!important;overflow:visible!important;height:auto!important;padding:0!important;}
+        #content > *:not(.lsp-report-body){display:none!important;}
+        .lsp-report-body{display:block!important;}
+        .lsp-report-body > *:not(.lsp-print-area){display:none!important;}
+        .lsp-print-area{display:block!important;font-family:'Times New Roman',Times,serif;color:#000;font-size:9.5pt;}
+        .lsp-print-kop{display:flex!important;align-items:center;justify-content:center;gap:14px;border-bottom:3px double #111;padding-bottom:8px;margin-bottom:10px;}
+        .lsp-print-kop img{width:80px;height:80px;object-fit:contain;}
+        .lsp-print-kop .nm{font-size:14pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase;text-align:center;}
+        .lsp-print-kop .al{font-size:9.5pt;text-align:center;margin-top:2px;}
+        .lsp-print-title{text-align:center;font-weight:700;text-decoration:underline;font-size:11.5pt;margin:6px 0 2px;letter-spacing:.4px;}
+        .lsp-pmeta{display:flex;justify-content:space-between;font-size:9pt;margin-bottom:10px;}
+        .lsp-print-area table{width:100%;border-collapse:collapse;font-size:8.5pt;}
+        .lsp-print-area th,.lsp-print-area td{border:1px solid #333;padding:3px 5px;text-align:left;vertical-align:top;}
+        .lsp-print-area thead{display:table-header-group;}
+        .lsp-print-area thead th{background:#eee!important;}
+        .lsp-print-area thead th:last-child, .lsp-print-area tbody td:last-child{width:0;}
+        .lsp-print-area tbody td{white-space:normal;}
+        .lsp-print-area tr{page-break-inside:avoid;}
+        .lsp-print-area td .badge{border:1px solid #999;border-radius:8px;padding:0 5px;font-size:7.5pt;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;max-width:70px;}
+        .lsp-print-area td .badge-soft{background:#eef2ee!important;color:#111!important;}
+        .lsp-print-area td .badge-gold{background:#fdeccf!important;color:#7a4a00!important;}
+        .lsp-print-area td .badge-green{background:#d8efdc!important;color:#14532d!important;}
+        .lsp-print-area td .badge-red{background:#f7dede!important;color:#7a2331!important;}
+        .lsp-print-total{display:flex;justify-content:space-between;background:#eee;border:1px solid #333;padding:4px 6px;margin-top:8px;font-weight:700;font-size:9pt;}
+        .lsp-ttd{margin-top:24px;display:flex;justify-content:flex-end;gap:60px;page-break-inside:avoid;}
+        .lsp-ttd .blok{text-align:center;width:190px;font-size:10pt;}
+        .lsp-ttd .sp{height:52px;}
+        .bar-track{display:none!important;}
+      }
+    </style>
+    <div class="page-title no-print"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}',{spSrc:'${backSrc}'})">${ICONS.chevronLeft}</button>Laporan Progres Surat SP<span class="sub">${periode}</span></span></div>
+    <div class="lsp-report-body">
+      <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">
+        <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
+        <button class="btn btn-outline no-print" onclick="suratSPLaporanPDF()">${ICONS.pdf||'📄'} Unduh PDF</button>
+        <button class="btn btn-outline no-print" onclick="suratSPLaporanXLS()">${ICONS.xls||'📊'} Excel</button>
+      </div>
+      ${filterCard}
+      ${statCards}
+      <div class="card no-print" style="padding:0;overflow:hidden;">
+        ${list.length ? `
+        <div class="ssp-over" style="overflow-x:auto;border:none;">
+          <table class="ssp-table">
+            ${tableHead}
+            <tbody>${rowsHTML}</tbody>
+          </table>
+        </div>
+        ` : `
+        <div class="empty-state">
+          <div class="ic">📋</div>
+          <div class="t">Tidak ada data pada filter ini</div>
+          <div class="d">Ubah rentang tanggal, sumber, atau status, atau buat surat SP baru terlebih dahulu.</div>
+        </div>`}
+      </div>
+      <div class="hint no-print" style="margin-top:10px;line-height:1.5;">Progres dihitung otomatis dari data pembiayaan/piutang saat ini. Cetak/PDF/Excel mengikuti filter yang aktif.</div>
+
+      <div class="lsp-print-area">
+        <div class="lsp-print-kop">
+          <img src="${escapeHtml(s.logo || LOGO_UB)}" alt="logo">
+          <div class="mid">
+            <div class="nm">${escapeHtml(s.namaLembaga || orgName)}</div>
+            <div class="al">${escapeHtml(s.alamatLembaga || '')}</div>
+          </div>
+        </div>
+        <div class="lsp-print-title">LAPORAN PROGRES SURAT PERINGATAN (SURAT SP)</div>
+        <div class="lsp-pmeta">
+          <div>${escapeHtml(periode)} &middot; Sumber: ${src==='semua'?'Semua':(src==='bermasalah'?'Pembiayaan Bermasalah':'Tunggakan Aktif')}</div>
+          <div>Dicetak: ${escapeHtml(tglCetakFull)}</div>
+        </div>
+        <table>
+          ${tableHead}
+          <tbody>${rowsHTML}</tbody>
+        </table>
+        <div class="lsp-print-total">
+          <span>Ringkasan: ${list.length} surat &middot; ${rk.unik.length} nasabah &middot; Lunas ${rk.jmlLunas} &middot; Berjalan ${rk.jmlSebagian+rk.jmlBerjalan}</span>
+          <span>Terbayar: ${rupiah(rk.totDibayar)} &nbsp;&middot;&nbsp; Sisa: ${rupiah(rk.totSisa)} &nbsp;&middot;&nbsp; Progres total: ${progresTot}%</span>
+        </div>
+        ${(()=> {
+          const ttd = (s.ttdList && s.ttdList[0] && (s.ttdList[0].nama || s.ttdList[0].jabatan)) ? s.ttdList[0] : {jabatan:'Ketua', nama:''};
+          const tglTtd = (s.kota ? (s.kota + ', ') : '') + new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+          return `
+          <div class="lsp-ttd">
+            <div class="blok">
+              <div>${escapeHtml(tglTtd)}</div>
+              <div class="sp"></div>
+              <div><b>${escapeHtml(ttd.nama || '')}</b></div>
+              <div>${escapeHtml(ttd.jabatan || '')}</div>
+            </div>
+          </div>`;
+        })()}
+      </div>
+    </div>
+  `;
+}
 function suratSPRiwayatDetail(id){
   const raw = suratSPRiwayatArr().find(r=>r.id===id);
   if(!raw){ toast('Catatan surat tidak ditemukan'); return; }
