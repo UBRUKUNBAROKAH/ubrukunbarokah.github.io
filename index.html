@@ -1169,6 +1169,7 @@ let DB = {}; // Global DB object (mirrors localStorage structure)
 let DB_LOADED = false;
 let TABUNGAN_NONAKTIF_COL = false; // apakah tabel tabungan_accounts sudah punya kolom nonaktif
 let PEMBIAYAAN_DISKON_COLS = false; // apakah tabel pembiayaan sudah punya kolom diskon_*
+let PEMBIAYAAN_STATUS_COLS = false; // apakah tabel pembiayaan sudah punya kolom status_manual
 
 async function checkTabunganNonaktifCol(){
   try{
@@ -1181,6 +1182,21 @@ async function checkPembiayaanDiskonCols(){
     const { error } = await supabaseClient.from(TABLES.pembiayaan).select('diskon_jumlah').limit(1);
     PEMBIAYAAN_DISKON_COLS = !error;
   }catch(e){ PEMBIAYAAN_DISKON_COLS = false; }
+}
+async function checkPembiayaanStatusCols(){
+  try{
+    const { error } = await supabaseClient.from(TABLES.pembiayaan).select('status_manual').limit(1);
+    PEMBIAYAAN_STATUS_COLS = !error;
+  }catch(e){ PEMBIAYAAN_STATUS_COLS = false; }
+}
+// Tandai status manual disimpan juga di info map agar tetap tersimpan
+// walaupun kolom status_manual belum ada di Supabase.
+function setStatusManualMap(p, status){
+  if(!DB.koperasi.info) DB.koperasi.info = {};
+  if(!DB.koperasi.info.statusManualPembiayaan) DB.koperasi.info.statusManualPembiayaan = {};
+  if(status==='lunas' || status==='berjalan') DB.koperasi.info.statusManualPembiayaan[p.id] = status;
+  else delete DB.koperasi.info.statusManualPembiayaan[p.id];
+  if(Object.keys(DB.koperasi.info.statusManualPembiayaan).length===0) delete DB.koperasi.info.statusManualPembiayaan;
 }
 
 // Saldo rekening wajib cocok dengan riwayat transaksinya. Perbaiki otomatis
@@ -1360,6 +1376,7 @@ async function initSupabaseDB() {
     DB_LOADED = true;
     checkTabunganNonaktifCol();
     checkPembiayaanDiskonCols();
+    checkPembiayaanStatusCols();
 
     // Hidrasi diskon dari info map bila kolom Supabase belum ada
     try{
@@ -1370,6 +1387,19 @@ async function initSupabaseDB() {
         if(d && typeof d==='object' && Number(d.jumlah)>0 && !Number(p.diskonJumlah)){
           p.diskonJumlah = Number(d.jumlah)||0;
           p.diskonTanggal = d.tanggal||''; p.diskonOleh = d.oleh||''; p.diskonKeterangan = d.keterangan||'';
+        }
+      });
+    }catch(e){}
+    // Hidrasi status manual dari info map (kolom status_manual belum tentu ada)
+    try{
+      const sm = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.statusManualPembiayaan) || {};
+      (DB.pembiayaan||[]).forEach(p=>{
+        if(!p || !(p.id in sm)) return;
+        const v = sm[p.id];
+        if((v==='lunas' || v==='berjalan') && !p.statusManual){
+          p.statusManual = v;
+          // Samakan status saat ini mengikuti manual
+          p.status = v;
         }
       });
     }catch(e){}
@@ -1637,6 +1667,7 @@ async function mergePembiayaanForSync(){
     // Bila tabel belum punya kolom diskon_*, buang dari payload agar upsert tidak gagal;
     // diskon tetap tersinkron lewat DB.koperasi.info.diskonPembiayaan.
     if(!PEMBIAYAAN_DISKON_COLS){ delete s.diskon_jumlah; delete s.diskon_tanggal; delete s.diskon_oleh; delete s.diskon_keterangan; }
+    if(!PEMBIAYAAN_STATUS_COLS){ delete s.status_manual; }
     const row = server.find(r=>r.id===p.id) || null;
     if(row) s.user_id = row.user_id; // identitas (pemilik) mengikuti server, mencegah kembalinya id legacy usang
     const localRiw = p.riwayatAngsuran || [];
@@ -3067,6 +3098,7 @@ function setStatusManualPembiayaan(pembId, status){
   if(!p){ toast('Pembiayaan tidak ditemukan'); return; }
   if(status === 'otomatis'){
     delete p.statusManual;
+    try{ setStatusManualMap(p, null); }catch(e){}
     const r = rekomputasiPembiayaan(p);
     persist();
     addLog('Status pembiayaan (otomatis)', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - kembali dihitung otomatis: ' + (r.otomatis==='lunas'?'Lunas':'Berjalan'));
@@ -3075,6 +3107,7 @@ function setStatusManualPembiayaan(pembId, status){
     return;
   }
   p.statusManual = status;
+  try{ setStatusManualMap(p, status); }catch(e){}
   rekomputasiPembiayaan(p);
   persist();
   addLog('Status pembiayaan (manual)', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - ditandai ' + (status==='lunas'?'LUNAS':'BERJALAN') + ' sesuai rekap manual');
