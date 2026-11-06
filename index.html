@@ -3513,7 +3513,16 @@ function renderAdminBeranda(user){
   const totalNilaiSaham = totalNilaiSahamSemua();
   const totalRekening = DB.tabunganAccounts.length;
   const totalAngsuranDiterima = DB.pembiayaan.reduce((s,p)=>s+(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0),0);
-  const totalAset = computeNeraca().totalAset;
+  const neracaNow = computeNeraca();
+  const totalAset = neracaNow.totalAset;
+  const kasTangan = neracaNow.kas;
+  const piutangNow = neracaNow.piutang;
+  const hariIni = hariIniStr();
+  const setorHariIni = (DB.tabunganTx||[]).filter(x=>String(x.tanggal||'').slice(0,10)===hariIni && x.tipe==='setor').reduce((s,x)=>s+(Number(x.jumlah)||0),0);
+  const angsuranHariIni = (DB.pembiayaan||[]).reduce((s,p2)=>s+((p2.riwayatAngsuran||[]).filter(a=>String(a.tanggal||'').slice(0,10)===hariIni).reduce((a,x)=>a+(Number(x.jumlah)||0),0)),0);
+  const koorRows = ringkasanSaldoKoordinator();
+  const totalKasKoor = koorRows.reduce((s,r)=>s+(Number(r.sisaKas)||0),0);
+  const totalHutangKoor2 = koorRows.reduce((s,r)=>s+(Number(r.totalHutang)||0),0);
 
   // ---- Blok "Perlu Tindakan": dikumpulkan & ditampilkan PALING ATAS ----
   const notifSaldoKoorHtml = renderNotifSaldoKoordinator();
@@ -3533,6 +3542,7 @@ function renderAdminBeranda(user){
       `).join('')}
     </div>` : '';
   const overdue = computeOverdueLoans();
+  const totalSisaTelat2 = overdue.reduce((s,o)=>{const p2=o.p;const tp=(p2.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max(totalKewOf(p2)-tp,0);},0);
   const overdueHtml = overdue.length ? `
     <div class="section-label" style="color:var(--danger);">Pembiayaan Terlambat</div>
     <div class="card" style="padding:14px 18px;border-left:3px solid var(--danger);display:flex;align-items:center;justify-content:space-between;gap:12px;">
@@ -3548,9 +3558,16 @@ function renderAdminBeranda(user){
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
     <div class="page-title" style="margin:0;">Halo, ${user.nama.split(' ')[0]}<span class="sub">Ringkasan koperasi hari ini</span></div>
     </div>
-    <div class="card balance-card" style="margin-bottom:18px;">
-      <div class="label">Total Aset (Neraca)</div>
-      <div class="amount mono">${rupiah(totalAset)}</div>
+    <div class="stat-grid cols-4">
+      <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.wallet}</div><div class="n mono" style="font-size:15px;color:${kasTangan<0?'var(--danger)':'var(--primary)'};">${rupiah(kasTangan)}</div><div class="l">Kas di tangan${kasTangan<0?' — MINUS, cek piutang!':''}</div></div>
+      <div class="stat-box stat-gold"><div class="ic-badge">${ICONS.finance}</div><div class="n mono" style="font-size:15px;">${rupiah(piutangNow)}</div><div class="l">Piutang pembiayaan</div></div>
+      <div class="stat-box stat-danger" style="cursor:pointer;" onclick="go('admin_pembiayaan_terlambat')"><div class="ic-badge" style="background:var(--danger-soft);color:var(--danger);">${ICONS.finance}</div><div class="n mono" style="font-size:15px;color:var(--danger);">${overdue.length} orang</div><div class="l">Telat bayar &middot; ${rupiah(totalSisaTelat2)}</div></div>
+    </div>
+    <div class="stat-grid cols-4" style="margin-top:8px;">
+      <div class="stat-box"><div class="n mono" style="font-size:14px;color:var(--ok);">${rupiah(setorHariIni)}</div><div class="l">Setoran hari ini</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:14px;color:var(--ok);">${rupiah(angsuranHariIni)}</div><div class="l">Angsuran hari ini</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:14px;color:${pendingPemb.length?'var(--gold)':'var(--muted)'};">${pendingPemb.length}</div><div class="l">Menunggu ACC</div></div>
+      <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(totalKasKoor)}</div><div class="l">Saldo di koordinator${koorRows.length?(' &middot; '+koorRows.length+' orang'):""}${totalHutangKoor2>0?(' &middot; hutang '+rupiah(totalHutangKoor2)):''}</div></div>
     </div>
 
     ${adaTindakan ? `<div class="section-label" style="color:var(--danger);">Perlu Tindakan</div>` : ''}
@@ -3565,6 +3582,7 @@ function renderAdminBeranda(user){
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.finance}</div><div class="n mono">${rupiah(totalNilaiSaham)}</div><div class="l">Nilai saham</div></div>
       <div class="stat-box stat-primary"><div class="ic-badge">${ICONS.users}</div><div class="n">${totalAnggota}</div><div class="l">Anggota nasabah</div></div>
     </div>
+    <div class="hint" style="text-align:center;margin-top:6px;font-size:11px;">Total Aset (Neraca) ${rupiah(totalAset)} = Kas ${rupiah(kasTangan)} + Piutang ${rupiah(piutangNow)}</div>
     <div style="text-align:center;margin:10px 0 4px;">
       <button class="btn btn-outline btn-sm" onclick="currentSubState.berandaShowAllStats=${showAllStats?'false':'true'};renderContent();">${showAllStats?'Sembunyikan detail':'Lihat detail statistik'} ${ICONS[showAllStats?'up':'down']}</button>
     </div>
