@@ -2824,6 +2824,21 @@ async function prosesBayarSP(userId, pembId, srcJenis, jumlah, ket){
     return;
   }
   addLog('Bayar pembiayaan dari tabungan', userById(userId).nama + ' - ' + jenisName(srcJenis) + ' - ' + rupiah(jumlah) + ' (angsuran ke-' + angsuranKe + ')');
+  // Bayar dari tabungan wajib ada copy ke admin. Jalur bukan-admin sudah dikirim
+  // doBayarAngsuran (Pemberitahuan Angsuran), jadi khusus admin yang ditambah di sini.
+  if(s && s.role==='admin'){
+    try{
+      notifAdminWA(waHeader('PEMBERITAHUAN BAYAR DARI TABUNGAN')
+        + waAnggotaInfo(pembUser(p))
+        + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+        + '\nAngsuran ke-' + angsuranKe + ' dari ' + p.tenor + ' bulan'
+        + '\nNominal : ' + rupiah(jumlah)
+        + '\nSumber : ' + jenisName(srcJenis) + ' (saldo sesudah ' + rupiah(srcAcc.saldo) + ')'
+        + '\nSisa angsuran : ' + p.sisaAngsuran + ' bulan'
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
+    }catch(e){}
+  }
   const btn = document.querySelector('button[onclick="confirmBayarSP()"]');
   if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
   const result = await persistNow();
@@ -3129,15 +3144,49 @@ function setStatusManualPembiayaan(pembId, status){
     const r = rekomputasiPembiayaan(p);
     persist();
     addLog('Status pembiayaan (otomatis)', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - kembali dihitung otomatis: ' + (r.otomatis==='lunas'?'Lunas':'Berjalan'));
+    try{
+      const rwa = rekomputasiPembiayaan(p);
+      notifAdminWA(waHeader('PEMBERITAHUAN STATUS PEMBIAYAAN')
+        + waAnggotaInfo(pembUser(p))
+        + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+        + '\nStatus dikembalikan OTOMATIS: ' + (rwa.otomatis==='lunas'?'LUNAS':'BERJALAN')
+        + '\nTotal kewajiban : ' + rupiah(rwa.totalKew)
+        + '\nSisa tagihan : ' + rupiah(rwa.sisaTagihan)
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
+    }catch(e){}
     bigSuccess('Status kembali otomatis');
     renderContent();
     return;
   }
   p.statusManual = status;
   try{ setStatusManualMap(p, status); }catch(e){}
-  rekomputasiPembiayaan(p);
+  const rMan = rekomputasiPembiayaan(p);
   persist();
   addLog('Status pembiayaan (manual)', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - ditandai ' + (status==='lunas'?'LUNAS':'BERJALAN') + ' sesuai rekap manual');
+  try{
+    const pesanAdminManual = waHeader('PEMBERITAHUAN STATUS PEMBIAYAAN')
+      + waAnggotaInfo(pembUser(p))
+      + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+      + '\nDitandai ' + (status==='lunas'?'LUNAS':'BERJALAN') + ' sesuai rekap manual'
+      + '\nTotal kewajiban : ' + rupiah(rMan.totalKew)
+      + '\nSudah dibayar : ' + rupiah(rMan.totalDibayar)
+      + '\nSisa tagihan : ' + rupiah(rMan.sisaTagihan)
+      + '\nWaktu : ' + waTanggal()
+      + waFooter();
+    notifAdminWA(pesanAdminManual);
+    if(status==='lunas'){
+      notifUserWA(p.userId, waHeader('PEMBERITAHUAN PELUNASAN')
+        + waAnggotaInfo(pembUser(p))
+        + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+        + '\nStatus : LUNAS (sesuai rekap manual)'
+        + '\nTotal kewajiban : ' + rupiah(rMan.totalKew)
+        + '\nSudah dibayar tercatat : ' + rupiah(rMan.totalDibayar)
+        + '\nSisa menurut hitungan : ' + rupiah(rMan.sisaTagihan)
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
+    }
+  }catch(e){}
   bigSuccess('Status ditandai ' + (status==='lunas'?'LUNAS':'BERJALAN'));
   renderContent();
 }
@@ -3245,9 +3294,18 @@ async function simpanDiskonPembiayaan(pembId){
     closeModal();
     bigSuccess('Diskon '+rupiah(diskon)+' tersimpan');
     renderContent();
-    // Beri tahu nasabah lewat WA (nomor tetap keluar saat admin menyimpan)
+    // Beri tahu nasabah + admin lewat WA (nomor tetap keluar saat admin menyimpan)
     try{
       const sisaBaru = Math.max(0, (totalAwal - diskon) - dibayar);
+      notifAdminWA(waHeader('PEMBERITAHUAN DISKON PELUNASAN')
+        + waAnggotaInfo(pembUser(p))
+        + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+        + '\nDiskon : -' + rupiah(diskon)
+        + '\nSisa pelunasan : ' + rupiah(sisaBaru)
+        + (ket?('\nKeterangan : '+ket):'')
+        + '\nOleh ' + olehNama
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
       notifUserWA(p.userId, waHeader('KERINGANAN PELUNASAN')
         + waAnggotaInfo(pembUser(p))
         + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
@@ -3286,6 +3344,21 @@ function hapusDiskonPembiayaan(pembId){
       renderContent();
       return;
     }
+    try{
+      notifAdminWA(waHeader('PEMBERITAHUAN HAPUS DISKON')
+        + waAnggotaInfo(pembUser(p))
+        + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+        + '\nDiskon yang dihapus : -' + rupiah(jumlahLama)
+        + '\nSisa kembali : ' + rupiah(r.sisaTagihan)
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
+      notifUserWA(p.userId, waHeader('KOREKSI KERINGANAN PELUNASAN')
+        + waAnggotaInfo(pembUser(p))
+        + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+        + '\nDiskon -' + rupiah(jumlahLama) + ' telah dihapus. Sisa tagihan kini ' + rupiah(r.sisaTagihan) + '.'
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
+    }catch(e){}
     bigSuccess('Diskon dihapus');
     renderContent();
   }, 'Ya, hapus diskon');
