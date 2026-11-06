@@ -921,6 +921,59 @@ function marginNominalOf(p){
   if(p.marginPersen) return Math.round(p.jumlahPinjaman * p.marginPersen / 100);
   return 0;
 }
+// --- Diskon pelunasan dipercepat (opsional) ---
+// Disimpan di p.diskon* bila kolom Supabase tersedia, dan selalu dicerminkan ke
+// DB.koperasi.info.diskonPembiayaan agar tetap tersinkron tanpa kolom baru.
+function diskonInfoOf(p){
+  if(!p) return { jumlah:0, tanggal:'', oleh:'', keterangan:'' };
+  let info = { jumlah:0, tanggal:'', oleh:'', keterangan:'' };
+  try{
+    const m = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.diskonPembiayaan) || {};
+    const d = m[p.id];
+    if(d && typeof d==='object'){ info.jumlah = Number(d.jumlah)||0; info.tanggal = d.tanggal||''; info.oleh = d.oleh||''; info.keterangan = d.keterangan||''; }
+    else if(Number(d)>0){ info.jumlah = Number(d); }
+  }catch(e){}
+  if(Number(p.diskonJumlah)>0){
+    info.jumlah = Number(p.diskonJumlah);
+    info.tanggal = p.diskonTanggal || info.tanggal;
+    info.oleh = p.diskonOleh || info.oleh;
+    info.keterangan = p.diskonKeterangan || info.keterangan;
+  }
+  return info;
+}
+function diskonOf(p){
+  return Number(diskonInfoOf(p).jumlah)||0;
+}
+function totalKewAwalOf(p){
+  return (Number(p.jumlahPinjaman)||0) + marginNominalOf(p);
+}
+function totalKewOf(p){
+  return Math.max(0, totalKewAwalOf(p) - diskonOf(p));
+}
+function totalDibayarOf(p){
+  return ((p && p.riwayatAngsuran)||[]).reduce((s,a)=>s+(Number(a.jumlah)||0),0);
+}
+function sisaTagihanOf(p){
+  return Math.max(0, totalKewOf(p) - totalDibayarOf(p));
+}
+function marginEfektifOf(p){
+  return marginNominalOf(p) - diskonOf(p);
+}
+function setDiskonPembiayaan(p, data){
+  if(!DB.koperasi.info) DB.koperasi.info = {};
+  if(!DB.koperasi.info.diskonPembiayaan) DB.koperasi.info.diskonPembiayaan = {};
+  const jumlah = Number(data && data.jumlah)||0;
+  if(jumlah>0){
+    p.diskonJumlah = jumlah;
+    p.diskonTanggal = data.tanggal || nowISO();
+    p.diskonOleh = data.oleh || '';
+    p.diskonKeterangan = data.keterangan || '';
+    DB.koperasi.info.diskonPembiayaan[p.id] = { jumlah, tanggal:p.diskonTanggal, oleh:p.diskonOleh, keterangan:p.diskonKeterangan };
+  } else {
+    delete p.diskonJumlah; delete p.diskonTanggal; delete p.diskonOleh; delete p.diskonKeterangan;
+    delete DB.koperasi.info.diskonPembiayaan[p.id];
+  }
+}
 // Label/warna status pembiayaan yg konsisten di semua tampilan (termasuk saat masih menunggu ACC admin)
 function pembBadge(p){
   if(p.statusPengajuan==='pending') return {cls:'badge-gold', label:'Menunggu ACC'};
@@ -1115,12 +1168,19 @@ function toSnake(obj) {
 let DB = {}; // Global DB object (mirrors localStorage structure)
 let DB_LOADED = false;
 let TABUNGAN_NONAKTIF_COL = false; // apakah tabel tabungan_accounts sudah punya kolom nonaktif
+let PEMBIAYAAN_DISKON_COLS = false; // apakah tabel pembiayaan sudah punya kolom diskon_*
 
 async function checkTabunganNonaktifCol(){
   try{
     const { error } = await supabaseClient.from(TABLES.tabungan_accounts).select('nonaktif').limit(1);
     TABUNGAN_NONAKTIF_COL = !error;
   }catch(e){ TABUNGAN_NONAKTIF_COL = false; }
+}
+async function checkPembiayaanDiskonCols(){
+  try{
+    const { error } = await supabaseClient.from(TABLES.pembiayaan).select('diskon_jumlah').limit(1);
+    PEMBIAYAAN_DISKON_COLS = !error;
+  }catch(e){ PEMBIAYAAN_DISKON_COLS = false; }
 }
 
 // Saldo rekening wajib cocok dengan riwayat transaksinya. Perbaiki otomatis
@@ -1299,6 +1359,20 @@ async function initSupabaseDB() {
 
     DB_LOADED = true;
     checkTabunganNonaktifCol();
+    checkPembiayaanDiskonCols();
+
+    // Hidrasi diskon dari info map bila kolom Supabase belum ada
+    try{
+      const dm = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.diskonPembiayaan) || {};
+      (DB.pembiayaan||[]).forEach(p=>{
+        if(!p || !(p.id in dm)) return;
+        const d = dm[p.id];
+        if(d && typeof d==='object' && Number(d.jumlah)>0 && !Number(p.diskonJumlah)){
+          p.diskonJumlah = Number(d.jumlah)||0;
+          p.diskonTanggal = d.tanggal||''; p.diskonOleh = d.oleh||''; p.diskonKeterangan = d.keterangan||'';
+        }
+      });
+    }catch(e){}
 
     return DB;
     
@@ -1560,6 +1634,9 @@ async function mergePembiayaanForSync(){
   for(const p of local){
     const s = toSnake(p);
     if(p.mulai) s.mulai = p.mulai.split('T')[0];
+    // Bila tabel belum punya kolom diskon_*, buang dari payload agar upsert tidak gagal;
+    // diskon tetap tersinkron lewat DB.koperasi.info.diskonPembiayaan.
+    if(!PEMBIAYAAN_DISKON_COLS){ delete s.diskon_jumlah; delete s.diskon_tanggal; delete s.diskon_oleh; delete s.diskon_keterangan; }
     const row = server.find(r=>r.id===p.id) || null;
     if(row) s.user_id = row.user_id; // identitas (pemilik) mengikuti server, mencegah kembalinya id legacy usang
     const localRiw = p.riwayatAngsuran || [];
@@ -2623,7 +2700,7 @@ function bspSelectPemb(){
   if(!infoEl) return;
   const srcSel = document.getElementById('bsp-asal-jenis');
   if(p){
-    const totalKew = p.jumlahPinjaman + marginNominalOf(p);
+    const totalKew = totalKewOf(p);
     const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
     const sisaTagihan = Math.max(totalKew-totalDibayar,0);
     infoEl.innerHTML = 'Nomor Akad : <b>' + (nomorAkadOf(p)||'-') + '</b><br>Angsuran ke-' + (p.tenor - p.sisaAngsuran + 1) + ' dari ' + p.tenor +
@@ -2647,7 +2724,7 @@ function confirmBayarSP(){
   if(!p){ toast('Pilih pembiayaan'); return; }
   if(!srcJenis){ toast('Pilih rekening tabungan sumber'); return; }
   if(!jumlah || jumlah<=0){ toast('Masukkan nominal yang valid'); return; }
-  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
+  const totalKew = totalKewOf(p);
   const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
   const sisaTagihan = Math.max(totalKew-totalDibayar,0);
   if(jumlah > sisaTagihan){ toast('Nominal lebih besar dari sisa tagihan (' + rupiah(sisaTagihan) + ')'); return; }
@@ -2883,13 +2960,15 @@ function akadBadge(p){
 // Hitung ulang sisa angsuran + status berdasarkan riwayat pembayaran.
 // Hormati status manual (p.statusManual) bila admin pernah menetapkannya.
 function rekomputasiPembiayaan(p){
-  const totalKew = (p.jumlahPinjaman||0) + marginNominalOf(p);
-  const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+(a.jumlah||0),0);
+  const totalKewAwal = totalKewAwalOf(p);
+  const diskon = diskonOf(p);
+  const totalKew = totalKewOf(p);
+  const totalDibayar = totalDibayarOf(p);
   const sisaTagihan = Math.max(0, totalKew - totalDibayar);
   p.sisaAngsuran = sisaTagihan>0 ? (p.angsuranPerBulan>0 ? Math.ceil(sisaTagihan / p.angsuranPerBulan) : 1) : 0;
   const otomatis = (sisaTagihan === 0) ? 'lunas' : 'berjalan';
   p.status = (p.statusManual === 'lunas' || p.statusManual === 'berjalan') ? p.statusManual : otomatis;
-  return { totalKew, totalDibayar, sisaTagihan, otomatis };
+  return { totalKew, totalKewAwal, diskon, totalDibayar, sisaTagihan, otomatis };
 }
 // Batalkan alokasi SHU satu angsuran (Kebalikan dari alokasi saat bayar).
 function batalkanAlokasiShu(p){
@@ -2912,7 +2991,7 @@ function modalKoreksiAngsuran(pembId, angsuranId){
     <h3>Koreksi Angsuran</h3>
     <div class="card" style="padding:12px 14px;font-size:13px;margin-bottom:12px;">
       <b>${pembUser(p).nama}</b> &middot; AKAD ${nomorAkadOf(p)||'-'}
-      <div style="color:var(--muted);margin-top:4px;">Total kewajiban ${rupiah(p.jumlahPinjaman + marginNominalOf(p))} &middot; angsuran ${rupiah(p.angsuranPerBulan)}/bln</div>
+      <div style="color:var(--muted);margin-top:4px;">Total kewajiban ${rupiah(totalKewOf(p))} &middot; angsuran ${rupiah(p.angsuranPerBulan)}/bln</div>
     </div>
     <div class="form-row"><label>Nominal (Rp)</label><input type="number" id="ka-jumlah" min="0" step="1000" value="${a.jumlah}"></div>
     <div class="form-row"><label>Tanggal bayar</label><input type="date" id="ka-tanggal" max="${hariIniStr()}" value="${tglVal}"><span class="hint">Ganti bila tanggal transaksinya salah catat.</span></div>
@@ -3003,6 +3082,155 @@ function setStatusManualPembiayaan(pembId, status){
   renderContent();
 }
 
+
+// ===== Diskon pelunasan dipercepat (admin saja, tombol di Detail Pembiayaan) =====
+// Diskon opsional: hanya bila nasabah yang melunasi lebih cepat meminta
+// keringanan. Besarannya bebas, maksimal sebesar sisa tagihan sesuai akad.
+function modalDiskonPembiayaan(pembId){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p){ toast('Pembiayaan tidak ditemukan'); return; }
+  const cu = currentUser();
+  if(!cu || cu.role!=='admin'){ toast('Hanya admin yang dapat memberi diskon'); return; }
+  const info = diskonInfoOf(p);
+  const totalAwal = totalKewAwalOf(p);
+  const dibayar = totalDibayarOf(p);
+  const sisaSebelum = Math.max(0, totalAwal - dibayar);
+  const tanggalDef = info.tanggal ? String(info.tanggal).slice(0,10) : hariIniStr();
+  const todayStr = hariIniStr();
+  window._diskonSisaSebelum = sisaSebelum;
+  openModal(`
+    <h3>${info.jumlah>0 ? 'Ubah' : 'Beri'} Diskon Pelunasan</h3>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="list-row"><div class="info"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">Pokok ${rupiah(p.jumlahPinjaman)} + margin ${rupiah(marginNominalOf(p))} = ${rupiah(totalAwal)}</div></div></div>
+    </div>
+    <div class="card" style="padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.6;">
+      <div>Total sesuai akad: <b class="mono">${rupiah(totalAwal)}</b></div>
+      <div>Sudah dibayar: <b class="mono">${rupiah(dibayar)}</b></div>
+      <div>Sisa sebelum diskon: <b class="mono">${rupiah(sisaSebelum)}</b></div>
+      ${info.jumlah>0 ? `<div style="color:var(--gold);">Diskon saat ini: <b class="mono">-${rupiah(info.jumlah)}</b>${info.tanggal?' &middot; '+fmtDateShort(info.tanggal):''}</div>` : ''}
+    </div>
+    <div class="form-row"><label>Jumlah diskon (Rp) — opsional, maks. ${rupiah(sisaSebelum)}</label><input type="number" id="diskon-jumlah" min="0" step="1000" max="${sisaSebelum}" value="${info.jumlah>0?info.jumlah:''}" placeholder="cth. 60000" oninput="updateDiskonPreview()"></div>
+    <div class="form-row"><label>Tanggal diskon</label><input type="date" id="diskon-tanggal" max="${todayStr}" value="${tanggalDef}"></div>
+    <div class="form-row"><label>Keterangan / alasan (opsional)</label><input type="text" id="diskon-ket" value="${escapeHtml(info.keterangan||'')}" placeholder="cth. Permintaan nasabah — melunasi dipercepat"></div>
+    <div id="diskon-preview" style="background:var(--gold-soft);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;">Sisa setelah diskon: <b class="mono">${rupiah(sisaSebelum - (info.jumlah||0))}</b></div>
+    <div class="hint">Diskon hanya mengurangi sisa tagihan — tidak ada pembayaran baru. Nasabah cukup melunasi sisa setelah diskon. Kalau diskon sama dengan sisa, pembiayaan jadi LUNAS tanpa pembayaran tambahan.</div>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      ${info.jumlah>0 ? `<button class="btn btn-outline btn-danger" style="margin-right:auto;" onclick="hapusDiskonPembiayaan('${p.id}')">Hapus diskon</button>` : '<span style="margin-right:auto;"></span>'}
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanDiskonPembiayaan('${p.id}')">Simpan diskon</button>
+    </div>
+  `);
+  updateDiskonPreview();
+}
+function updateDiskonPreview(){
+  const pEl = document.getElementById('diskon-jumlah');
+  if(!pEl) return;
+  const modal = pEl.closest('.modal') || document;
+  // sisa sebelum diskon dihitung dari total awal - dibayar (konstan modal ini)
+  // ambil dari data yang disimpan di window saat modal dibuka
+  const sisaSebelum = Number(window._diskonSisaSebelum ?? 0);
+  const diskon = parseIdr(pEl.value)||0;
+  const sisaSetelah = Math.max(0, sisaSebelum - diskon);
+  const prev = document.getElementById('diskon-preview');
+  if(prev){
+    let html = 'Sisa setelah diskon: <b class="mono">'+rupiah(sisaSetelah)+'</b>';
+    if(diskon>0 && diskon>=sisaSebelum && sisaSebelum>0){
+      html += ' <span style="color:var(--danger);font-weight:700;">— LUNAS tanpa bayar tambahan</span>';
+    }
+    prev.innerHTML = html;
+  }
+}
+async function simpanDiskonPembiayaan(pembId){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p){ toast('Pembiayaan tidak ditemukan'); return; }
+  const cu = currentUser();
+  if(!cu || cu.role!=='admin'){ toast('Hanya admin yang dapat memberi diskon'); return; }
+  const diskon = parseIdr(document.getElementById('diskon-jumlah').value)||0;
+  const tanggalVal = document.getElementById('diskon-tanggal').value;
+  const ket = String(document.getElementById('diskon-ket').value||'').trim();
+  const totalAwal = totalKewAwalOf(p);
+  const dibayar = totalDibayarOf(p);
+  const sisaSebelum = Math.max(0, totalAwal - dibayar);
+  if(diskon < 0){ toast('Jumlah diskon tidak valid'); return; }
+  if(diskon > sisaSebelum){ toast('Diskon melebihi sisa tagihan ('+rupiah(sisaSebelum)+')'); return; }
+  if(diskon > 0){
+    const cekTgl = cekTanggalTransaksi(tanggalVal || hariIniStr());
+    if(!cekTgl.ok){ toast(cekTgl.msg); return; }
+    const snap = { jumlah:p.diskonJumlah||0, tanggal:p.diskonTanggal||'', oleh:p.diskonoleh||'', keterangan:p.diskonKeterangan||'', map: (DB.koperasi.info.diskonPembiayaan||{})[p.id] ? {...DB.koperasi.info.diskonPembiayaan[p.id]} : null, status:p.status, sisaAngsuran:p.sisaAngsuran };
+    const olehNama = cu.nama || cu.username || cu.id;
+    const tglIso = cekTgl.iso;
+    setDiskonPembiayaan(p, { jumlah:diskon, tanggal:tglIso, oleh:olehNama, keterangan:ket });
+    if(diskon >= sisaSebelum && sisaSebelum>0 && !window.confirm('Diskon '+rupiah(diskon)+' sama dengan sisa tagihan '+rupiah(sisaSebelum)+'. Pembiayaan akan LUNAS tanpa pembayaran tambahan. Lanjutkan?')){
+      // batalkan perubahan lokal
+      if(snap.jumlah>0){ setDiskonPembiayaan(p, { jumlah:snap.jumlah, tanggal:snap.tanggal, oleh:snap.oleh, keterangan:snap.keterangan }); }
+      else { setDiskonPembiayaan(p, { jumlah:0 }); }
+      if(snap.map){ DB.koperasi.info.diskonPembiayaan[p.id]=snap.map; } else { if(DB.koperasi.info.diskonPembiayaan) delete DB.koperasi.info.diskonPembiayaan[p.id]; }
+      p.status=snap.status; p.sisaAngsuran=snap.sisaAngsuran;
+      return;
+    }
+    const r = rekomputasiPembiayaan(p);
+    addLog('Diskon pelunasan', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - diskon ' + rupiah(diskon) + ' | sesuai akad ' + rupiah(totalAwal) + ' - diskon ' + rupiah(diskon) + ' - dibayar ' + rupiah(dibayar) + ' = sisa ' + rupiah(r.sisaTagihan) + (ket?(' | '+ket):''));
+    const btn = document.querySelector('button[onclick*="simpanDiskonPembiayaan"]');
+    if(btn){ btn.disabled=true; btn.textContent='Menyimpan...'; }
+    const hasil = await persistNow();
+    if(!hasil.ok){
+      if(snap.jumlah>0){ setDiskonPembiayaan(p, { jumlah:snap.jumlah, tanggal:snap.tanggal, oleh:snap.oleh, keterangan:snap.keterangan }); }
+      else { setDiskonPembiayaan(p, { jumlah:0 }); }
+      if(snap.map){ DB.koperasi.info.diskonPembiayaan[p.id]=snap.map; } else { if(DB.koperasi.info.diskonPembiayaan) delete DB.koperasi.info.diskonPembiayaan[p.id]; }
+      p.status=snap.status; p.sisaAngsuran=snap.sisaAngsuran;
+      toast('Gagal menyimpan ke server: ' + (hasil.err && hasil.err.message ? hasil.err.message : 'cek koneksi internet, lalu coba lagi'));
+      renderContent();
+      return;
+    }
+    closeModal();
+    bigSuccess('Diskon '+rupiah(diskon)+' tersimpan');
+    renderContent();
+    // Beri tahu nasabah lewat WA (nomor tetap keluar saat admin menyimpan)
+    try{
+      const sisaBaru = Math.max(0, (totalAwal - diskon) - dibayar);
+      notifUserWA(p.userId, waHeader('KERINGANAN PELUNASAN')
+        + waAnggotaInfo(pembUser(p))
+        + '\nNomor Akad : ' + (nomorAkadOf(p)||'-')
+        + '\nTotal sesuai akad : ' + rupiah(totalAwal)
+        + '\nDiskon pelunasan : -' + rupiah(diskon)
+        + '\nSudah dibayar : ' + rupiah(dibayar)
+        + '\nSisa pelunasan : ' + rupiah(sisaBaru)
+        + (ket?('\nKeterangan : '+ket):'')
+        + (r.otomatis==='lunas' ? '\nStatus : LUNAS' : '')
+        + '\nWaktu : ' + waTanggal()
+        + waFooter());
+    }catch(e){}
+    return;
+  }
+  // diskon 0 = hapus
+  hapusDiskonPembiayaan(pembId);
+}
+function hapusDiskonPembiayaan(pembId){
+  const p = DB.pembiayaan.find(x=>x.id===pembId);
+  if(!p){ toast('Pembiayaan tidak ditemukan'); return; }
+  const cu = currentUser();
+  if(!cu || cu.role!=='admin'){ toast('Hanya admin yang dapat mengubah diskon'); return; }
+  const info = diskonInfoOf(p);
+  if(info.jumlah<=0){ toast('Tidak ada diskon untuk dihapus'); return; }
+  confirmDialog('Hapus diskon pelunasan?', 'Diskon '+rupiah(info.jumlah)+' untuk '+pembUser(p).nama+' (Akad '+(nomorAkadOf(p)||'-')+') akan dihapus dan sisa tagihan akan kembali seperti semula.', 'danger', async ()=>{
+    const snap = { status:p.status, sisaAngsuran:p.sisaAngsuran };
+    const jumlahLama = info.jumlah;
+    setDiskonPembiayaan(p, { jumlah:0 });
+    const r = rekomputasiPembiayaan(p);
+    addLog('Hapus diskon pelunasan', pembUser(p).nama + ' - AKAD ' + (nomorAkadOf(p)||'-') + ' - hapus diskon ' + rupiah(jumlahLama) + ' | sisa kembali ' + rupiah(r.sisaTagihan));
+    const hasil = await persistNow();
+    if(!hasil.ok){
+      setDiskonPembiayaan(p, { jumlah:info.jumlah, tanggal:info.tanggal, oleh:info.oleh, keterangan:info.keterangan });
+      p.status=snap.status; p.sisaAngsuran=snap.sisaAngsuran;
+      toast('Gagal menyimpan ke server: ' + (hasil.err && hasil.err.message ? hasil.err.message : 'cek koneksi internet, lalu coba lagi'));
+      renderContent();
+      return;
+    }
+    bigSuccess('Diskon dihapus');
+    renderContent();
+  }, 'Ya, hapus diskon');
+}
+
 function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p || p.status==='lunas') return {ok:false, msg:'Pembiayaan tidak ditemukan atau sudah lunas.'};
@@ -3011,8 +3239,8 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   const tgl = tanggal || nowISO();
   const angsuranKe = p.tenor - p.sisaAngsuran + 1;
   p.riwayatAngsuran.push({id:uid('ang'), tanggal:tgl, jumlah, oleh, angsuranKe});
-  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
-  const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
+  const totalKew = totalKewOf(p);
+  const totalDibayar = totalDibayarOf(p);
   const sisaTagihan = Math.max(0, totalKew - totalDibayar);
   p.sisaAngsuran = sisaTagihan>0 ? (p.angsuranPerBulan>0 ? Math.ceil(sisaTagihan / p.angsuranPerBulan) : 1) : 0;
   // Status manual (hasil koreksi rekap) tidak ditimpa oleh pembayaran baru.
@@ -3024,8 +3252,8 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   DB.setoran.push(st);
   if(!isAdmin) autoLunasiHutangDariSetoran(oleh);
   const atur = DB.koperasi.aturKeuangan;
-  if(atur && atur.pools && atur.dana && marginNominalOf(p)){
-    const marginPerAngsuran = Math.round(marginNominalOf(p) / p.tenor);
+  if(atur && atur.pools && atur.dana && marginEfektifOf(p) > 0 && p.tenor){
+    const marginPerAngsuran = Math.round(marginEfektifOf(p) / p.tenor);
     atur.pools.forEach(pool=>{
       const alokasi = Math.round(marginPerAngsuran * pool.persen / 100);
       atur.dana[pool.id] = (atur.dana[pool.id]||0) + alokasi;
@@ -3145,7 +3373,7 @@ function renderAdminBeranda(user){
   const totalAnggota = DB.users.filter(u=>u.role==='nasabah').length;
   const totalKoor = DB.users.filter(u=>u.role==='koordinator').length;
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
-  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?p.jumlahPinjaman+marginNominalOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
+  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?totalKewOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
   const pembAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
   const totalPembDisalurkan = DB.pembiayaan.reduce((s,p)=>s+(p.jumlahPinjaman||0),0);
   const totalLembarSaham = (DB.kepemilikanSaham||[]).reduce((s,k)=>s+(k.lembar||0),0);
@@ -4246,14 +4474,14 @@ function renderAdminPembiayaan(user){
   const lunasAll = list.filter(p=>p.status==='lunas');
   let i = 0;
   const totalPembiayaan = list.length;
-  const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max(totalKewOf(p)-tp,0);},0);
   const belumLunas = list.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
   const totalBelumLunas = belumLunas.length;
-  const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max(totalKewOf(p)-tp,0);},0);
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
   const lunas = list.filter(p=>p.status==='lunas');
   const totalLunas = lunas.length;
-  const totalLunasNilai = lunas.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
+  const totalLunasNilai = lunas.reduce((s,p)=>s+(totalKewOf(p)),0);
   const overdueCount = computeOverdueLoans().length;
   return `
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
@@ -4448,7 +4676,7 @@ function detailPengajuanModal(pembId){
         <div><span style="color:var(--muted);font-size:11px;">Jangka waktu</span><br><b>${p.tenor} bulan</b></div>
         <div><span style="color:var(--muted);font-size:11px;">Keuntungan</span><br><b>${rupiah(marginNominalOf(p))}</b></div>
         <div><span style="color:var(--muted);font-size:11px;">Angsuran/bulan</span><br><b class="mono">${rupiah(p.angsuranPerBulan)}</b></div>
-        <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Total Kewajiban</span><br><b class="mono">${rupiah(p.jumlahPinjaman + marginNominalOf(p))}</b></div>
+        <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Total Kewajiban${diskonOf(p)>0?' (setelah diskon)':''}</span><br><b class="mono">${rupiah(totalKewOf(p))}</b>${diskonOf(p)>0?' <span style="color:var(--gold);font-size:11px;">(sesuai akad '+rupiah(totalKewAwalOf(p))+', diskon -'+rupiah(diskonOf(p))+')</span>':''}</div>
 <div style="grid-column:span 2;"><span style="color:var(--muted);font-size:11px;">Diajukan oleh</span><br><b>${koor?koor.nama:'-'} (Koordinator)</b></div>
        </div>
     </div>
@@ -4469,7 +4697,7 @@ function renderAdminPembiayaanLunas(user){
   if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const groups = groupByKelompok(list, p=>p.userId);
   const kelompokOptions = DB.koperasi.kelompok.map(k=>`<option value="${k.id}" ${kelFilter===k.id?'selected':''}>${k.nama}</option>`).join('');
-  const totalNilai = list.reduce((s,p)=>s+((p.jumlahPinjaman||0)+marginNominalOf(p)),0);
+  const totalNilai = list.reduce((s,p)=>s+(totalKewOf(p)),0);
   let i = 0;
   return `
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
@@ -4500,7 +4728,7 @@ function renderAdminPembiayaanTerlambat(user){
   const q = (currentSubState.q||'').toLowerCase();
   let overdue = computeOverdueLoans();
   if(q) overdue = overdue.filter(o=>{ const u=pembUser(o.p); return u && u.nama.toLowerCase().includes(q); });
-  const totalSisaTelat = overdue.reduce((s,o)=>{const p=o.p;const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  const totalSisaTelat = overdue.reduce((s,o)=>{const p=o.p;const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max(totalKewOf(p)-tp,0);},0);
   return `
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
     <div class="page-title" style="margin:0;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('admin_pembiayaan')">${ICONS.chevronLeft}</button>Pembiayaan Terlambat</span><span class="sub">${overdue.length} pembiayaan telat &middot; sisa ${rupiah(totalSisaTelat)}</span></div>
@@ -4522,11 +4750,16 @@ function renderPembiayaanDetailPage(pembId, backPage){
   if(!p) return `<div class="empty-state">Pembiayaan tidak ditemukan</div>`;
   const nas = pembUser(p);
   const angsuranBayar = p.riwayatAngsuran.length;
-  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
-  const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
+  const totalKewAwal = totalKewAwalOf(p);
+  const diskon = diskonOf(p);
+  const _diskInfo = diskonInfoOf(p);
+  const totalKew = totalKewOf(p);
+  const totalDibayar = totalDibayarOf(p);
   const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
   const progres = totalKew>0 ? ((totalDibayar/totalKew)*100).toFixed(0) : 0;
   const isActive = p.statusPengajuan==='approved' && p.status!=='lunas';
+  const _isAdminDet = backPage==='admin_pembiayaan';
+  const _sisaSebelumDiskon = Math.max(0, totalKewAwal - totalDibayar);
   return `
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
     <div class="page-title" style="margin:0 0 10px;"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}')">${ICONS.chevronLeft}</button>Detail Pembiayaan</span></div>
@@ -4535,16 +4768,27 @@ function renderPembiayaanDetailPage(pembId, backPage){
       <div class="amount" style="font-size:24px;">${rupiah(p.jumlahPinjaman)}</div>
       <div class="rekening">AKAD ${nomorAkadOf(p)||'-'} &middot; ${p.tenor} bulan &middot; keuntungan ${rupiah(marginNominalOf(p))} &middot; ${rupiah(p.angsuranPerBulan)}/bln</div>
     </div>
-    <div class="stat-grid" style="margin-bottom:0;">
-      <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(totalKew)}</div><div class="l">Total kewajiban</div></div>
+    <div class="stat-grid" style="margin-bottom:0;grid-template-columns:1fr 1fr;">
+      <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(totalKew)}</div><div class="l">Total kewajiban${diskon>0?' (setelah diskon)':''}</div></div>
       <div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(sisaTagihan)}</div><div class="l">Sisa tagihan</div></div>
+      ${diskon>0 ? `<div class="stat-box"><div class="n mono" style="font-size:14px;">${rupiah(totalKewAwal)}</div><div class="l">Total sesuai akad</div></div><div class="stat-box" style="box-shadow:inset 0 0 0 2px var(--gold);"><div class="n mono" style="font-size:14px;color:var(--gold);">-${rupiah(diskon)}</div><div class="l">Diskon pelunasan</div></div>` : ''}
     </div>
     </div>
     ${p.statusPengajuan==='approved' ? `
     <div class="bar-row"><div class="lbl"><span>Progres pembayaran</span><span>${rupiah(totalDibayar)} / ${rupiah(totalKew)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${progres}%"></div></div></div>
-    <div style="display:flex;gap:10px;margin-bottom:16px;margin-top:10px;">
+    ${diskon>0 ? `<div class="card" style="padding:12px 14px;margin-top:10px;border:1px solid var(--gold);background:rgba(201,164,76,.07);">
+      <div class="section-label" style="margin-top:0;">🎁 Diskon Pelunasan</div>
+      <div style="font-size:13px;line-height:1.6;">
+        <div>Diskon: <b class="mono">-${rupiah(diskon)}</b></div>
+        <div style="color:var(--muted);font-size:12px;">Total sesuai akad ${rupiah(totalKewAwal)} &minus; diskon ${rupiah(diskon)} = ${rupiah(totalKew)} &middot; Sudah dibayar ${rupiah(totalDibayar)} &middot; Sisa ${rupiah(sisaTagihan)}</div>
+        ${_diskInfo.tanggal?`<div style="color:var(--muted);font-size:12px;">Diberikan ${fmtDateShort(_diskInfo.tanggal)}${_diskInfo.oleh?' oleh '+escapeHtml(_diskInfo.oleh):''}${_diskInfo.keterangan?' &middot; '+escapeHtml(_diskInfo.keterangan):''}</div>`:''}
+      </div>
+      ${_isAdminDet ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button class="btn btn-outline btn-compact" onclick="modalDiskonPembiayaan('${p.id}')">✏️ Ubah diskon</button><button class="btn btn-outline btn-compact" style="color:var(--danger);border-color:var(--danger);" onclick="hapusDiskonPembiayaan('${p.id}')">🗑️ Hapus diskon</button></div>` : ''}
+    </div>` : ''}
+    <div style="display:flex;gap:10px;margin-bottom:16px;margin-top:10px;flex-wrap:wrap;">
       ${isActive ? `<button class="btn btn-gold" style="flex:1;" onclick="bayarAngsuranPrompt('${p.id}')">${ICONS.down} Bayar angsuran</button><button class="btn btn-primary" style="flex:1;" onclick="openBayarSPModal('${p.userId}')">${ICON_SWAP} Bayar dari Tabungan</button>` : ''}
       <button class="btn btn-outline" style="flex:1;" onclick="detailPengajuanModal('${p.id}')">Detail pengajuan</button>
+      ${isActive && _isAdminDet && diskon===0 ? `<button class="btn btn-outline" style="flex:1;" onclick="modalDiskonPembiayaan('${p.id}')">🎁 Diskon Pelunasan</button>` : ''}
       ${backPage==='admin_pembiayaan' ? `<button class="btn btn-outline" style="flex:0 0 auto;" onclick="downloadAngsuranPDF('${p.id}')" title="Download PDF Buku Angsuran">${ICONS.download} PDF</button>` : ''}
     </div>
     <div class="section-label">Riwayat Angsuran</div>
@@ -4576,8 +4820,10 @@ function downloadAngsuranPDF(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   if(!p) return;
   const nas = pembUser(p);
-  const totalKew = (p.jumlahPinjaman||0) + marginNominalOf(p);
-  const totalDibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
+  const totalKewAwal = totalKewAwalOf(p);
+  const diskonPdf = diskonOf(p);
+  const totalKew = totalKewOf(p);
+  const totalDibayar = totalDibayarOf(p);
   const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
   const riwayat = (p.riwayatAngsuran || []).slice().reverse();
   const { jsPDF } = window.jspdf;
@@ -4603,6 +4849,8 @@ function downloadAngsuranPDF(pembId){
       ['Jangka Waktu', (p.tenor||0) + ' bulan'],
       ['Keuntungan', rupiah(marginNominalOf(p))],
       ['Angsuran / Bulan', rupiah(p.angsuranPerBulan)],
+      ['Total Sesuai Akad', rupiah(totalKewAwal)],
+      ...(diskonPdf>0 ? [['Diskon Pelunasan', '-' + rupiah(diskonPdf)], ['Total Setelah Diskon', rupiah(totalKew)]] : []),
     ],
     startY: 33,
     styles:{ fontSize:8, cellPadding:2.5 },
@@ -5248,7 +5496,7 @@ function computeLapModalData(){
     pemb.forEach(p=>{
       if(p.statusPengajuan!=='approved') return;
       if(String(p.mulai||'').slice(0,7) > bulan) return;
-      const totalKew = (p.jumlahPinjaman||0) + marginNominalOf(p);
+      const _diM = diskonInfoOf(p); const _diskM = (_diM.tanggal && String(_diM.tanggal).slice(0,7) <= bulan) ? (_diM.jumlah||0) : 0; const totalKew = totalKewAwalOf(p) - _diskM;
       const dibayar = (p.riwayatAngsuran||[]).filter(a=>String(a.tanggal||'').slice(0,7) <= bulan).reduce((s,a)=>s+(a.jumlah||0),0);
       piutang += Math.max(0, totalKew - dibayar);
     });
@@ -5447,7 +5695,7 @@ function computeNeraca(){
   let pokok = 0, bayar = 0, piutang = 0;
   (DB.pembiayaan||[]).forEach(p=>{
     pokok += p.jumlahPinjaman||0;
-    const kew = (p.jumlahPinjaman||0)+marginNominalOf(p);
+    const kew = totalKewOf(p);
     const tp = (p.riwayatAngsuran||[]).reduce((s,a)=>s+a.jumlah,0);
     bayar += tp;
     piutang += Math.max(kew-tp,0);
@@ -5833,7 +6081,7 @@ function computeLapRingkasData(){
   const overdue = computeOverdueLoans();
   const totalTertunggak = overdue.reduce((s,o)=>s+o.telat*(o.p.angsuranPerBulan||0),0);
   const totalSimpanan = DB.tabunganAccounts.reduce((s,a)=>s+a.saldo,0);
-  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?p.jumlahPinjaman+marginNominalOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
+  const totalPembiayaanAktif = DB.pembiayaan.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved').reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+(tp>0?totalKewOf(p)-tp:p.angsuranPerBulan*p.sisaAngsuran);},0);
   const poolSHUTabungan = (base.dana && base.dana.bagi_hasil_tabungan) || 0;
   return { pools: pools, byYear: base.byYear, overdue, totalTertunggak, totalSimpanan, totalPembiayaanAktif, poolSHUTabungan };
 }
@@ -5888,7 +6136,7 @@ function computeLapTransaksiBulanan(bulan){
     (DB.pembiayaan||[]).forEach(p=>{
       if(p.statusPengajuan!=='approved') return;
       if(monthKey(p.mulai) >= cutoffBulan) return; // belum cair
-      const totalTagihan = (p.jumlahPinjaman||0) + (marginNominalOf(p)||0);
+      const _diAt = diskonInfoOf(p); const _diskAt = (_diAt.tanggal && monthKey(_diAt.tanggal) < cutoffBulan) ? (_diAt.jumlah||0) : 0; const totalTagihan = totalKewAwalOf(p) - _diskAt;
       let dibayar = 0;
       (p.riwayatAngsuran||[]).forEach(a=>{
         if(monthKey(a.tanggal) < cutoffBulan) dibayar += a.jumlah||0;
@@ -5905,7 +6153,7 @@ function computeLapTransaksiBulanan(bulan){
     (DB.pembiayaan||[]).forEach(p=>{
       if(p.statusPengajuan!=='approved') return;
       if(monthKey(p.mulai) > bulanAfter) return; // belum cair
-      const totalTagihan = (p.jumlahPinjaman||0) + (marginNominalOf(p)||0);
+      const _diAf = diskonInfoOf(p); const _diskAf = (_diAf.tanggal && monthKey(_diAf.tanggal) <= bulanAfter) ? (_diAf.jumlah||0) : 0; const totalTagihan = totalKewAwalOf(p) - _diskAf;
       let dibayar = 0;
       (p.riwayatAngsuran||[]).forEach(a=>{
         if(monthKey(a.tanggal) <= bulanAfter) dibayar += a.jumlah||0;
@@ -8615,7 +8863,7 @@ function suratSPRiwayatEnrich(r){
     const p = (DB.pembiayaan||[]).find(x=>x.id===r.pembId);
     if(p){
       ketemu = true;
-      const total = (Number(p.jumlahPinjaman)||0) + marginNominalOf(p);
+      const total = totalKewOf(p);
       const dibayar = (p.riwayatAngsuran||[]).reduce((s,a)=>s+(Number(a.jumlah)||0),0);
       sisaSekarang = Math.max(total - dibayar, 0);
       lunas = p.status==='lunas' || sisaSekarang<=0;
@@ -9524,10 +9772,10 @@ const anggota = nasabahOfKelompok(user.kelompokId);
    list = [...list.filter(p=>p.status!=='lunas'), ...list.filter(p=>p.status==='lunas')];
    if(q) list = list.filter(p=>pembUser(p).nama.toLowerCase().includes(q));
   const totalPembiayaan = list.length;
-  const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  const totalSisa = list.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max(totalKewOf(p)-tp,0);},0);
   const belumLunas = list.filter(p=>p.status==='berjalan' && p.statusPengajuan==='approved');
   const totalBelumLunas = belumLunas.length;
-  const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max((p.jumlahPinjaman||0)+marginNominalOf(p)-tp,0);},0);
+  const sisaBelumLunas = belumLunas.reduce((s,p)=>{const tp=(p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max(totalKewOf(p)-tp,0);},0);
   return `
     <div style="position:sticky;top:var(--header-h,76px);z-index:6;background:var(--bg);padding:2px 0 4px;margin-bottom:10px;">
     <div class="page-title" style="margin:0 0 10px;">Pembiayaan<span class="sub">Anggota ${kelompokName(user.kelompokId)}</span></div>
@@ -9703,14 +9951,17 @@ function submitEditPengajuanKoor(pembId){
 function bayarAngsuranPrompt(pembId){
   const p = DB.pembiayaan.find(p=>p.id===pembId);
   const angsuranKe = p.tenor - p.sisaAngsuran + 1;
-  const totalKew = p.jumlahPinjaman + marginNominalOf(p);
-  const totalDibayar = p.riwayatAngsuran.reduce((s,a)=>s+a.jumlah, 0);
+  const totalKew = totalKewOf(p);
+  const totalKewAwalB = totalKewAwalOf(p);
+  const diskonB = diskonOf(p);
+  const totalDibayar = totalDibayarOf(p);
   const sisaTagihan = totalKew - totalDibayar;
   const todayStr = hariIniStr();
   openModal(`
     <h3>Bayar Angsuran</h3>
     <div class="card" style="margin-bottom:14px;">
       <div class="list-row"><div class="info"><div class="title">${pembUser(p).nama}${akadBadge(p)}</div><div class="sub">Angsuran ke-${angsuranKe} dari ${p.tenor} &middot; Sisa tagihan ${rupiah(sisaTagihan)}</div></div></div>
+      ${diskonB>0 ? `<div style="font-size:12.5px;color:var(--muted);margin-top:6px;">Diskon pelunasan -${rupiah(diskonB)} sudah diterapkan (total ${rupiah(totalKewAwalB)} &rarr; ${rupiah(totalKew)}).</div>` : ''}
     </div>
     <div class="form-row"><label>Jumlah bayar (Rp)</label><input type="number" id="bayar-angsuran-jumlah" min="0" step="5000" value="${Math.min(p.angsuranPerBulan, sisaTagihan)}"></div>
     <div class="form-row"><label>Tanggal bayar</label><input type="date" id="bayar-angsuran-tanggal" max="${todayStr}" value="${todayStr}"></div>
@@ -10076,7 +10327,7 @@ function renderNasBeranda(user){
   const totalTab = totalSaldoUser(user.id);
   const pembAktif = pembiayaanForUser(user.id).filter(p=>p.statusPengajuan==='approved' && p.status!=='lunas');
   const totalSisaPemb = pembAktif.reduce((s,p)=>{
-    const totalKew = p.jumlahPinjaman + marginNominalOf(p);
+    const totalKew = totalKewOf(p);
     const totalDibayar = (p.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);
     return s + Math.max(totalKew - totalDibayar, 0);
   },0);
@@ -10296,7 +10547,7 @@ function renderNasPembiayaan(user){
     </div>
     ${list.map(p=>{
       const riw = Array.isArray(p.riwayatAngsuran) ? p.riwayatAngsuran : [];
-      const totalKew = p.jumlahPinjaman + marginNominalOf(p);
+      const totalKew = totalKewOf(p);
       const totalDibayar = riw.reduce((a,x)=>a+x.jumlah,0);
       const sisaTagihan = Math.max(totalKew - totalDibayar, 0);
       return `
