@@ -924,12 +924,38 @@ function marginNominalOf(p){
 // --- Diskon pelunasan dipercepat (opsional) ---
 // Disimpan di p.diskon* bila kolom Supabase tersedia, dan selalu dicerminkan ke
 // DB.koperasi.info.diskonPembiayaan agar tetap tersinkron tanpa kolom baru.
+// Penyimpan map per-id di DB.koperasi.info tahan terhadap toCamel() saat load:
+// kunci 'pemb_xxxx' bisa terbaca sebagai 'pembXxxx'. Cari toleran dua bentuk.
+function _mapGet(map, id){
+  if(!map || !id) return null;
+  if(id in map) return map[id];
+  const camel = String(id).replace(/_([a-z])/g, (_,c)=>c.toUpperCase());
+  if(camel in map) return map[camel];
+  const norm = s=>String(s).replace(/_/g,'').toLowerCase();
+  const nid = norm(id);
+  for(const k of Object.keys(map)){ if(norm(k)===nid) return map[k]; }
+  return null;
+}
+function _mapSet(map, id, val){
+  map[id] = val;
+  const camel = String(id).replace(/_([a-z])/g, (_,c)=>c.toUpperCase());
+  if(camel!==id && camel in map && map[camel]!==val) delete map[camel];
+}
+function _mapDel(map, id){
+  if(!map) return;
+  delete map[id];
+  const camel = String(id).replace(/_([a-z])/g, (_,c)=>c.toUpperCase());
+  delete map[camel];
+  const norm = s=>String(s).replace(/_/g,'').toLowerCase();
+  const nid = norm(id);
+  for(const k of Object.keys(map)){ if(norm(k)===nid) delete map[k]; }
+}
 function diskonInfoOf(p){
   if(!p) return { jumlah:0, tanggal:'', oleh:'', keterangan:'' };
   let info = { jumlah:0, tanggal:'', oleh:'', keterangan:'' };
   try{
     const m = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.diskonPembiayaan) || {};
-    const d = m[p.id];
+    const d = _mapGet(m, p.id);
     if(d && typeof d==='object'){ info.jumlah = Number(d.jumlah)||0; info.tanggal = d.tanggal||''; info.oleh = d.oleh||''; info.keterangan = d.keterangan||''; }
     else if(Number(d)>0){ info.jumlah = Number(d); }
   }catch(e){}
@@ -968,10 +994,10 @@ function setDiskonPembiayaan(p, data){
     p.diskonTanggal = data.tanggal || nowISO();
     p.diskonOleh = data.oleh || '';
     p.diskonKeterangan = data.keterangan || '';
-    DB.koperasi.info.diskonPembiayaan[p.id] = { jumlah, tanggal:p.diskonTanggal, oleh:p.diskonOleh, keterangan:p.diskonKeterangan };
+    _mapSet(DB.koperasi.info.diskonPembiayaan, p.id, { jumlah, tanggal:p.diskonTanggal, oleh:p.diskonOleh, keterangan:p.diskonKeterangan });
   } else {
     delete p.diskonJumlah; delete p.diskonTanggal; delete p.diskonOleh; delete p.diskonKeterangan;
-    delete DB.koperasi.info.diskonPembiayaan[p.id];
+    _mapDel(DB.koperasi.info.diskonPembiayaan, p.id);
   }
 }
 // Label/warna status pembiayaan yg konsisten di semua tampilan (termasuk saat masih menunggu ACC admin)
@@ -1194,8 +1220,8 @@ async function checkPembiayaanStatusCols(){
 function setStatusManualMap(p, status){
   if(!DB.koperasi.info) DB.koperasi.info = {};
   if(!DB.koperasi.info.statusManualPembiayaan) DB.koperasi.info.statusManualPembiayaan = {};
-  if(status==='lunas' || status==='berjalan') DB.koperasi.info.statusManualPembiayaan[p.id] = status;
-  else delete DB.koperasi.info.statusManualPembiayaan[p.id];
+  if(status==='lunas' || status==='berjalan') _mapSet(DB.koperasi.info.statusManualPembiayaan, p.id, status);
+  else _mapDel(DB.koperasi.info.statusManualPembiayaan, p.id);
   if(Object.keys(DB.koperasi.info.statusManualPembiayaan).length===0) delete DB.koperasi.info.statusManualPembiayaan;
 }
 
@@ -1382,8 +1408,9 @@ async function initSupabaseDB() {
     try{
       const dm = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.diskonPembiayaan) || {};
       (DB.pembiayaan||[]).forEach(p=>{
-        if(!p || !(p.id in dm)) return;
-        const d = dm[p.id];
+        if(!p) return;
+        const d = _mapGet(dm, p.id);
+        if(!d) return;
         if(d && typeof d==='object' && Number(d.jumlah)>0 && !Number(p.diskonJumlah)){
           p.diskonJumlah = Number(d.jumlah)||0;
           p.diskonTanggal = d.tanggal||''; p.diskonOleh = d.oleh||''; p.diskonKeterangan = d.keterangan||'';
@@ -1394,8 +1421,8 @@ async function initSupabaseDB() {
     try{
       const sm = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.statusManualPembiayaan) || {};
       (DB.pembiayaan||[]).forEach(p=>{
-        if(!p || !(p.id in sm)) return;
-        const v = sm[p.id];
+        if(!p) return;
+        const v = _mapGet(sm, p.id);
         if((v==='lunas' || v==='berjalan') && !p.statusManual){
           p.statusManual = v;
           // Samakan status saat ini mengikuti manual
@@ -3189,7 +3216,7 @@ async function simpanDiskonPembiayaan(pembId){
   if(diskon > 0){
     const cekTgl = cekTanggalTransaksi(tanggalVal || hariIniStr());
     if(!cekTgl.ok){ toast(cekTgl.msg); return; }
-    const snap = { jumlah:p.diskonJumlah||0, tanggal:p.diskonTanggal||'', oleh:p.diskonoleh||'', keterangan:p.diskonKeterangan||'', map: (DB.koperasi.info.diskonPembiayaan||{})[p.id] ? {...DB.koperasi.info.diskonPembiayaan[p.id]} : null, status:p.status, sisaAngsuran:p.sisaAngsuran };
+    const _mapSnap = _mapGet(DB.koperasi.info.diskonPembiayaan||{}, p.id); const snap = { jumlah:p.diskonJumlah||0, tanggal:p.diskonTanggal||'', oleh:p.diskonoleh||'', keterangan:p.diskonKeterangan||'', map: _mapSnap ? {..._mapSnap} : null, status:p.status, sisaAngsuran:p.sisaAngsuran };
     const olehNama = cu.nama || cu.username || cu.id;
     const tglIso = cekTgl.iso;
     setDiskonPembiayaan(p, { jumlah:diskon, tanggal:tglIso, oleh:olehNama, keterangan:ket });
@@ -3197,7 +3224,7 @@ async function simpanDiskonPembiayaan(pembId){
       // batalkan perubahan lokal
       if(snap.jumlah>0){ setDiskonPembiayaan(p, { jumlah:snap.jumlah, tanggal:snap.tanggal, oleh:snap.oleh, keterangan:snap.keterangan }); }
       else { setDiskonPembiayaan(p, { jumlah:0 }); }
-      if(snap.map){ DB.koperasi.info.diskonPembiayaan[p.id]=snap.map; } else { if(DB.koperasi.info.diskonPembiayaan) delete DB.koperasi.info.diskonPembiayaan[p.id]; }
+      if(snap.map){ if(!DB.koperasi.info.diskonPembiayaan) DB.koperasi.info.diskonPembiayaan={}; _mapSet(DB.koperasi.info.diskonPembiayaan, p.id, snap.map); } else { if(DB.koperasi.info.diskonPembiayaan) _mapDel(DB.koperasi.info.diskonPembiayaan, p.id); }
       p.status=snap.status; p.sisaAngsuran=snap.sisaAngsuran;
       return;
     }
@@ -3209,7 +3236,7 @@ async function simpanDiskonPembiayaan(pembId){
     if(!hasil.ok){
       if(snap.jumlah>0){ setDiskonPembiayaan(p, { jumlah:snap.jumlah, tanggal:snap.tanggal, oleh:snap.oleh, keterangan:snap.keterangan }); }
       else { setDiskonPembiayaan(p, { jumlah:0 }); }
-      if(snap.map){ DB.koperasi.info.diskonPembiayaan[p.id]=snap.map; } else { if(DB.koperasi.info.diskonPembiayaan) delete DB.koperasi.info.diskonPembiayaan[p.id]; }
+      if(snap.map){ if(!DB.koperasi.info.diskonPembiayaan) DB.koperasi.info.diskonPembiayaan={}; _mapSet(DB.koperasi.info.diskonPembiayaan, p.id, snap.map); } else { if(DB.koperasi.info.diskonPembiayaan) _mapDel(DB.koperasi.info.diskonPembiayaan, p.id); }
       p.status=snap.status; p.sisaAngsuran=snap.sisaAngsuran;
       toast('Gagal menyimpan ke server: ' + (hasil.err && hasil.err.message ? hasil.err.message : 'cek koneksi internet, lalu coba lagi'));
       renderContent();
