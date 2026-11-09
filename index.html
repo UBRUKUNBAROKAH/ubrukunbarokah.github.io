@@ -8599,7 +8599,7 @@ function renderAdminSuratSP(user){
           <thead><tr><th>No</th><th>Nama</th><th>Nomor Surat</th><th>Tanggal</th><th>SP ke</th><th>Status</th><th></th></tr></thead>
           <tbody>${_list.map((r,i)=>`<tr>
             <td>${i+1}</td>
-            <td><b>${escapeHtml(r.nama||'-')}</b><br><span style="color:var(--muted);font-size:11px;">${escapeHtml(r.kelompok||'-')}</span></td>
+            <td><a style="cursor:pointer;color:var(--primary);text-decoration:underline;font-weight:700;" title="Lihat pratinjau surat" onclick="pratinjauSuratSP('${r.id}')">${escapeHtml(r.nama||'-')}</a><br><span style="color:var(--muted);font-size:11px;">${escapeHtml(r.kelompok||'-')}</span></td>
             <td style="font-size:11.5px;white-space:nowrap;">${escapeHtml(r.nomorSurat||'-')}</td>
             <td style="white-space:nowrap;">${fmtDateShort(r.tanggalSurat)}</td>
             <td>SP ${r.spKe||1}</td>
@@ -8614,16 +8614,32 @@ function renderAdminSuratSP(user){
     })() : ''}
     ${ _activeTab==='laporan' ? renderSuratSPLaporan() : ''}
     ${ _activeTab==='pengaturan' ? `
-    <div class="card" style="padding:16px;">
+    <div class="card" style="padding:16px;margin-bottom:14px;">
       <div class="section-label" style="margin-top:0;">Pengaturan Surat SP</div>
       <div style="font-size:13px;line-height:1.7;">
         <div>Nama lembaga: <b>${escapeHtml(s.namaLembaga||'-')}</b></div>
         <div>Alamat: ${escapeHtml(s.alamatLembaga||'-')}</div>
+        <div>Kota: ${escapeHtml(s.kota||'-')}</div>
         <div>Batas waktu pelunasan: <b>${s.batasHari||0} hari</b></div>
         <div>Tanggal surat: <b>${escapeHtml(s.tanggalSurat||'-')}</b></div>
+        <div>Nomor surat awal: <b>${s.nomorAwal||1}</b> &middot; Format: <b>${escapeHtml(s.formatNomor||'-')}</b></div>
         <div>Penandatangan: ${(s.ttdList||[]).map(x=>escapeHtml(x.jabatan+': '+x.nama)).join(' | ')||'-'}</div>
+        <div>Logo kop: ${s.tampilLogo && s.logo ? 'Ditampilkan' : 'Tidak ditampilkan'}</div>
       </div>
       <button class="btn btn-primary" style="margin-top:12px;" onclick="suratSPOpenSettings()">Ubah Pengaturan</button>
+    </div>
+    <div class="card" style="padding:16px;">
+      <div class="section-label" style="margin-top:0;">Templat Surat SP</div>
+      <div style="font-size:13px;line-height:1.6;">
+        <div style="font-weight:700;margin-top:4px;">Paragraf Pembuka</div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;white-space:pre-wrap;margin:6px 0 10px;">${escapeHtml(s.tplPembuka||'-')}</div>
+        <div style="font-weight:700;">Paragraf Isi</div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;white-space:pre-wrap;margin:6px 0 10px;">${escapeHtml(s.tplIsi||'-')}</div>
+        <div style="font-weight:700;">Paragraf Penutup</div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;white-space:pre-wrap;margin:6px 0;">${escapeHtml(s.tplPenutup||'-')}</div>
+        <div class="ssp-tag">Tag isi: <code>{nama}</code> <code>{alamat}</code> <code>{kelompok}</code> <code>{nomor_akad}</code> <code>{tgl_akad}</code> <code>{jatuh_tempo}</code> <code>{pokok}</code> <code>{laba}</code> <code>{jumlah}</code> <code>{sudah_diangsur}</code> <code>{sisa_angsuran}</code> <code>{hari_telat}</code> <code>{batas_hari}</code> <code>{tanggal_batas}</code></div>
+      </div>
+      <button class="btn btn-outline" style="margin-top:12px;" onclick="suratSPOpenSettings()">Edit Templat</button>
     </div>
     ` : ''}
     ${ (_activeTab==='piutang' && _sspSrc==='aktif') ? `
@@ -9357,6 +9373,26 @@ function cetakUlangSuratSP(id){
       setTimeout(cetakSuratSP, 700);
     }
   }catch(e){ console.error('Cetak ulang SP gagal:', e); toast('Gagal menyiapkan cetak ulang'); }
+}
+function pratinjauSuratSP(id){
+  const raw = suratSPRiwayatArr().find(r=>r.id===id);
+  if(!raw){ toast('Catatan surat tidak ditemukan'); return; }
+  try{
+    const s = suratSPLoad();
+    const d = {nama:raw.nama, alamat:raw.alamat||'', pokok:Number(raw.pokok)||0, laba:Number(raw.laba)||0, jumlah:Number(raw.jumlah)||0, sudahDiangsur:Number(raw.sudahDiangsur)||0, sisaKewajiban:Number(raw.sisaKewajiban)||0, hariTelat:Number(raw.hariTelat)||0};
+    const s2 = Object.assign({}, s, {tanggalSurat: raw.tanggalSurat || s.tanggalSurat});
+    let page = suratSPBuatPage(d, s2, Number(raw.urut)||1);
+    if(raw.nomorSurat){
+      const hasil = suratSPBuildNomor(s2, Number(raw.urut)||1);
+      if(hasil && hasil!==raw.nomorSurat) page = page.split(escapeHtml(hasil)).join(escapeHtml(raw.nomorSurat));
+    }
+    let html = '<div class="ssp-toolbar no-print" style="position:sticky;top:0;z-index:15;background:var(--bg);padding:10px 12px;border-radius:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+      '<div style="font-size:13px;color:var(--muted);">Pratinjau 1 surat ('+escapeHtml(raw.nomorSurat||'-')+')</div>' +
+      '<button type="button" class="btn btn-primary no-print" onclick="cetakSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat</button></div>' + page;
+    suratSPLastPreview = html;
+    renderContent();
+    setTimeout(()=>{ const el=document.getElementById('ssp-preview'); if(el) el.scrollIntoView({behavior:'smooth'}); }, 150);
+  }catch(e){ console.error('Pratinjau SP gagal:', e); toast('Gagal menampilkan pratinjau'); }
 }
 function cetakSemuaSuratSP(){
   const src = currentSubState.spSrc==='bermasalah' ? 'bermasalah' : 'aktif';
