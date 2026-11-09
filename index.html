@@ -1425,7 +1425,12 @@ async function initSupabaseDB() {
         if(!r || !r.id) return;
         const idx = DB.setoran.findIndex(x=>x.id===r.id);
         if(idx>=0){ if(r.status) DB.setoran[idx].status = r.status; }
-        else DB.setoran.push({id:r.id, userId:r.userId||null, jenis:'angsuran', pembiayaanId:r.pembiayaanId||null, jumlah:Number(r.jumlah)||0, keterangan:r.keterangan||'', tanggal:r.tanggal||nowISO(), dibuatoleh:r.dibuatoleh||null, status:r.status||'di_koordinator', dikonfirmasioleh:r.dikonfirmasioleh||null, waktuKonfirmasi:r.waktuKonfirmasi||null});
+        else {
+          // cegah dobel: id beda tapi transaksi sama (pembiayaan+tanggal+jumlah+dibuatoleh)
+          const dup = DB.setoran.find(x=>x.jenis==='angsuran' && x.pembiayaanId===r.pembiayaanId && String(x.tanggal)===String(r.tanggal) && Number(x.jumlah)===Number(r.jumlah) && x.dibuatoleh===r.dibuatoleh);
+          if(dup){ if(r.status) dup.status = r.status; }
+          else DB.setoran.push({id:r.id, userId:r.userId||null, jenis:'angsuran', pembiayaanId:r.pembiayaanId||null, jumlah:Number(r.jumlah)||0, keterangan:r.keterangan||'', tanggal:r.tanggal||nowISO(), dibuatoleh:r.dibuatoleh||null, status:r.status||'di_koordinator', dikonfirmasioleh:r.dikonfirmasioleh||null, waktuKonfirmasi:r.waktuKonfirmasi||null});
+        }
       });
     }catch(e){}
     // Hidrasi status manual dari info map (kolom status_manual belum tentu ada)
