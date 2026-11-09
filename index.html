@@ -8562,18 +8562,10 @@ function renderAdminSuratSP(user){
       ${currentSubState.spSrc==='bermasalah'
         ? `<div class="page-title">Surat SP — Pembiayaan Bermasalah<span class="sub">Data kartu pembiayaan bermasalah (2018–2023, diimpor terpisah, bukan data anggota aktif)</span></div>`
         : `<div class="page-title">Surat SP<span class="sub">Surat Peringatan tunggakan angsuran (data otomatis dari aplikasi)</span></div>`}
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${currentSubState.spSrc==='bermasalah' ? `
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
-        ${currentSubState.spSrc==='bermasalah' ? `
-          <button class="btn btn-outline" onclick="spBermasalahImport()">📥 Muat Data Lama (${SP_BERMASALAH_SEED.length})${spBermasalahImported()?' <span style="opacity:.6">✓</span>':''}</button>
-        ` : ''}
-        <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}'})">📋 Daftar Surat SP${riwayatCount?(' ('+riwayatCount+')'):''}</button>
-        <button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
-        <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
-        <button class="btn btn-primary no-print" onclick="cetakSemuaSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat SP</button>
-        <button class="btn btn-outline no-print" onclick="cetakDaftarSuratSP()">\uD83D\uDD68\uFE0F Cetak Daftar</button>
-      </div>
-    </div>
+        <button class="btn btn-outline" onclick="spBermasalahImport()">📥 Muat Data Lama (${SP_BERMASALAH_SEED.length})${spBermasalahImported()?' <span style="opacity:.6">✓</span>':''}</button>
+      </div>` : ''}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;" class="no-print">
       ${_tabBtn('piutang','Data Piutang Bermasalah')}
@@ -8590,6 +8582,10 @@ function renderAdminSuratSP(user){
       const _list = _d.list;
       return `
     <div class="section-label" style="margin-top:0;">Seluruh Surat SP Siap Cetak</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;" class="no-print">
+      <button class="btn btn-primary no-print" onclick="cetakSemuaSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat SP</button>
+      <button class="btn btn-outline no-print" onclick="cetakDaftarSuratSP()">\uD83D\uDD68\uFE0F Cetak Daftar</button>
+    </div>
     <div class="card" style="padding:0;overflow:hidden;">
       ${_list.length ? `
       <div class="ssp-over" style="overflow-x:auto;">
@@ -8625,12 +8621,13 @@ function renderAdminSuratSP(user){
     ` : ''}
     ${ (_activeTab==='piutang' && _sspSrc==='aktif') ? `
     <div class="section-label" style="margin-top:0;">Nasabah Telat Bayar (Siap Dibuatkan SP)</div>
+    <div style="margin-bottom:12px;" class="no-print"><button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button></div>
     <div class="card" style="padding:14px;margin-bottom:14px;">
       <div class="stat-grid ssp-stat-grid" style="margin-bottom:12px;">
         <div class="stat-box"><div class="n mono" style="font-size:20px;">${list.length}</div><div class="l">Nasabah Telat</div></div>
         <div class="stat-box"><div class="n mono" style="font-size:20px;color:var(--danger);">${rupiah(sisaTotal)}</div><div class="l">Sisa Total</div></div>
       </div>
-      <div class="hint" style="margin-bottom:10px;">Klik <b>Pilih &amp; Buat Surat</b> di atas untuk memilih nasabah lalu membuat surat SP, atau klik <b>Surat</b> di barisnya untuk 1 orang.</div>
+      <div class="hint" style="margin-bottom:10px;">Klik <b>Pilih &amp; Buat Surat</b> untuk memilih nasabah lalu membuat surat SP, atau klik <b>Surat</b> di barisnya untuk 1 orang.</div>
       <div class="ssp-over" style="max-height:420px;overflow:auto;">
         <table class="ssp-table">
           <thead><tr><th>Nama</th><th>Kelompok</th><th>Jatuh Tempo</th><th>Telat</th><th>Sisa</th><th></th></tr></thead>
@@ -8659,6 +8656,7 @@ function renderAdminSuratSP(user){
       const totDiangsur = bm.reduce((t,d)=>t+d.sudahDiangsur+(d.dibayarBaru||0),0);
       const lunasJml = bm.filter(d=>d.lunas).length;
       return `
+      <div style="margin-bottom:12px;" class="no-print"><button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button></div>
       <div class="card" style="padding:14px;margin-bottom:14px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Ringkasan Pembiayaan Bermasalah</div>
         <div class="stat-grid ssp-stat-grid" style="margin-bottom:14px;">
