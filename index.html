@@ -9451,8 +9451,16 @@ function suratSPLaporanPDF(){
   doc.setFont('helvetica','normal');
   doc.setFontSize(8.5);
   doc.setTextColor(0,0,0);
-  doc.text(list.length+' Surat dalam periode  |  '+rk.unik.length+' Nasabah  |  '+rk.jmlLunas+' Surat lunas  |  '+berjalanPdf+' Masih berjalan', 14, 33);
-  doc.text(rupiah(rk.totDibayar)+' Terbayar sesudah SP  |  '+rupiah(rk.totSisa)+' Sisa tagihan saat ini  |  '+progresTot+'% Progres total', 14, 40);
+  const ringPdf = [
+    list.length+' Surat dalam periode',
+    rk.unik.length+' Nasabah',
+    rk.jmlLunas+' Surat lunas',
+    berjalanPdf+' Masih berjalan',
+    rupiah(rk.totDibayar)+' Terbayar sesudah SP',
+    rupiah(rk.totSisa)+' Sisa tagihan saat ini',
+    progresTot+'% Progres total'
+  ];
+  ringPdf.forEach(function(barisPdf, iPdf){ doc.text(barisPdf, 14, 33 + iPdf*5); });
   const body = list.map((r,i)=>[
     i+1, fmtDateShort(r.tanggalSurat), r.nomorSurat||'-', r.nama||'-', r.kelompok||'-',
     r.sumber==='bermasalah'?'Bermasalah':'Aktif', Number(r.spKe)||1,
@@ -9463,7 +9471,7 @@ function suratSPLaporanPDF(){
   doc.autoTable({
     head: [['No','Tanggal','Nomor Surat','Nama','Kelompok','Sumber','SP','Sisa saat SP','Terbayar sesudah SP','Sisa sekarang','Progres','Status']],
     body,
-    startY: 50,
+    startY: 70,
     styles:{ fontSize:7, cellPadding:2 },
     headStyles:{ fillColor:[11,61,46], textColor:255, halign:'center' },
     columnStyles:{
@@ -9670,7 +9678,8 @@ function renderSuratSPLaporan(){
         .lsp-print-total{display:flex;justify-content:space-between;background:#eee;border:1px solid #333;padding:4px 6px;margin-top:8px;font-weight:700;font-size:9pt;}
         .lsp-print-stats{border:1px solid #333;margin-bottom:8px;font-size:9pt;page-break-inside:avoid;}
         .lsp-print-stats > div{display:flex;justify-content:space-between;gap:8px;padding:3px 6px;}
-        .lsp-print-stats > div:first-child{border-bottom:1px solid #333;}
+        .lsp-print-stats > div{border-bottom:1px solid #333;}
+        .lsp-print-stats > div:last-child{border-bottom:none;}
         .lsp-print-stats b{font-weight:700;}
         .lsp-ttd{margin-top:24px;display:flex;justify-content:flex-end;gap:60px;page-break-inside:avoid;}
         .lsp-ttd .blok{text-align:center;width:190px;font-size:10pt;}
@@ -9718,8 +9727,13 @@ function renderSuratSPLaporan(){
           <div>Dicetak: ${escapeHtml(tglCetakFull)}</div>
         </div>
         <div class="lsp-print-stats">
-          <div><span>${list.length} Surat dalam periode &nbsp;|&nbsp; ${rk.unik.length} Nasabah &nbsp;|&nbsp; ${rk.jmlLunas} Surat lunas &nbsp;|&nbsp; ${rk.jmlSebagian+rk.jmlBerjalan} Masih berjalan</span><span></span></div>
-          <div><span>${rupiah(rk.totDibayar)} Terbayar sesudah SP &nbsp;|&nbsp; ${rupiah(rk.totSisa)} Sisa tagihan saat ini &nbsp;|&nbsp; ${progresTot}% Progres total</span><span></span></div>
+          <div><span>${list.length} Surat dalam periode</span><span></span></div>
+          <div><span>${rk.unik.length} Nasabah</span><span></span></div>
+          <div><span>${rk.jmlLunas} Surat lunas</span><span></span></div>
+          <div><span>${rk.jmlSebagian+rk.jmlBerjalan} Masih berjalan</span><span></span></div>
+          <div><span>${rupiah(rk.totDibayar)} Terbayar sesudah SP</span><span></span></div>
+          <div><span>${rupiah(rk.totSisa)} Sisa tagihan saat ini</span><span></span></div>
+          <div><span>${progresTot}% Progres total</span><span></span></div>
         </div>
         <table>
           ${printHead}
