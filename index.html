@@ -8571,6 +8571,7 @@ function renderAdminSuratSP(user){
       ${_tabBtn('piutang','Data Piutang Bermasalah')}
       ${_tabBtn('sudahDiberi','Data Nasabah Sudah Diberi SP')}
       ${_tabBtn('daftar','Daftar Surat SP')}
+      ${_tabBtn('laporan','Laporan Progres')}
       ${_tabBtn('pengaturan','Pengaturan')}
     </div>
     ${ _activeTab==='sudahDiberi' ? `
@@ -8585,7 +8586,6 @@ function renderAdminSuratSP(user){
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;" class="no-print">
       <button class="btn btn-primary no-print" onclick="cetakSemuaSuratSP()">\uD83D\uDD68\uFE0F Cetak Semua Surat SP</button>
       <button class="btn btn-outline no-print" onclick="cetakDaftarSuratSP()">\uD83D\uDD68\uFE0F Cetak Daftar</button>
-      <button class="btn btn-outline no-print" onclick="go('admin_suratsp_laporan',{spSrc:'${_sspSrc}',lapSrc:'${_sspSrc}'})">📊 Laporan Progres</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
       ${_list.length ? `
@@ -8607,6 +8607,7 @@ function renderAdminSuratSP(user){
     </div>
     <div class="hint" style="margin-top:10px;">Gunakan tombol di atas untuk mencetak semua surat, atau tombol Cetak per baris untuk satu surat.</div>`;
     })() : ''}
+    ${ _activeTab==='laporan' ? renderSuratSPLaporan() : ''}
     ${ _activeTab==='pengaturan' ? `
     <div class="card" style="padding:16px;">
       <div class="section-label" style="margin-top:0;">Pengaturan Surat SP</div>
@@ -9586,7 +9587,7 @@ function renderSuratSPLaporan(){
         .bar-track{display:none!important;}
       }
     </style>
-    <div class="page-title no-print"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="go('${backPage}',{spSrc:'${backSrc}'})">${ICONS.chevronLeft}</button>Laporan Progres Surat SP<span class="sub">${periode}</span></span></div>
+    <div class="page-title no-print"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="currentSubState.sspTab='sudahDiberi';go('${backPage}',{spSrc:'${backSrc}'})">${ICONS.chevronLeft}</button>Laporan Progres Surat SP<span class="sub">${periode}</span></span></div>
     <div class="lsp-report-body">
       <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">
         <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
