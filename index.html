@@ -1429,7 +1429,7 @@ async function initSupabaseDB() {
           // cegah dobel: id beda tapi transaksi sama (pembiayaan+tanggal+jumlah+dibuatoleh)
           const dup = DB.setoran.find(x=>x.jenis==='angsuran' && x.pembiayaanId===r.pembiayaanId && String(x.tanggal)===String(r.tanggal) && Number(x.jumlah)===Number(r.jumlah) && x.dibuatoleh===r.dibuatoleh);
           if(dup){ if(r.status) dup.status = r.status; }
-          else DB.setoran.push({id:r.id, userId:r.userId||null, jenis:'angsuran', pembiayaanId:r.pembiayaanId||null, jumlah:Number(r.jumlah)||0, keterangan:r.keterangan||'', tanggal:r.tanggal||nowISO(), dibuatoleh:r.dibuatoleh||r.dibuatOleh||null, dibuatOleh:r.dibuatoleh||r.dibuatOleh||null, status:r.status||'di_koordinator', dikonfirmasioleh:r.dikonfirmasioleh||null, dikonfirmasiOleh:r.dikonfirmasioleh||null, waktuKonfirmasi:r.waktuKonfirmasi||null});
+          else DB.setoran.push({id:r.id, userId:r.userId||null, jenis:'angsuran', pembiayaanId:r.pembiayaanId||null, jumlah:Number(r.jumlah)||0, keterangan:r.keterangan||'', tanggal:r.tanggal||nowISO(), dibuatPada:r.dibuatPada||null, dibuatoleh:r.dibuatoleh||r.dibuatOleh||null, dibuatOleh:r.dibuatoleh||r.dibuatOleh||null, status:r.status||'di_koordinator', dikonfirmasioleh:r.dikonfirmasioleh||null, dikonfirmasiOleh:r.dikonfirmasioleh||null, waktuKonfirmasi:r.waktuKonfirmasi||null});
         }
       });
     }catch(e){}
@@ -1676,7 +1676,7 @@ async function syncAllToSupabase() {
     const mapAnsur = new Map();
     srvArr.forEach(r=>{ if(r && r.id) mapAnsur.set(r.id, r); });
     (DB.setoran||[]).filter(s=>s.jenis==='angsuran').forEach(s=>{
-      const rec = {id:s.id, userId:s.userId, pembiayaanId:s.pembiayaanId, jumlah:s.jumlah, keterangan:s.keterangan, tanggal:s.tanggal, dibuatoleh:setoranOlehOf(s), status:s.status, dikonfirmasioleh:(s.dikonfirmasiOleh||s.dikonfirmasioleh||null), waktuKonfirmasi:s.waktuKonfirmasi};
+      const rec = {id:s.id, userId:s.userId, pembiayaanId:s.pembiayaanId, jumlah:s.jumlah, keterangan:s.keterangan, tanggal:s.tanggal, dibuatPada:(s.dibuatPada||null), dibuatoleh:setoranOlehOf(s), status:s.status, dikonfirmasioleh:(s.dikonfirmasiOleh||s.dikonfirmasioleh||null), waktuKonfirmasi:s.waktuKonfirmasi};
       mapAnsur.set(s.id, rec);
     });
     const mergedAnsur = [...mapAnsur.values()];
@@ -3426,7 +3426,7 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
   p.status = (p.statusManual === 'lunas' || p.statusManual === 'berjalan') ? p.statusManual : ((totalDibayar >= totalKew || sisaTagihan === 0) ? 'lunas' : 'berjalan');
   const olehUser = userById(oleh);
   const isAdmin = olehUser && olehUser.role==='admin';
-  const st = {id:uid('st'), userId:p.userId, jenis:'angsuran', pembiayaanId:p.id, jumlah, keterangan:'Angsuran ke-'+angsuranKe, tanggal:tgl, dibuatOleh:oleh, status: isAdmin ? 'sudah_di_admin' : 'di_koordinator'};
+  const st = {id:uid('st'), userId:p.userId, jenis:'angsuran', pembiayaanId:p.id, jumlah, keterangan:'Angsuran ke-'+angsuranKe, tanggal:tgl, dibuatPada:nowISO(), dibuatOleh:oleh, status: isAdmin ? 'sudah_di_admin' : 'di_koordinator'};
   if(isAdmin){ st.dikonfirmasiOleh = oleh; st.waktuKonfirmasi = nowISO(); }
   DB.setoran.push(st);
   if(!isAdmin) autoLunasiHutangDariSetoran(oleh);
@@ -3596,7 +3596,7 @@ function renderAdminBeranda(user){
         const _jenisTab = s.jenisId ? jenisName(s.jenisId) : (s.jenis||'Setoran');
         _sumber = _nasabah + ' · ' + _jenisTab + (s.keterangan && s.keterangan!=='Setoran tunai' ? ' · '+s.keterangan : '');
       }
-      _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${_judul}</div><div class="notif-sub">${_sumber} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' (dari '+rupiah(s.jumlah)+')' : ''} &middot; ${fmtDateShort(s.tanggal)} &middot; menunggu diterima</div></div><button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button></div>`);
+      _notifRows.push(`<div class="notif-row" style="cursor:pointer;" onclick="detailSetoranKoorModal('${s.id}')"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${_judul}</div><div class="notif-sub">${_sumber} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' (dari '+rupiah(s.jumlah)+')' : ''} &middot; ${fmtDateShort(s.tanggal)} &middot; menunggu diterima</div></div><span style="color:var(--muted);flex:0 0 auto;">${ICONS.chevron||'›'}</span></div>`);
     });
     (r.hutangItems||[]).forEach(h=>{
       _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--danger-soft, #fdeaea);color:var(--danger);">${ICONS.alert || '!'}</div><div class="notif-info"><div class="notif-title">Hutang ke ${r.koor ? r.koor.nama : '-'}</div><div class="notif-sub">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${rupiah(h.jumlah-(h.dibayar||0))} &middot; ${fmtDateShort(h.tanggal)}</div></div><button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button></div>`);
@@ -3787,6 +3787,66 @@ function toggleKoorDetail(koorId, btn){
   if(verb) verb.textContent = open ? 'Lihat' : 'Sembunyikan';
 }
 function emptyRow(msg){ return `<div class="hint" style="text-align:center;padding:10px 0;">${msg}</div>`; }
+function detailSetoranKoorModal(setoranId){
+  const st = DB.setoran.find(s=>s.id===setoranId);
+  if(!st) return;
+  normalisasiSetoran();
+  const koorId = setoranOlehOf(st);
+  const koor = userById(koorId);
+  const koorNama = (koor && koor.nama && koor.nama!=='-') ? koor.nama : '-';
+  const sisa = sisaSetoran(setoranId);
+  const totalKoor = totalSetoranPendingKoor(koorId);
+  const tarik = totalPenarikanDariKasKoor(koorId);
+  const kas = kasKoordinator(koorId);
+  const isAngsuran = st.jenis==='angsuran';
+  const pb = isAngsuran ? (DB.pembiayaan||[]).find(x=>x.id===st.pembiayaanId) : null;
+  const nas = pb ? pembUser(pb) : userById(st.userId);
+  const akad = pb ? (nomorAkadOf(pb)||'') : '';
+  const angsuranKe = (isAngsuran && st.keterangan) ? ((String(st.keterangan).match(/(\d+)/)||[])[1]||'') : '';
+  const jenisDana = isAngsuran ? 'Angsuran pembiayaan' : (st.jenisId ? jenisName(st.jenisId) : (st.jenis||'Setoran'));
+  const dicatat = st.dibuatPada || st.waktuDicatat || null;
+  const _row = (label, val) => `<div><span style="color:var(--muted);font-size:11px;">${label}</span><br><b>${val}</b></div>`;
+  openModal(`
+    <h3>Rincian Dana Masuk</h3>
+    <div style="margin:-4px 0 10px;"><span class="badge badge-gold">Menunggu diterima</span></div>
+    <div class="card" style="padding:14px 16px;font-size:13.5px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${_row('Dana dari koordinator', koorNama)}
+        ${_row('Jenis dana', jenisDana)}
+        ${_row('Nasabah / penyetor', nas.nama + (nas.noRekening && nas.noRekening!=='-' ? '<br><span style="font-weight:400;color:var(--muted);font-size:11px;">Rek. '+nas.noRekening+'</span>' : ''))}
+        ${_row('Kelompok', kelompokName(nas.kelompokId))}
+        ${isAngsuran ? _row('Nomor akad', akad ? 'AKD-'+akad : '-') : ''}
+        ${isAngsuran ? _row('Angsuran ke', angsuranKe ? angsuranKe + (pb && pb.tenor ? ' dari '+pb.tenor : '') : '-') : ''}
+        ${_row('Jumlah dana', '<span class="mono">'+rupiah(st.jumlah)+'</span>')}
+        ${_row('Tanggal bayar', st.tanggal ? fmtDate(st.tanggal) : '-')}
+        ${_row('Waktu dicatat', dicatat ? fmtDate(dicatat) : '<span style="font-weight:400;color:var(--muted);">Tidak tercatat (data lama)</span>')}
+        ${_row('Dicatat oleh', koorNama + ' (koordinator)')}
+      </div>
+      ${sisa < st.jumlah ? `<div style="margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--gold-soft);color:var(--text);font-size:12.5px;">Sebagian dana sudah dipakai penarikan koordinator. Yang bisa diterima sekarang: <b>${rupiah(sisa)}</b> dari total ${rupiah(st.jumlah)}.</div>` : ''}
+    </div>
+    <div class="section-label">Posisi kas koordinator ${koorNama}</div>
+    <div class="card" style="padding:12px 16px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Total dana dipegang</span><b class="mono">${rupiah(totalKoor)}</b></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Sudah dipakai penarikan</span><b class="mono">${rupiah(tarik)}</b></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px solid var(--border);margin-top:4px;"><span style="font-weight:700;">Sisa kas di koordinator</span><b class="mono">${rupiah(kas)}</b></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Tutup</button>
+      <button class="btn btn-primary" onclick="terimaSetoranKoor('${st.id}')">Terima Dana</button>
+    </div>
+  `);
+}
+async function terimaSetoranKoor(setoranId){
+  const st = DB.setoran.find(s=>s.id===setoranId);
+  if(!st || st.status!=='di_koordinator'){ closeModal(); renderContent(); return; }
+  const namaNasabah = (st.jenis==='angsuran' ? (()=>{const pb=(DB.pembiayaan||[]).find(x=>x.id===st.pembiayaanId); return pb?pembUser(pb).nama:userById(st.userId).nama;})() : userById(st.userId).nama);
+  closeModal();
+  toast('Menyimpan...');
+  const r = await confirmSetoran(setoranId);
+  if(!r.ok){ toast(r.msg); renderContent(); return; }
+  bigSuccess('Dana diterima dari koordinator · '+namaNasabah);
+  renderContent();
+}
 function confirmSetoranUI(setoranId){
   const st = DB.setoran.find(s=>s.id===setoranId);
   if(!st) return;
