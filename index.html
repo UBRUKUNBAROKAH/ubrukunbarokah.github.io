@@ -8895,7 +8895,8 @@ function suratSPBuat(){
   const isBm = currentSubState.spSrc==='bermasalah';
   const chosen = (isBm ? suratSPBermasalah() : suratSPOverdue()).filter(d=>suratSPSelected.includes(d.pembId)).sort((a,b)=>b.hariTelat-a.hariTelat);
   let html = '<div class="ssp-toolbar no-print" style="position:sticky;top:0;z-index:15;background:var(--bg);padding:10px 12px;border-radius:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
-    '<div style="font-size:13px;color:var(--muted);"><b>'+chosen.length+' surat</b> siap dicetak</div></div>';
+    '<div style="font-size:13px;color:var(--muted);"><b>'+chosen.length+' surat</b> siap dicetak</div>' +
+    '<button type="button" class="btn btn-primary no-print" onclick="cetakSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat</button></div>';
   let urut = suratSPNextUrut(s);
   const urutAwal = urut;
   chosen.forEach(d=>{ html += suratSPBuatPage(d, s, urut); urut++; });
@@ -9184,6 +9185,40 @@ function suratSPDaftarCetakHTML(src){
       <tfoot><tr><td colspan="6">Jumlah: ${list.length} surat &middot; ${unik.size} nasabah</td><td colspan="3" class="r">Total sisa: ${rupiah(totSisa)}</td></tr></tfoot>
     </table>
     <div class="dsp-ttd"><div class="dsp-ttd-blok"><div>${escapeHtml(tglTtd)}</div><div class="dsp-sp"></div><div><b>${escapeHtml(ttd.nama||'')}</b></div><div>${escapeHtml(ttd.jabatan||'Ketua')}</div></div></div>`;
+}
+function cetakSuratSP(){
+  const el = document.getElementById('ssp-preview');
+  if(!el || !el.querySelector('.ssp-page')){ toast('Belum ada surat untuk dicetak. Pilih dan buat surat dulu.'); return; }
+  document.body.classList.remove('print-daftar-sp');
+  setTimeout(()=>{ try{ window.print(); }catch(e){ console.error('Cetak surat SP gagal:', e); toast('Gagal membuka dialog cetak'); } }, 80);
+}
+function cetakUlangSuratSP(id){
+  const raw = suratSPRiwayatArr().find(r=>r.id===id);
+  if(!raw){ toast('Catatan surat tidak ditemukan'); return; }
+  const s = suratSPLoad();
+  const d = {nama:raw.nama, alamat:raw.alamat||'', pokok:Number(raw.pokok)||0, laba:Number(raw.laba)||0, jumlah:Number(raw.jumlah)||0, sudahDiangsur:Number(raw.sudahDiangsur)||0, sisaKewajiban:Number(raw.sisaKewajiban)||0, hariTelat:Number(raw.hariTelat)||0};
+  const s2 = Object.assign({}, s, {tanggalSurat: raw.tanggalSurat || s.tanggalSurat});
+  try{
+    let page = suratSPBuatPage(d, s2, Number(raw.urut)||1);
+    if(raw.nomorSurat){
+      const hasil = suratSPBuildNomor(s2, Number(raw.urut)||1);
+      if(hasil && hasil!==raw.nomorSurat) page = page.split(escapeHtml(hasil)).join(escapeHtml(raw.nomorSurat));
+    }
+    let html = '<div class="ssp-toolbar no-print" style="position:sticky;top:0;z-index:15;background:var(--bg);padding:10px 12px;border-radius:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+      '<div style="font-size:13px;color:var(--muted);"><b>1 surat</b> siap dicetak (cetak ulang)</div>' +
+      '<button type="button" class="btn btn-primary no-print" onclick="cetakSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat</button></div>' + page;
+    suratSPLastPreview = html;
+    closeModal();
+    currentSubState.spSrc = raw.sumber==='bermasalah' ? 'bermasalah' : 'aktif';
+    // render ke halaman Surat SP lalu cetak
+    if(currentPage==='admin_suratsp' || currentPage==='admin_spbermasalah'){
+      renderContent();
+      setTimeout(cetakSuratSP, 400);
+    } else {
+      go(raw.sumber==='bermasalah' ? 'admin_spbermasalah' : 'admin_suratsp', {spSrc: raw.sumber});
+      setTimeout(cetakSuratSP, 700);
+    }
+  }catch(e){ console.error('Cetak ulang SP gagal:', e); toast('Gagal menyiapkan cetak ulang'); }
 }
 function cetakDaftarSuratSP(){
   const el = document.getElementById('ssp-daftar-print');
@@ -9554,7 +9589,8 @@ function suratSPRiwayatDetail(id){
     <div class="modal-actions" style="margin-top:14px;flex-wrap:wrap;">
       <button class="btn btn-danger" style="margin-right:auto;" onclick="suratSPRiwayatHapus('${r.id}')">Hapus dari daftar</button>
       <button class="btn btn-outline" onclick="closeModal()">Tutup</button>
-      <button class="btn btn-primary" onclick="suratSPRiwayatSimpanCatatan('${r.id}')">Simpan catatan</button>
+      <button class="btn btn-primary" onclick="cetakUlangSuratSP('${r.id}')">\uD83D\uDD68\uFE0F Cetak Surat</button>
+      <button class="btn btn-outline" onclick="suratSPRiwayatSimpanCatatan('${r.id}')">Simpan catatan</button>
     </div>
     <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
       ${r.status!=='lunas' ? `<button class="btn btn-gold btn-block" onclick="suratSPBayarAngsuran('${r.pembId}','${r.sumber}')">💵 Bayar Angsuran</button>` : ''}
