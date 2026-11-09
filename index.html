@@ -8577,6 +8577,7 @@ function renderAdminSuratSP(user){
     </div>
     ${ _activeTab==='sudahDiberi' ? `
     <div class="section-label" style="margin-top:0;">Data Nasabah Sudah Diberi Surat SP</div>
+    <div style="margin-bottom:12px;" class="no-print"><button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih Nasabah untuk Dibuatkan SP${selectedCount?(' ('+selectedCount+')'):''}</button></div>
     ${suratSPListSection(_sspSrc)}
     ` : ''}
     ${ _activeTab==='daftar' ? (()=>{
