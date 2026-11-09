@@ -9446,14 +9446,13 @@ function suratSPLaporanPDF(){
   doc.text((per ? 'Periode '+per : 'Semua periode') + ' | Sumber: ' + (src==='semua'?'Semua':(src==='bermasalah'?'Pembiayaan bermasalah':'Tunggakan aktif')) + ' | Dicetak: '+tgl, 14, 26);
   doc.setTextColor(0);
   const progresTot = rk.totAwal>0 ? Math.min(100, Math.round(rk.totDibayar/rk.totAwal*100)) : 0;
-  // Ringkasan 7 angka (sama dengan kartu ringkasan)
+  // Ringkasan 7 angka (sama dengan kartu ringkasan) — teks biasa, tanpa fill
   const berjalanPdf = rk.jmlSebagian + rk.jmlBerjalan;
+  doc.setFont('helvetica','normal');
   doc.setFontSize(8.5);
-  doc.setFillColor(244,248,244);
-  doc.rect(14, 28.5, 269, 9.5, 'FD');
-  doc.text(list.length+' Surat dalam periode  |  '+rk.unik.length+' Nasabah  |  '+rk.jmlLunas+' Surat lunas  |  '+berjalanPdf+' Masih berjalan', 148.5, 32.5, {align:'center'});
-  doc.rect(14, 38.5, 269, 9.5, 'FD');
-  doc.text(rupiah(rk.totDibayar)+' Terbayar sesudah SP  |  '+rupiah(rk.totSisa)+' Sisa tagihan saat ini  |  '+progresTot+'% Progres total', 148.5, 42.5, {align:'center'});
+  doc.setTextColor(0,0,0);
+  doc.text(list.length+' Surat dalam periode  |  '+rk.unik.length+' Nasabah  |  '+rk.jmlLunas+' Surat lunas  |  '+berjalanPdf+' Masih berjalan', 14, 33);
+  doc.text(rupiah(rk.totDibayar)+' Terbayar sesudah SP  |  '+rupiah(rk.totSisa)+' Sisa tagihan saat ini  |  '+progresTot+'% Progres total', 14, 40);
   const body = list.map((r,i)=>[
     i+1, fmtDateShort(r.tanggalSurat), r.nomorSurat||'-', r.nama||'-', r.kelompok||'-',
     r.sumber==='bermasalah'?'Bermasalah':'Aktif', Number(r.spKe)||1,
@@ -9671,7 +9670,6 @@ function renderSuratSPLaporan(){
         .lsp-print-total{display:flex;justify-content:space-between;background:#eee;border:1px solid #333;padding:4px 6px;margin-top:8px;font-weight:700;font-size:9pt;}
         .lsp-print-stats{border:1px solid #333;margin-bottom:8px;font-size:9pt;page-break-inside:avoid;}
         .lsp-print-stats > div{display:flex;justify-content:space-between;gap:8px;padding:3px 6px;}
-        .lsp-print-stats > div{background:#f4f8f4;}
         .lsp-print-stats > div:first-child{border-bottom:1px solid #333;}
         .lsp-print-stats b{font-weight:700;}
         .lsp-ttd{margin-top:24px;display:flex;justify-content:flex-end;gap:60px;page-break-inside:avoid;}
