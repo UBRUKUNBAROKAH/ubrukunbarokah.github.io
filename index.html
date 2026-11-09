@@ -8461,6 +8461,9 @@ function renderAdminSuratSP(user){
   const selectedCount = suratSPSelected.length;
   const sisaTotal = all.reduce((s2,d)=>s2+d.sisaKewajiban,0);
   const riwayatCount = suratSPRiwayatArr().length;
+  const _sspSrc = currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif';
+  const _activeTab = currentSubState.sspTab || (_sspSrc==='bermasalah' ? 'piutang' : 'sudahDiberi');
+  const _tabBtn = (id, label)=>`<button class="btn ${_activeTab===id?'btn-primary':'btn-outline'} btn-compact no-print" onclick="currentSubState.sspTab='${id}';renderContent()">${label}</button>`;
   return `
     <style>
       .ssp-input, .ssp-select, .ssp-textarea{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:13.5px;font-family:inherit;background:var(--surface);color:inherit;box-sizing:border-box;}
@@ -8572,9 +8575,83 @@ function renderAdminSuratSP(user){
       </div>
     </div>
     </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;" class="no-print">
+      ${_tabBtn('piutang','Data Piutang Bermasalah')}
+      ${_tabBtn('sudahDiberi','Data Nasabah Sudah Diberi SP')}
+      ${_tabBtn('daftar','Daftar Surat SP')}
+      ${_tabBtn('pengaturan','Pengaturan')}
+    </div>
+    ${ _activeTab==='sudahDiberi' ? `
     <div class="section-label" style="margin-top:0;">Daftar Surat SP yang Sudah Dibuat</div>
-    ${suratSPRiwayatSection(currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif')}
-    ${currentSubState.spSrc==='bermasalah' ? (()=>{
+    ${suratSPRiwayatSection(_sspSrc)}
+    ` : ''}
+    ${ _activeTab==='daftar' ? (()=>{
+      const _d = suratSPRiwayatData(_sspSrc);
+      const _list = _d.list;
+      return `
+    <div class="section-label" style="margin-top:0;">Seluruh Surat SP Siap Cetak</div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      ${_list.length ? `
+      <div class="ssp-over" style="overflow-x:auto;">
+        <table class="ssp-table">
+          <thead><tr><th>No</th><th>Nama</th><th>Nomor Surat</th><th>Tanggal</th><th>SP ke</th><th>Status</th><th></th></tr></thead>
+          <tbody>${_list.map((r,i)=>`<tr>
+            <td>${i+1}</td>
+            <td><b>${escapeHtml(r.nama||'-')}</b><br><span style="color:var(--muted);font-size:11px;">${escapeHtml(r.kelompok||'-')}</span></td>
+            <td style="font-size:11.5px;white-space:nowrap;">${escapeHtml(r.nomorSurat||'-')}</td>
+            <td style="white-space:nowrap;">${fmtDateShort(r.tanggalSurat)}</td>
+            <td>SP ${r.spKe||1}</td>
+            <td><span class="badge ${suratSPRiwayatStatusMeta(r).cls}">${suratSPRiwayatStatusMeta(r).label}</span></td>
+            <td style="white-space:nowrap;"><button class="btn btn-primary btn-compact no-print" onclick="cetakUlangSuratSP('${r.id}')">Cetak</button></td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>` : `
+      <div class="empty-state"><div class="ic">📋</div><div class="t">Belum ada surat SP tercatat</div><div class="d">Buat surat dari tab Data Piutang Bermasalah.</div></div>`}
+    </div>
+    <div class="hint" style="margin-top:10px;">Gunakan tombol di atas untuk mencetak semua surat, atau tombol Cetak per baris untuk satu surat.</div>`;
+    })() : ''}
+    ${ _activeTab==='pengaturan' ? `
+    <div class="card" style="padding:16px;">
+      <div class="section-label" style="margin-top:0;">Pengaturan Surat SP</div>
+      <div style="font-size:13px;line-height:1.7;">
+        <div>Nama lembaga: <b>${escapeHtml(s.namaLembaga||'-')}</b></div>
+        <div>Alamat: ${escapeHtml(s.alamatLembaga||'-')}</div>
+        <div>Batas waktu pelunasan: <b>${s.batasHari||0} hari</b></div>
+        <div>Tanggal surat: <b>${escapeHtml(s.tanggalSurat||'-')}</b></div>
+        <div>Penandatangan: ${(s.ttdList||[]).map(x=>escapeHtml(x.jabatan+': '+x.nama)).join(' | ')||'-'}</div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="suratSPOpenSettings()">Ubah Pengaturan</button>
+    </div>
+    ` : ''}
+    ${ (_activeTab==='piutang' && _sspSrc==='aktif') ? `
+    <div class="section-label" style="margin-top:0;">Nasabah Telat Bayar (Siap Dibuatkan SP)</div>
+    <div class="card" style="padding:14px;margin-bottom:14px;">
+      <div class="stat-grid ssp-stat-grid" style="margin-bottom:12px;">
+        <div class="stat-box"><div class="n mono" style="font-size:20px;">${list.length}</div><div class="l">Nasabah Telat</div></div>
+        <div class="stat-box"><div class="n mono" style="font-size:20px;color:var(--danger);">${rupiah(sisaTotal)}</div><div class="l">Sisa Total</div></div>
+      </div>
+      <div class="hint" style="margin-bottom:10px;">Klik <b>Pilih &amp; Buat Surat</b> di atas untuk memilih nasabah lalu membuat surat SP, atau klik <b>Surat</b> di barisnya untuk 1 orang.</div>
+      <div class="ssp-over" style="max-height:420px;overflow:auto;">
+        <table class="ssp-table">
+          <thead><tr><th>Nama</th><th>Kelompok</th><th>Jatuh Tempo</th><th>Telat</th><th>Sisa</th><th></th></tr></thead>
+          <tbody>
+            ${list.length ? list.slice(0,50).map(d=>`<tr>
+              <td><b>${escapeHtml(d.nama)}</b>${d.alamat?`<br><span style="color:var(--muted);font-size:11px;">${escapeHtml(d.alamat)}</span>`:''}</td>
+              <td>${escapeHtml(d.kelompok)}</td>
+              <td>${suratSPTanggal(d.jatuhTempo)}</td>
+              <td><span class="ssp-badge ${d.hariTelat>=90?'d3':(d.hariTelat>=30?'d2':'d1')}">${d.hariTelat} x</span></td>
+              <td class="mono">${rupiah(d.sisaKewajiban)}</td>
+              <td style="white-space:nowrap;"><button class="btn btn-outline btn-compact no-print" onclick="suratSPBuatSatuAktif('${d.pembId}')">✉️ Surat</button>
+              <button class="btn btn-gold btn-compact no-print" style="margin-left:4px;" onclick="suratSPBayarAngsuran('${d.pembId}','aktif')">💵 Bayar Angsuran</button></td>
+            </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--muted);">Tidak ada nasabah yang telat.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      ${list.length>50 ? `<div class="hint" style="margin-top:8px;">Menampilkan 50 teratas dari ${list.length} nasabah telat. Gunakan Pilih &amp; Buat Surat untuk mencari lainnya.</div>` : ''}
+    </div>
+    ` : ''}
+    ${ (_activeTab==='piutang' && _sspSrc==='bermasalah') ? (()=>{
+
       const bm = suratSPBermasalah();
       const totPokok = bm.reduce((t,d)=>t+d.pokok,0);
       const totSisa = bm.reduce((t,d)=>t+(d.sisaSekarang!=null?d.sisaSekarang:d.sisaKewajiban),0);
@@ -8923,6 +9000,12 @@ function suratSPBuat(){
 }
 function suratSPBuatSatu(pembId){
   currentSubState.spSrc = 'bermasalah';
+  suratSPSelected = [pembId];
+  renderContent();
+  suratSPBuat();
+}
+function suratSPBuatSatuAktif(pembId){
+  currentSubState.spSrc = 'aktif';
   suratSPSelected = [pembId];
   renderContent();
   suratSPBuat();
