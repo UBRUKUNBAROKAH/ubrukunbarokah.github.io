@@ -1417,6 +1417,17 @@ async function initSupabaseDB() {
         }
       });
     }catch(e){}
+    // Hidrasi setoran angsuran dari info (agar muncul di dashboard admin lintas perangkat)
+    try{
+      const sa = (DB.koperasi && DB.koperasi.info && Array.isArray(DB.koperasi.info.setoranAnsur)) ? DB.koperasi.info.setoranAnsur : [];
+      if(!DB.setoran) DB.setoran = [];
+      sa.forEach(r=>{
+        if(!r || !r.id) return;
+        const idx = DB.setoran.findIndex(x=>x.id===r.id);
+        if(idx>=0){ if(r.status) DB.setoran[idx].status = r.status; }
+        else DB.setoran.push({id:r.id, userId:r.userId||null, jenis:'angsuran', pembiayaanId:r.pembiayaanId||null, jumlah:Number(r.jumlah)||0, keterangan:r.keterangan||'', tanggal:r.tanggal||nowISO(), dibuatoleh:r.dibuatoleh||null, status:r.status||'di_koordinator', dikonfirmasioleh:r.dikonfirmasioleh||null, waktuKonfirmasi:r.waktuKonfirmasi||null});
+      });
+    }catch(e){}
     // Hidrasi status manual dari info map (kolom status_manual belum tentu ada)
     try{
       const sm = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.statusManualPembiayaan) || {};
@@ -1651,6 +1662,22 @@ async function syncAllToSupabase() {
       }
     }
   } catch(e){} // cleanup error aman diabaikan
+  // Setoran angsuran (di_koordinator) disimpan via info agar ikut tersinkron
+  // tanpa kolom baru di tabel setoran (yang tidak punya kolom jenis).
+  try{
+    const { data: srvPg } = await supabaseClient.from(TABLES.pengaturan_koperasi).select('info').eq('id','koperasi').single();
+    const srvArr = (srvPg && srvPg.info && Array.isArray(srvPg.info.setoranAnsur)) ? srvPg.info.setoranAnsur : [];
+    const mapAnsur = new Map();
+    srvArr.forEach(r=>{ if(r && r.id) mapAnsur.set(r.id, r); });
+    (DB.setoran||[]).filter(s=>s.jenis==='angsuran').forEach(s=>{
+      const rec = {id:s.id, userId:s.userId, pembiayaanId:s.pembiayaanId, jumlah:s.jumlah, keterangan:s.keterangan, tanggal:s.tanggal, dibuatoleh:s.dibuatoleh, status:s.status, dikonfirmasioleh:s.dikonfirmasioleh, waktuKonfirmasi:s.waktuKonfirmasi};
+      mapAnsur.set(s.id, rec);
+    });
+    const mergedAnsur = [...mapAnsur.values()];
+    if(!DB.koperasi.info) DB.koperasi.info = {};
+    if(mergedAnsur.length) DB.koperasi.info.setoranAnsur = mergedAnsur;
+    else delete DB.koperasi.info.setoranAnsur;
+  }catch(e){ /* aman: tanpa gabungan, status lama tetap terkirim */ }
   // Sync pengaturan koperasi (single row) - JSONB fields jangan di-toSnake
   const pg = {
     id: 'koperasi',
