@@ -9434,6 +9434,7 @@ function suratSPLaporanPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'landscape', format:'a4' });
   const orgName = (DB.koperasi && DB.koperasi.nama) || 'Koperasi';
+  const s = suratSPLoad();
   pdfKop(doc, orgName, 'LAPORAN PROGRES SURAT SP');
   const tgl = new Date().toLocaleString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   const rk = suratSPLaporanRingkas(list);
@@ -9442,6 +9443,14 @@ function suratSPLaporanPDF(){
   doc.text((per ? 'Periode '+per : 'Semua periode') + ' | Sumber: ' + (src==='semua'?'Semua':(src==='bermasalah'?'Pembiayaan bermasalah':'Tunggakan aktif')) + ' | Dicetak: '+tgl, 14, 26);
   doc.setTextColor(0);
   const progresTot = rk.totAwal>0 ? Math.min(100, Math.round(rk.totDibayar/rk.totAwal*100)) : 0;
+  // Ringkasan 7 angka (sama dengan kartu ringkasan)
+  const berjalanPdf = rk.jmlSebagian + rk.jmlBerjalan;
+  doc.setFontSize(8.5);
+  doc.setFillColor(244,248,244);
+  doc.rect(14, 28.5, 269, 9.5, 'FD');
+  doc.text(list.length+' Surat dalam periode  |  '+rk.unik.length+' Nasabah  |  '+rk.jmlLunas+' Surat lunas  |  '+berjalanPdf+' Masih berjalan', 148.5, 32.5, {align:'center'});
+  doc.rect(14, 38.5, 269, 9.5, 'FD');
+  doc.text(rupiah(rk.totDibayar)+' Terbayar sesudah SP  |  '+rupiah(rk.totSisa)+' Sisa tagihan saat ini  |  '+progresTot+'% Progres total', 148.5, 42.5, {align:'center'});
   const body = list.map((r,i)=>[
     i+1, fmtDateShort(r.tanggalSurat), r.nomorSurat||'-', r.nama||'-', r.kelompok||'-',
     r.sumber==='bermasalah'?'Bermasalah':'Aktif', Number(r.spKe)||1,
@@ -9452,7 +9461,7 @@ function suratSPLaporanPDF(){
   doc.autoTable({
     head: [['No','Tanggal','Nomor Surat','Nama','Kelompok','Sumber','SP','Sisa saat SP','Terbayar sesudah SP','Sisa sekarang','Progres','Status']],
     body,
-    startY: 30,
+    startY: 50,
     styles:{ fontSize:7, cellPadding:2 },
     headStyles:{ fillColor:[11,61,46], textColor:255, halign:'center' },
     columnStyles:{
@@ -9464,6 +9473,17 @@ function suratSPLaporanPDF(){
       if(d.section==='body' && d.row.index===body.length-1){ d.cell.styles.fillColor=[218,232,222]; d.cell.styles.fontStyle='bold'; }
     }
   });
+  // Blok tanda tangan (sama seperti cetak)
+  try{
+    const fp = doc.lastAutoTable.finalY + 24;
+    const tt = (s.ttdList && s.ttdList[0]) || {jabatan:'Ketua', nama:''};
+    const tglTtd = (s.kota ? s.kota + ', ' : '') + new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+    doc.setFontSize(10);
+    doc.text(tglTtd, 283, fp, {align:'right'});
+    doc.line(223, fp+22, 283, fp+22);
+    if(tt.nama) doc.text(tt.nama, 253, fp+28, {align:'center'});
+    doc.text(tt.jabatan||'Ketua', 253, fp+34, {align:'center'});
+  }catch(e){}
   doc.save(sanitizeFileName('Laporan Progres Surat SP ' + new Date().toISOString().slice(0,10)) + '.pdf');
   toast('File PDF berhasil diunduh');
 }
@@ -9632,6 +9652,10 @@ function renderSuratSPLaporan(){
         .lsp-print-area td .badge-green{background:#d8efdc!important;color:#14532d!important;}
         .lsp-print-area td .badge-red{background:#f7dede!important;color:#7a2331!important;}
         .lsp-print-total{display:flex;justify-content:space-between;background:#eee;border:1px solid #333;padding:4px 6px;margin-top:8px;font-weight:700;font-size:9pt;}
+        .lsp-print-stats{border:1px solid #333;margin-bottom:8px;font-size:9pt;page-break-inside:avoid;}
+        .lsp-print-stats > div{display:flex;justify-content:space-between;gap:8px;padding:3px 6px;}
+        .lsp-print-stats > div:first-child{background:#f4f4f4;border-bottom:1px solid #333;}
+        .lsp-print-stats b{font-weight:700;}
         .lsp-ttd{margin-top:24px;display:flex;justify-content:flex-end;gap:60px;page-break-inside:avoid;}
         .lsp-ttd .blok{text-align:center;width:190px;font-size:10pt;}
         .lsp-ttd .sp{height:52px;}
@@ -9677,13 +9701,17 @@ function renderSuratSPLaporan(){
           <div>${escapeHtml(periode)} &middot; Sumber: ${src==='semua'?'Semua':(src==='bermasalah'?'Pembiayaan Bermasalah':'Tunggakan Aktif')}</div>
           <div>Dicetak: ${escapeHtml(tglCetakFull)}</div>
         </div>
+        <div class="lsp-print-stats">
+          <div><span>${list.length} Surat dalam periode &middot; ${rk.unik.length} Nasabah &middot; ${rk.jmlLunas} Surat lunas &middot; ${rk.jmlSebagian+rk.jmlBerjalan} Masih berjalan</span><span></span></div>
+          <div><span>${rupiah(rk.totDibayar)} Terbayar sesudah SP &middot; ${rupiah(rk.totSisa)} Sisa tagihan saat ini &middot; ${progresTot}% Progres total</span><span></span></div>
+        </div>
         <table>
           ${tableHead}
           <tbody>${rowsHTML}</tbody>
         </table>
         <div class="lsp-print-total">
-          <span>Ringkasan: ${list.length} surat &middot; ${rk.unik.length} nasabah &middot; Lunas ${rk.jmlLunas} &middot; Berjalan ${rk.jmlSebagian+rk.jmlBerjalan}</span>
-          <span>Terbayar: ${rupiah(rk.totDibayar)} &nbsp;&middot;&nbsp; Sisa: ${rupiah(rk.totSisa)} &nbsp;&middot;&nbsp; Progres total: ${progresTot}%</span>
+          <span>TOTAL &middot; ${list.length} surat &middot; ${rk.unik.length} nasabah</span>
+          <span>Sisa saat SP: ${rupiah(rk.totAwal)} &nbsp;&middot;&nbsp; Terbayar: ${rupiah(rk.totDibayar)} &nbsp;&middot;&nbsp; Sisa: ${rupiah(rk.totSisa)} &nbsp;&middot;&nbsp; Progres total: ${progresTot}%</span>
         </div>
         ${(()=> {
           const ttd = (s.ttdList && s.ttdList[0] && (s.ttdList[0].nama || s.ttdList[0].jabatan)) ? s.ttdList[0] : {jabatan:'Ketua', nama:''};
