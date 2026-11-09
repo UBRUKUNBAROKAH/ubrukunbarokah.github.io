@@ -8567,7 +8567,8 @@ function renderAdminSuratSP(user){
         <button class="btn btn-outline" onclick="go('admin_suratsp_riwayat',{spSrc:'${currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif'}'})">📋 Daftar Surat SP${riwayatCount?(' ('+riwayatCount+')'):''}</button>
         <button class="btn btn-primary" onclick="suratSPOpenPilih()">✍️ Pilih & Buat Surat${selectedCount?(' ('+selectedCount+')'):''}</button>
         <button class="btn btn-outline" onclick="suratSPOpenSettings()">⚙️ Pengaturan</button>
-        <button class="btn btn-outline no-print" onclick="cetakDaftarSuratSP()">🖨️ Cetak</button>
+        <button class="btn btn-primary no-print" onclick="cetakSemuaSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat SP</button>
+        <button class="btn btn-outline no-print" onclick="cetakDaftarSuratSP()">\uD83D\uDD68\uFE0F Cetak Daftar</button>
       </div>
     </div>
     </div>
@@ -9219,6 +9220,40 @@ function cetakUlangSuratSP(id){
       setTimeout(cetakSuratSP, 700);
     }
   }catch(e){ console.error('Cetak ulang SP gagal:', e); toast('Gagal menyiapkan cetak ulang'); }
+}
+function cetakSemuaSuratSP(){
+  const src = currentSubState.spSrc==='bermasalah' ? 'bermasalah' : 'aktif';
+  const {list} = suratSPRiwayatData(src);
+  if(!list.length){ toast('Belum ada surat SP pada daftar ini'); return; }
+  try{
+    const s = suratSPLoad();
+    let html = '<div class="ssp-toolbar no-print" style="position:sticky;top:0;z-index:15;background:var(--bg);padding:10px 12px;border-radius:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+      '<div style="font-size:13px;color:var(--muted);"><b>'+list.length+' surat</b> siap dicetak</div>' +
+      '<button type="button" class="btn btn-primary no-print" onclick="cetakSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat</button></div>';
+    list.forEach(r=>{
+      const d = {nama:r.nama, alamat:r.alamat||'', pokok:Number(r.pokok)||0, laba:Number(r.laba)||0, jumlah:Number(r.jumlah)||0, sudahDiangsur:Number(r.sudahDiangsur)||0, sisaKewajiban:Number(r.sisaKewajiban)||0, hariTelat:Number(r.hariTelat)||0};
+      const s2 = Object.assign({}, s, {tanggalSurat: r.tanggalSurat || s.tanggalSurat});
+      let page = suratSPBuatPage(d, s2, Number(r.urut)||1);
+      if(r.nomorSurat){
+        const hasil = suratSPBuildNomor(s2, Number(r.urut)||1);
+        if(hasil && hasil!==r.nomorSurat) page = page.split(escapeHtml(hasil)).join(escapeHtml(r.nomorSurat));
+      }
+      html += page;
+    });
+    suratSPLastPreview = html;
+    document.body.classList.remove('print-daftar-sp');
+    // pastikan pratinjau tampil di halaman ini (render ulang)
+    const pv = document.getElementById('ssp-preview');
+    if(pv){
+      pv.innerHTML = html;
+      pv.scrollIntoView({behavior:'smooth'});
+    } else {
+      renderContent();
+      pv2Scroll();
+    }
+    function pv2Scroll(){ const el = document.getElementById('ssp-preview'); if(el) el.scrollIntoView({behavior:'smooth'}); }
+    setTimeout(cetakSuratSP, 450);
+  }catch(e){ console.error('Cetak semua SP gagal:', e); toast('Gagal menyiapkan cetak surat'); }
 }
 function cetakDaftarSuratSP(){
   const el = document.getElementById('ssp-daftar-print');
