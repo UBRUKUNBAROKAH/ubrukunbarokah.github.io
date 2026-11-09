@@ -3424,6 +3424,7 @@ function doBayarAngsuran(pembId, oleh, jumlah, tanggal){
 ========================================================= */
 function renderContent(){
   document.body.classList.remove('print-daftar-sp');
+  document.body.classList.remove('print-laporan');
   const el = document.getElementById('content');
   const user = currentUser();
   if(!user) return;
@@ -8548,7 +8549,9 @@ function renderAdminSuratSP(user){
       .dsp-empty{padding:20px;text-align:center;color:#555;}
       @media print{
         .app-header,.bottom-nav,.sidebar,.fab-bar,.no-print{display:none!important;}
-        body:not(.print-daftar-sp) #content > *:not(.ssp-preview-wrap){display:none!important;}
+        body:not(.print-daftar-sp):not(.print-laporan) #content > *:not(.ssp-preview-wrap){display:none!important;}
+        body.print-laporan #content > *:not(.lsp-report-body):not(.ssp-daftar-print){display:none!important;}
+        body.print-laporan .ssp-preview-wrap{display:none!important;}
         .ssp-preview-wrap{display:block!important;height:auto!important;max-height:none!important;overflow:visible!important;}#ssp-preview{display:block!important;}
         .ssp-preview-head{display:none!important;}
         .ssp-preview-wrap>.card{padding:0!important;border:none!important;box-shadow:none!important;background:transparent!important;}
@@ -9561,6 +9564,17 @@ function suratSPLaporanRingkas(list){
     totSisa: list.reduce((s,r)=>s+(Number(r.sisaSekarang)||0),0)
   };
 }
+function cetakLaporanProgres(){
+  const beres = ()=>{
+    document.body.classList.remove('print-laporan');
+    window.removeEventListener('afterprint', beres);
+    clearTimeout(safety);
+  };
+  document.body.classList.add('print-laporan');
+  window.addEventListener('afterprint', beres);
+  const safety = setTimeout(beres, 120000);
+  setTimeout(()=>{ try{ window.print(); }catch(e){ console.error('Cetak laporan gagal:', e); beres(); } }, 80);
+}
 function renderSuratSPLaporan(){
   const {list, st, src, dari, sampai} = suratSPLaporanRows();
   const rk = suratSPLaporanRingkas(list);
@@ -9665,7 +9679,7 @@ function renderSuratSPLaporan(){
     <div class="page-title no-print"><span style="display:flex;align-items:center;gap:8px;"><button class="icon-btn" style="background:var(--primary-soft);color:var(--primary);" onclick="currentSubState.sspTab='sudahDiberi';go('${backPage}',{spSrc:'${backSrc}'})">${ICONS.chevronLeft}</button>Laporan Progres Surat SP<span class="sub">${periode}</span></span></div>
     <div class="lsp-report-body">
       <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px;">
-        <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
+        <button class="btn btn-primary no-print" onclick="cetakLaporanProgres()">🖨️ Cetak</button>
         <button class="btn btn-outline no-print" onclick="suratSPLaporanPDF()">${ICONS.pdf||'📄'} Unduh PDF</button>
         <button class="btn btn-outline no-print" onclick="suratSPLaporanXLS()">${ICONS.xls||'📊'} Excel</button>
       </div>
