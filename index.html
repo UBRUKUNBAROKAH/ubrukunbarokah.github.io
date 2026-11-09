@@ -8463,6 +8463,7 @@ function renderAdminSuratSP(user){
   const riwayatCount = suratSPRiwayatArr().length;
   const _sspSrc = currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif';
   const _activeTab = currentSubState.sspTab || (_sspSrc==='bermasalah' ? 'piutang' : 'sudahDiberi');
+  if(_activeTab==='sudahDiberi' || _activeTab==='daftar') currentSubState.st='';
   const _tabBtn = (id, label)=>`<button class="btn ${_activeTab===id?'btn-primary':'btn-outline'} btn-compact no-print" onclick="currentSubState.sspTab='${id}';renderContent()">${label}</button>`;
   return `
     <style>
@@ -8575,8 +8576,8 @@ function renderAdminSuratSP(user){
       ${_tabBtn('pengaturan','Pengaturan')}
     </div>
     ${ _activeTab==='sudahDiberi' ? `
-    <div class="section-label" style="margin-top:0;">Daftar Surat SP yang Sudah Dibuat</div>
-    ${suratSPRiwayatSection(_sspSrc)}
+    <div class="section-label" style="margin-top:0;">Data Nasabah Sudah Diberi Surat SP</div>
+    ${suratSPListSection(_sspSrc)}
     ` : ''}
     ${ _activeTab==='daftar' ? (()=>{
       const _d = suratSPRiwayatData(_sspSrc);
@@ -9125,8 +9126,10 @@ function suratSPRiwayatData(defaultSrc){
   const q = String(currentSubState.q||'').toLowerCase().trim();
   const st = currentSubState.st || '';
   const src = currentSubState.src || defaultSrc || '';
+  const spKe = currentSubState.spKe ? Number(currentSubState.spKe) : '';
   let list = all.slice();
   if(st) list = list.filter(r=>r.status===st);
+  if(spKe) list = list.filter(r=>(Number(r.spKe)||1)===spKe);
   if(src) list = list.filter(r=>r.sumber===src);
   if(q) list = list.filter(r=>
     String(r.nama||'').toLowerCase().includes(q) ||
@@ -9146,9 +9149,56 @@ function suratSPRiwayatData(defaultSrc){
   const jmlBerjalan = unik.length - jmlLunas;
   const totalSisa = unik.reduce((s,r)=>s + (r.status==='lunas' ? 0 : (Number(r.sisaSekarang)||0)), 0);
   const totalDibayar = unik.reduce((s,r)=>s + (Number(r.dibayarSetelah)||0), 0);
-  return {all, list, q, st, src, unik, jmlLunas, jmlBerjalan, totalSisa, totalDibayar};
+  return {all, list, q, st, src, spKe, unik, jmlLunas, jmlBerjalan, totalSisa, totalDibayar};
 }
 
+function suratSPListSection(defaultSrc){
+  const {all, list, src, spKe} = suratSPRiwayatData(defaultSrc);
+  const tahapSet = [...new Set(all.map(r=>Number(r.spKe)||1))].sort((a,b)=>a-b);
+  const tr = list.map(r=>`
+    <tr>
+      <td style="white-space:nowrap;">${fmtDateShort(r.tanggalSurat)}</td>
+      <td style="white-space:nowrap;font-size:11.5px;">${escapeHtml(r.nomorSurat||'-')}</td>
+      <td><b>${escapeHtml(r.nama||'-')}</b><br><span style="color:var(--muted);font-size:11px;">${escapeHtml(r.kelompok||'-')}</span></td>
+      <td><span class="badge ${r.sumber==='bermasalah'?'badge-gold':'badge-soft'}">${r.sumber==='bermasalah'?'Bermasalah':'Aktif'}</span></td>
+      <td style="white-space:nowrap;"><b>SP ${r.spKe||1}</b></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-outline btn-compact" onclick="suratSPRiwayatDetail('${r.id}')">Detail</button>
+        <button class="btn btn-outline btn-compact" style="margin-left:4px;color:var(--danger);border-color:var(--danger);" title="Hapus dari daftar SP" onclick="suratSPRiwayatHapus('${r.id}')">🗑️ Hapus</button>
+      </td>
+    </tr>`).join('');
+  return `
+    <div class="card" style="padding:14px;margin-bottom:14px;">
+      <div class="toolbar-row" style="flex-wrap:wrap;gap:10px;">
+        <div class="search-box" style="margin:0;">${ICONS.search}<input id="sp-rw-cari" placeholder="Cari nama / nomor surat / kelompok..." value="${escapeHtml(currentSubState.q||'')}" oninput="currentSubState.q=this.value;renderContent()"></div>
+        <select style="padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;" onchange="currentSubState.src=this.value;renderContent()">
+          <option value="" ${src===''?'selected':''}>Semua sumber</option>
+          <option value="aktif" ${src==='aktif'?'selected':''}>Tunggakan aktif</option>
+          <option value="bermasalah" ${src==='bermasalah'?'selected':''}>Pembiayaan bermasalah</option>
+        </select>
+        <select style="padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;" onchange="currentSubState.spKe=this.value;renderContent()">
+          <option value="" ${!spKe?'selected':''}>Semua tahap</option>
+          ${tahapSet.map(n=>`<option value="${n}" ${spKe===n?'selected':''}>SP ke-${n}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      ${list.length ? `
+      <div class="ssp-over" style="overflow-x:auto;">
+        <table class="ssp-table">
+          <thead><tr><th>Kapan Diberi</th><th>Nomor</th><th>Nama</th><th>Sumber</th><th>SP ke</th><th></th></tr></thead>
+          <tbody>${tr}</tbody>
+        </table>
+      </div>` : `
+      <div class="empty-state">
+        <div class="ic">📋</div>
+        <div class="t">${all.length?'Tidak ada data sesuai filter':'Belum ada surat SP tercatat'}</div>
+        <div class="d">${all.length?'Ubah kata kunci atau filter tahap/sumber di atas.':'Riwayat mulai tercatat otomatis saat surat SP dibuat.'}</div>
+      </div>`}
+    </div>
+    <div class="hint" style="margin-top:10px;line-height:1.5;">Catatan: progres pembayaran dipantau di <b>TAB Laporan Progres</b>.</div>
+  `;
+}
 function suratSPRiwayatSection(defaultSrc){
   const {all, list, st, src, unik, jmlLunas, jmlBerjalan, totalSisa, totalDibayar} = suratSPRiwayatData(defaultSrc);
   const tr = list.map(r=>{
