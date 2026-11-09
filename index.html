@@ -1930,7 +1930,7 @@ function txForUser(userId) { return (DB.tabunganTx||[]).filter(t=>t.user_id===us
 function totalSaldoUser(userId) { return userAccounts(userId).reduce((s,a)=>s+(a.acc?.saldo||0),0); }
 function pembiayaanForUser(userId) { return (DB.pembiayaan||[]).filter(p=>p.user_id===userId || p.userId===userId); }
 function jenisName(jid) { const j = DB.koperasi?.jenisTabungan?.find(x=>x.id===jid); return j?j.nama:'-'; }
-function koordinatorForKelompok(kid) { const k = DB.koperasi?.kelompok?.find(x=>x.id===kid); return k?userById(k.koor_id||k.koorId||k.koordinatorId):null; }
+function koordinatorForKelompok(kid) { const k = DB.koperasi?.kelompok?.find(x=>x.id===kid); const koorId = k && (k.koor_id||k.koorId||k.koordinatorId); return koorId?userById(koorId):null; }
 
 // ---- Boot ----
 async function boot() {
@@ -2405,7 +2405,8 @@ function nasabahOfKelompok(kelompokId){ return DB.users.filter(u=>u.role==='nasa
 function pembiayaanForUser(userId){ return DB.pembiayaan.filter(p=>p.userId===userId).sort((a,b)=>new Date(b.mulai)-new Date(a.mulai)); }
 function koordinatorForKelompok(kelompokId){
   const k = DB.koperasi.kelompok.find(k=>k.id===kelompokId);
-  return k && k.koordinatorId ? userById(k.koordinatorId) : null;
+  const koorId = k && (k.koor_id || k.koorId || k.koordinatorId);
+  return koorId ? userById(koorId) : null;
 }
 
 function doSetor(userId, jenisId, jumlah, keterangan, tglIso){
@@ -3594,8 +3595,9 @@ function renderAdminBeranda(user){
   const pendingPemb = DB.pembiayaan.filter(p=>p.statusPengajuan==='pending');
   const overdue = computeOverdueLoans();
   const totalSisaTelat2 = overdue.reduce((s,o)=>{const p2=o.p;const tp=(p2.riwayatAngsuran||[]).reduce((a,x)=>a+x.jumlah,0);return s+Math.max(totalKewOf(p2)-tp,0);},0);
-  // Flatten semua yang perlu tindakan menjadi satu list notifikasi
-  const _notifRows = [];
+  // Notifikasi dikelompokkan per jenis agar urutannya konsisten walau nominalnya
+  // berbeda-beda: 1) dana masuk, 2) pengajuan menunggu ACC, 3) hutang ke koordinator.
+  const _danaNotif = [], _accNotif = [], _hutangNotif = [];
   koorRows.forEach(r=>{
     // Satu notifikasi per koordinator. Kalau dananya berasal dari beberapa nasabah,
     // rinciannya dibuka di modal (detailKoorDanaModal).
@@ -3611,15 +3613,18 @@ function renderAdminBeranda(user){
         const _info = sumberSetoranInfo(_pItems[0]);
         _sumber = _info.nas.nama + ' · ' + _info.ket + ' · ' + fmtDateShort(_pItems[0].tanggal);
       }
-      _notifRows.push(`<div class="notif-row" style="cursor:pointer;" onclick="detailKoorDanaModal('${r.koorId}')"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${_judul}</div><div class="notif-sub">${_sumber} &middot; ${rupiah(_totalSisa)} &middot; menunggu diterima</div></div><span style="color:var(--muted);flex:0 0 auto;">${ICONS.chevron||'›'}</span></div>`);
+      _danaNotif.push({total:_totalSisa, html:`<div class="notif-row" style="cursor:pointer;" onclick="detailKoorDanaModal('${r.koorId}')"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${_judul}</div><div class="notif-sub">${_sumber} &middot; ${rupiah(_totalSisa)} &middot; menunggu diterima</div></div><span style="color:var(--muted);flex:0 0 auto;">${ICONS.chevron||'›'}</span></div>`});
     }
     (r.hutangItems||[]).forEach(h=>{
-      _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--danger-soft, #fdeaea);color:var(--danger);">${ICONS.alert || '!'}</div><div class="notif-info"><div class="notif-title">Hutang ke ${r.koor ? r.koor.nama : '-'}</div><div class="notif-sub">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${rupiah(h.jumlah-(h.dibayar||0))} &middot; ${fmtDateShort(h.tanggal)}</div></div><button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button></div>`);
+      const _sisaHutang = Number(h.jumlah||0) - Number(h.dibayar||0);
+      _hutangNotif.push({total:_sisaHutang, html:`<div class="notif-row"><div class="notif-ic" style="background:var(--danger-soft, #fdeaea);color:var(--danger);">${ICONS.alert || '!'}</div><div class="notif-info"><div class="notif-title">Hutang ke ${r.koor ? r.koor.nama : '-'}</div><div class="notif-sub">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${rupiah(_sisaHutang)} &middot; ${fmtDateShort(h.tanggal)}</div></div><button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button></div>`});
     });
   });
   pendingPemb.forEach(p=>{
-    _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.finance}</div><div class="notif-info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="notif-title">${pembUser(p).nama}${akadBadge(p)}</div><div class="notif-sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; menunggu ACC &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(pembUser(p).kelompokId))}</div></div><div style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button></div></div>`);
+    _accNotif.push({total:Number(p.jumlahPinjaman)||0, html:`<div class="notif-row"><div class="notif-ic" style="background:var(--gold-soft);color:var(--gold);">${ICONS.finance}</div><div class="notif-info" style="cursor:pointer;" onclick="detailPengajuanModal('${p.id}')"><div class="notif-title">${pembUser(p).nama}${akadBadge(p)}</div><div class="notif-sub">${rupiah(p.jumlahPinjaman)} &middot; ${p.tenor} bulan &middot; menunggu ACC &middot; oleh ${(k=>k&&k.nama?k.nama:'-')(koordinatorForKelompok(pembUser(p).kelompokId))}</div></div><div style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();accPengajuan('${p.id}')">ACC</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();tolakPengajuan('${p.id}')">Tolak</button></div></div>`});
   });
+  [_danaNotif, _accNotif, _hutangNotif].forEach(a=>a.sort((x,y)=>y.total-x.total));
+  const _notifRows = [..._danaNotif, ..._accNotif, ..._hutangNotif].map(x=>x.html);
   // Telat bayar tidak masuk notif Perlu Tindakan (hanya kartu atas).
   const _notifTotal = _notifRows.length;
   const _notifIsi = _notifTotal ? _notifRows.join('') : `<div class="notif-row"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">✓</div><div class="notif-info"><div class="notif-title">Tidak ada yang perlu tindakan</div><div class="notif-sub">Semua aman — tidak ada setoran menunggu, pengajuan, atau tunggakan yang perlu ditindaklanjuti.</div></div></div>`;
