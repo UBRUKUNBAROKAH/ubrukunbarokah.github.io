@@ -1429,10 +1429,11 @@ async function initSupabaseDB() {
           // cegah dobel: id beda tapi transaksi sama (pembiayaan+tanggal+jumlah+dibuatoleh)
           const dup = DB.setoran.find(x=>x.jenis==='angsuran' && x.pembiayaanId===r.pembiayaanId && String(x.tanggal)===String(r.tanggal) && Number(x.jumlah)===Number(r.jumlah) && x.dibuatoleh===r.dibuatoleh);
           if(dup){ if(r.status) dup.status = r.status; }
-          else DB.setoran.push({id:r.id, userId:r.userId||null, jenis:'angsuran', pembiayaanId:r.pembiayaanId||null, jumlah:Number(r.jumlah)||0, keterangan:r.keterangan||'', tanggal:r.tanggal||nowISO(), dibuatoleh:r.dibuatoleh||null, status:r.status||'di_koordinator', dikonfirmasioleh:r.dikonfirmasioleh||null, waktuKonfirmasi:r.waktuKonfirmasi||null});
+          else DB.setoran.push({id:r.id, userId:r.userId||null, jenis:'angsuran', pembiayaanId:r.pembiayaanId||null, jumlah:Number(r.jumlah)||0, keterangan:r.keterangan||'', tanggal:r.tanggal||nowISO(), dibuatoleh:r.dibuatoleh||r.dibuatOleh||null, dibuatOleh:r.dibuatoleh||r.dibuatOleh||null, status:r.status||'di_koordinator', dikonfirmasioleh:r.dikonfirmasioleh||null, dikonfirmasiOleh:r.dikonfirmasioleh||null, waktuKonfirmasi:r.waktuKonfirmasi||null});
         }
       });
     }catch(e){}
+    try{ normalisasiSetoran(); }catch(e){}
     // Hidrasi status manual dari info map (kolom status_manual belum tentu ada)
     try{
       const sm = (DB.koperasi && DB.koperasi.info && DB.koperasi.info.statusManualPembiayaan) || {};
@@ -1675,7 +1676,7 @@ async function syncAllToSupabase() {
     const mapAnsur = new Map();
     srvArr.forEach(r=>{ if(r && r.id) mapAnsur.set(r.id, r); });
     (DB.setoran||[]).filter(s=>s.jenis==='angsuran').forEach(s=>{
-      const rec = {id:s.id, userId:s.userId, pembiayaanId:s.pembiayaanId, jumlah:s.jumlah, keterangan:s.keterangan, tanggal:s.tanggal, dibuatoleh:s.dibuatoleh, status:s.status, dikonfirmasioleh:s.dikonfirmasioleh, waktuKonfirmasi:s.waktuKonfirmasi};
+      const rec = {id:s.id, userId:s.userId, pembiayaanId:s.pembiayaanId, jumlah:s.jumlah, keterangan:s.keterangan, tanggal:s.tanggal, dibuatoleh:setoranOlehOf(s), status:s.status, dikonfirmasioleh:(s.dikonfirmasiOleh||s.dikonfirmasioleh||null), waktuKonfirmasi:s.waktuKonfirmasi};
       mapAnsur.set(s.id, rec);
     });
     const mergedAnsur = [...mapAnsur.values()];
@@ -2899,8 +2900,21 @@ async function prosesBayarSP(userId, pembId, srcJenis, jumlah, ket){
    Jika penarikan > dana yang dipegang, selisihnya jadi hutang
    admin ke koordinator.
 ========================================================= */
+// Tabel setoran lama memakai camelCase (dibuatOleh), sedangkan antrian angsuran
+// yang disinkronkan lewat info memakai huruf kecil semua (dibuatoleh). Helper ini
+// membaca keduanya supaya saldo & nama koordinator tidak pernah kosong.
+function setoranOlehOf(s){ return s ? (s.dibuatOleh || s.dibuatoleh || null) : null; }
+function normalisasiSetoran(){
+  (DB.setoran||[]).forEach(s=>{
+    if(!s) return;
+    const oleh = setoranOlehOf(s);
+    if(oleh){ s.dibuatOleh = oleh; s.dibuatoleh = oleh; }
+    const konf = s.dikonfirmasiOleh || s.dikonfirmasioleh || null;
+    if(konf){ s.dikonfirmasiOleh = konf; s.dikonfirmasioleh = konf; }
+  });
+}
 function totalSetoranPendingKoor(koorId){
-  return DB.setoran.filter(s=>s.dibuatOleh===koorId && s.status==='di_koordinator').reduce((s,x)=>s+x.jumlah,0);
+  return DB.setoran.filter(s=>setoranOlehOf(s)===koorId && s.status==='di_koordinator').reduce((s,x)=>s+x.jumlah,0);
 }
 function totalPenarikanDariKasKoor(koorId){
   return (DB.kasPenarikan||[]).filter(p=>p.koorId===koorId).reduce((s,x)=>s+x.jumlah,0);
@@ -2914,7 +2928,7 @@ function totalHutangKoor(koorId){
 // Setoran pending (belum disetor ke admin) dikurangi FIFO oleh penarikan yang sudah
 // memakai kas koordinator, supaya antrian/notifikasi konfirmasi admin ikut berkurang.
 function pendingSetoranNetForKoor(koorId){
-  const items = DB.setoran.filter(s=>s.dibuatOleh===koorId && s.status==='di_koordinator')
+  const items = DB.setoran.filter(s=>setoranOlehOf(s)===koorId && s.status==='di_koordinator')
     .slice().sort((a,b)=>new Date(a.tanggal)-new Date(b.tanggal));
   let dipakai = totalPenarikanDariKasKoor(koorId);
   const out = [];
@@ -2927,7 +2941,7 @@ function pendingSetoranNetForKoor(koorId){
   return out;
 }
 function pendingSetoranNetAll(){
-  const koorIds = [...new Set(DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>s.dibuatOleh))];
+  const koorIds = [...new Set(DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>setoranOlehOf(s)))];
   let out = [];
   koorIds.forEach(kid=>{ out = out.concat(pendingSetoranNetForKoor(kid)); });
   return out;
@@ -2935,7 +2949,7 @@ function pendingSetoranNetAll(){
 function sisaSetoran(setoranId){
   const st = DB.setoran.find(s=>s.id===setoranId);
   if(!st) return 0;
-  const net = pendingSetoranNetForKoor(st.dibuatOleh).find(x=>x.id===setoranId);
+  const net = pendingSetoranNetForKoor(setoranOlehOf(st)).find(x=>x.id===setoranId);
   return net ? net.sisa : 0;
 }
 // Ringkasan per koordinator: total saldo yg dipegang (belum disetor ke admin)
@@ -2943,7 +2957,7 @@ function sisaSetoran(setoranId){
 // menunggu diterima + hutang admin ke koordinator ybs. Untuk notifikasi
 // simple & mudah dibaca (semua info soal 1 koordinator jadi 1 kartu).
 function ringkasanSaldoKoordinator(){
-  const setoranKoorIds = DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>s.dibuatOleh);
+  const setoranKoorIds = DB.setoran.filter(s=>s.status==='di_koordinator').map(s=>setoranOlehOf(s));
   const hutangKoorIds = (DB.hutangKoor||[]).filter(h=>h.status==='belum_lunas').map(h=>h.koorId);
   const koorIds = [...new Set([...setoranKoorIds, ...hutangKoorIds])];
   return koorIds.map(kid=>{
@@ -3568,8 +3582,21 @@ function renderAdminBeranda(user){
   const _notifRows = [];
   koorRows.forEach(r=>{
     (r.pendingItems||[]).forEach(s=>{
-      const _jenis = s.jenis==='angsuran' ? ('Angsuran '+(s.keterangan||'')) : (jenisName(s.jenisId)+(s.keterangan && s.keterangan!=='Setoran tunai' ? ' · '+s.keterangan : ''));
-      _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${r.koor ? r.koor.nama : '-'} &middot; ${userById(s.userId).nama}</div><div class="notif-sub">${_jenis} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' (dari '+rupiah(s.jumlah)+')' : ''} &middot; ${fmtDateShort(s.tanggal)} &middot; menunggu diterima</div></div><button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button></div>`);
+      // Judul: dana dari koordinator siapa. Sub: dana dari apa (angsuran nasabah/akad atau setoran jenis apa).
+      const _koorNama = (r.koor && r.koor.nama && r.koor.nama!=='-') ? r.koor.nama : (userById(setoranOlehOf(s)).nama || '-');
+      const _nasabah = userById(s.userId).nama;
+      let _judul, _sumber;
+      if(s.jenis==='angsuran'){
+        const _p = (DB.pembiayaan||[]).find(x=>x.id===s.pembiayaanId);
+        const _akad = _p ? (nomorAkadOf(_p)||'-') : '-';
+        _judul = 'Dana angsuran dari koordinator '+_koorNama;
+        _sumber = _nasabah + (_akad!=='-' ? ' · AKD-'+_akad : '') + ' · ' + (s.keterangan||'Angsuran');
+      } else {
+        _judul = 'Dana setoran dari koordinator '+_koorNama;
+        const _jenisTab = s.jenisId ? jenisName(s.jenisId) : (s.jenis||'Setoran');
+        _sumber = _nasabah + ' · ' + _jenisTab + (s.keterangan && s.keterangan!=='Setoran tunai' ? ' · '+s.keterangan : '');
+      }
+      _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${_judul}</div><div class="notif-sub">${_sumber} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' (dari '+rupiah(s.jumlah)+')' : ''} &middot; ${fmtDateShort(s.tanggal)} &middot; menunggu diterima</div></div><button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button></div>`);
     });
     (r.hutangItems||[]).forEach(h=>{
       _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--danger-soft, #fdeaea);color:var(--danger);">${ICONS.alert || '!'}</div><div class="notif-info"><div class="notif-title">Hutang ke ${r.koor ? r.koor.nama : '-'}</div><div class="notif-sub">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${rupiah(h.jumlah-(h.dibayar||0))} &middot; ${fmtDateShort(h.tanggal)}</div></div><button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button></div>`);
@@ -4254,7 +4281,7 @@ function renderAdminTabungan(user){
     <div class="card" style="padding:6px 18px;">
       ${pending.map(s=>`
         <div class="list-row">
-          <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(s.dibuatOleh).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah?' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+', sdh dipakai penarikan)</span>':''} &middot; oleh ${userById(s.dibuatOleh).nama}</div></div>
+          <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(setoranOlehOf(s)).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah?' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+', sdh dipakai penarikan)</span>':''} &middot; oleh ${userById(setoranOlehOf(s)).nama}</div></div>
           <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
         </div>
       `).join('')}
@@ -10043,7 +10070,7 @@ function renderKoorBeranda(user){
   const anggota = nasabahOfKelompok(user.kelompokId);
   const totalSimpanan = anggota.reduce((s,u)=>s+totalSaldoUser(u.id),0);
   const pembAktif = DB.pembiayaan.filter(p=>anggota.some(u=>u.id===p.userId) && p.status==='berjalan' && p.statusPengajuan==='approved').length;
-  const pendingRaw = DB.setoran.filter(s=>s.dibuatOleh===user.id && s.status==='di_koordinator');
+  const pendingRaw = DB.setoran.filter(s=>setoranOlehOf(s)===user.id && s.status==='di_koordinator');
   const totalPending = pendingRaw.reduce((s,x)=>s+x.jumlah,0);
   const pendingNet = pendingSetoranNetForKoor(user.id);
   const totalDipakaiTarik = totalPenarikanDariKasKoor(user.id);
