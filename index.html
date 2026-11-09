@@ -2913,6 +2913,22 @@ function normalisasiSetoran(){
     if(konf){ s.dikonfirmasiOleh = konf; s.dikonfirmasioleh = konf; }
   });
 }
+// Ringkasan satu record dana masuk: siapa nasabahnya & dari apa (angsuran/akad atau jenis setoran).
+function sumberSetoranInfo(s){
+  const isAngsuran = s && s.jenis==='angsuran';
+  const pb = isAngsuran ? (DB.pembiayaan||[]).find(x=>x.id===s.pembiayaanId) : null;
+  const nas = pb ? pembUser(pb) : userById(s ? s.userId : null);
+  const akad = pb ? (nomorAkadOf(pb)||'') : '';
+  let ket;
+  if(isAngsuran){
+    ket = (s.keterangan||'Angsuran');
+    if(akad) ket += ' · AKD-'+akad;
+  } else {
+    ket = s && s.jenisId ? jenisName(s.jenisId) : ((s&&s.jenis)||'Setoran');
+    if(s && s.keterangan && s.keterangan!=='Setoran tunai') ket += ' · '+s.keterangan;
+  }
+  return {isAngsuran, pb, nas, akad, ket};
+}
 function totalSetoranPendingKoor(koorId){
   return DB.setoran.filter(s=>setoranOlehOf(s)===koorId && s.status==='di_koordinator').reduce((s,x)=>s+x.jumlah,0);
 }
@@ -3581,23 +3597,22 @@ function renderAdminBeranda(user){
   // Flatten semua yang perlu tindakan menjadi satu list notifikasi
   const _notifRows = [];
   koorRows.forEach(r=>{
-    (r.pendingItems||[]).forEach(s=>{
-      // Judul: dana dari koordinator siapa. Sub: dana dari apa (angsuran nasabah/akad atau setoran jenis apa).
-      const _koorNama = (r.koor && r.koor.nama && r.koor.nama!=='-') ? r.koor.nama : (userById(setoranOlehOf(s)).nama || '-');
-      const _nasabah = userById(s.userId).nama;
-      let _judul, _sumber;
-      if(s.jenis==='angsuran'){
-        const _p = (DB.pembiayaan||[]).find(x=>x.id===s.pembiayaanId);
-        const _akad = _p ? (nomorAkadOf(_p)||'-') : '-';
-        _judul = 'Dana angsuran dari koordinator '+_koorNama;
-        _sumber = _nasabah + (_akad!=='-' ? ' · AKD-'+_akad : '') + ' · ' + (s.keterangan||'Angsuran');
+    // Satu notifikasi per koordinator. Kalau dananya berasal dari beberapa nasabah,
+    // rinciannya dibuka di modal (detailKoorDanaModal).
+    const _pItems = r.pendingItems||[];
+    if(_pItems.length){
+      const _koorNama = (r.koor && r.koor.nama && r.koor.nama!=='-') ? r.koor.nama : (userById(r.koorId).nama || '-');
+      const _totalSisa = _pItems.reduce((a,x)=>a+Number(x.sisa||0),0);
+      const _judul = 'Dana dari koordinator '+_koorNama;
+      let _sumber;
+      if(_pItems.length>1){
+        _sumber = _pItems.length+' nasabah · rincian per nasabah';
       } else {
-        _judul = 'Dana setoran dari koordinator '+_koorNama;
-        const _jenisTab = s.jenisId ? jenisName(s.jenisId) : (s.jenis||'Setoran');
-        _sumber = _nasabah + ' · ' + _jenisTab + (s.keterangan && s.keterangan!=='Setoran tunai' ? ' · '+s.keterangan : '');
+        const _info = sumberSetoranInfo(_pItems[0]);
+        _sumber = _info.nas.nama + ' · ' + _info.ket + ' · ' + fmtDateShort(_pItems[0].tanggal);
       }
-      _notifRows.push(`<div class="notif-row" style="cursor:pointer;" onclick="detailSetoranKoorModal('${s.id}')"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${_judul}</div><div class="notif-sub">${_sumber} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' (dari '+rupiah(s.jumlah)+')' : ''} &middot; ${fmtDateShort(s.tanggal)} &middot; menunggu diterima</div></div><span style="color:var(--muted);flex:0 0 auto;">${ICONS.chevron||'›'}</span></div>`);
-    });
+      _notifRows.push(`<div class="notif-row" style="cursor:pointer;" onclick="detailKoorDanaModal('${r.koorId}')"><div class="notif-ic" style="background:var(--ok-soft, #e7f6e9);color:var(--ok);">${ICONS.wallet}</div><div class="notif-info"><div class="notif-title">${_judul}</div><div class="notif-sub">${_sumber} &middot; ${rupiah(_totalSisa)} &middot; menunggu diterima</div></div><span style="color:var(--muted);flex:0 0 auto;">${ICONS.chevron||'›'}</span></div>`);
+    }
     (r.hutangItems||[]).forEach(h=>{
       _notifRows.push(`<div class="notif-row"><div class="notif-ic" style="background:var(--danger-soft, #fdeaea);color:var(--danger);">${ICONS.alert || '!'}</div><div class="notif-info"><div class="notif-title">Hutang ke ${r.koor ? r.koor.nama : '-'}</div><div class="notif-sub">${h.keterangan||'Kekurangan kas penarikan'} &middot; ${rupiah(h.jumlah-(h.dibayar||0))} &middot; ${fmtDateShort(h.tanggal)}</div></div><button class="btn btn-primary btn-sm" onclick="bayarHutangKoorUI('${h.id}')">Bayar</button></div>`);
     });
@@ -3835,6 +3850,80 @@ function detailSetoranKoorModal(setoranId){
       <button class="btn btn-primary" onclick="terimaSetoranKoor('${st.id}')">Terima Dana</button>
     </div>
   `);
+}
+function detailKoorDanaModal(koorId){
+  const r = ringkasanSaldoKoordinator().find(x=>x.koorId===koorId);
+  if(!r || !(r.pendingItems||[]).length) return;
+  const items = r.pendingItems;
+  const koorNama = (r.koor && r.koor.nama && r.koor.nama!=='-') ? r.koor.nama : (userById(koorId).nama || '-');
+  const totalSisa = items.reduce((a,x)=>a+Number(x.sisa||0),0);
+  const _itemsHtml = items.map(s=>{
+    const info = sumberSetoranInfo(s);
+    return `<div class="list-row" style="padding:9px 0;align-items:center;">
+      <div class="info">
+        <div class="title" style="font-size:13.5px;">${info.nas.nama}</div>
+        <div class="sub">${info.ket} &middot; ${fmtDateShort(s.tanggal)}</div>
+      </div>
+      <div style="text-align:right;flex:0 0 auto;">
+        <div class="mono" style="font-weight:700;font-size:13.5px;">${rupiah(s.sisa)}</div>
+        ${s.sisa<s.jumlah ? `<div style="font-size:10px;color:var(--muted);">dari ${rupiah(s.jumlah)}</div>` : ''}
+        <button class="btn btn-primary btn-sm" style="margin-top:5px;" onclick="terimaSetoranKoor('${s.id}')">Terima</button>
+      </div>
+    </div>`;
+  }).join('');
+  openModal(`
+    <h3>Rincian Dana di Koordinator</h3>
+    <div class="card" style="padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <div class="row-ic" style="background:var(--gold-soft);color:var(--gold);flex-shrink:0;">${ICONS.wallet}</div>
+          <div style="min-width:0;">
+            <div class="title" style="font-weight:700;font-size:14.5px;">${koorNama}</div>
+            <div class="sub" style="font-size:11px;">${items.length} nasabah &middot; menunggu diterima</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;">Total dana</div>
+          <div class="mono" style="font-size:19px;font-weight:800;color:var(--primary);line-height:1.3;">${rupiah(totalSisa)}</div>
+        </div>
+      </div>
+      ${r.dipakaiTarik>0 ? `
+      <div style="display:flex;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">
+        <div style="flex:1;text-align:center;"><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Terkumpul</div><div class="mono" style="font-size:14px;font-weight:700;">${rupiah(r.totalSetoran)}</div></div>
+        <div style="color:var(--muted);font-size:17px;font-weight:600;padding:0 6px;">&minus;</div>
+        <div style="flex:1;text-align:center;"><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Dipakai tarik</div><div class="mono" style="font-size:14px;font-weight:700;color:var(--danger);">${rupiah(r.dipakaiTarik)}</div></div>
+        <div style="color:var(--muted);font-size:17px;font-weight:600;padding:0 6px;">=</div>
+        <div style="flex:1;text-align:center;"><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Sisa dibawa</div><div class="mono" style="font-size:14px;font-weight:800;color:var(--ok);">${rupiah(r.sisaKas)}</div></div>
+      </div>` : ''}
+    </div>
+    <div class="section-label">Sumber dana (${items.length})</div>
+    <div class="card" style="padding:4px 16px;">${_itemsHtml}</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Tutup</button>
+      ${items.length>1
+        ? `<button class="btn btn-primary" onclick="terimaSemuaSetoranKoor('${koorId}')">Terima Semua (${rupiah(totalSisa)})</button>`
+        : `<button class="btn btn-primary" onclick="terimaSetoranKoor('${items[0].id}')">Terima Dana</button>`}
+    </div>
+  `);
+}
+async function terimaSemuaSetoranKoor(koorId){
+  const r = ringkasanSaldoKoordinator().find(x=>x.koorId===koorId);
+  if(!r || !(r.pendingItems||[]).length){ closeModal(); renderContent(); return; }
+  const items = r.pendingItems.slice();
+  const koorNama = (r.koor && r.koor.nama && r.koor.nama!=='-') ? r.koor.nama : (userById(koorId).nama || '-');
+  const total = items.reduce((a,x)=>a+Number(x.sisa||0),0);
+  confirmDialog('Terima semua dana?', items.length+' setoran dari koordinator '+koorNama+' senilai '+rupiah(total)+' akan diterima sekaligus.', 'warning', async ()=>{
+    closeModal();
+    let ok = 0, gagal = 0;
+    for(let i=0;i<items.length;i++){
+      toast('Menerima '+(i+1)+'/'+items.length+'...');
+      const res = await confirmSetoran(items[i].id);
+      if(res && res.ok) ok++; else gagal++;
+    }
+    if(ok) bigSuccess(ok+' setoran diterima · '+rupiah(total));
+    if(gagal) toast(gagal+' setoran gagal diterima');
+    renderContent();
+  }, 'Ya, terima semua');
 }
 async function terimaSetoranKoor(setoranId){
   const st = DB.setoran.find(s=>s.id===setoranId);
