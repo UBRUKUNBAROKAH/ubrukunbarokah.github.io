@@ -3743,7 +3743,7 @@ function renderNotifSaldoKoordinator(){
                 <div class="title" style="font-size:13px;">${userById(s.userId).nama}</div>
                 <div class="sub">${s.jenis==='angsuran' ? 'Angsuran '+(s.keterangan||'') : jenisName(s.jenisId)+(s.keterangan && s.keterangan!=='Setoran tunai' ? ' &middot; '+s.keterangan : '')} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah ? ' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+')</span>' : ''}</div>
               </div>
-              <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
+              <button class="btn btn-primary btn-sm" onclick="detailSetoranKoorModal('${s.id}')">Rincian</button>
             </div>
           `).join('')}
         </div>` : ''}
@@ -4342,7 +4342,7 @@ function renderAdminTabungan(user){
       ${pending.map(s=>`
         <div class="list-row">
           <div class="info"><div class="title"><span style="font-size:10px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:8px;">${kelompokName(userById(setoranOlehOf(s)).kelompokId)}</span>${userById(s.userId).nama}</div><div class="sub">${s.jenis==='angsuran'?'Angsuran '+s.keterangan:jenisName(s.jenisId)} &middot; ${rupiah(s.sisa)}${s.sisa<s.jumlah?' <span style="color:var(--muted);">(dari '+rupiah(s.jumlah)+', sdh dipakai penarikan)</span>':''} &middot; oleh ${userById(setoranOlehOf(s)).nama}</div></div>
-          <button class="btn btn-primary btn-sm" onclick="confirmSetoranUI('${s.id}')">Terima</button>
+          <button class="btn btn-primary btn-sm" onclick="detailSetoranKoorModal('${s.id}')">Rincian</button>
         </div>
       `).join('')}
     </div>` : ''}
