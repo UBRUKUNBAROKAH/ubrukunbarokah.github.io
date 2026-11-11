@@ -8806,6 +8806,12 @@ function renderAdminSuratSP(user){
       ${_tabBtn('laporan','Laporan Progres')}
       ${_tabBtn('pengaturan','Pengaturan')}
     </div>
+    ${suratSPLastPreview ? `
+    <div class="ssp-preview-wrap">
+      <div class="card" style="padding:16px;">
+        <div id="ssp-preview">${suratSPLastPreview}</div>
+      </div>
+    </div>` : ''}
     ${ _activeTab==='sudahDiberi' ? `
     <div class="section-label" style="margin-top:0;">Data Nasabah Sudah Diberi Surat SP</div>
     <div style="margin-bottom:12px;" class="no-print">
@@ -8950,12 +8956,6 @@ function renderAdminSuratSP(user){
         </div>
       </div>`;
     })() : ''}
-    ${suratSPLastPreview ? `
-    <div class="ssp-preview-wrap">
-      <div class="card" style="padding:16px;">
-        <div id="ssp-preview">${suratSPLastPreview}</div>
-      </div>
-    </div>` : ''}
     <div class="ssp-daftar-print" id="ssp-daftar-print">${suratSPDaftarCetakHTML(currentSubState.spSrc==='bermasalah'?'bermasalah':'aktif')}</div>
   `;
 }
@@ -9247,20 +9247,8 @@ function suratSPBuat(){
     suratSPCatatRiwayat(chosen, s, urutAwal, isBm ? 'bermasalah' : 'aktif');
     try{ addLog('Surat SP dibuat', chosen.length + ' surat - ' + chosen.map(d=>d.nama).join(', ')); }catch(e){}
   }
-  const pv = document.getElementById('ssp-preview');
   suratSPLastPreview = html;
-  pv.innerHTML = html;
-  const tb = pv.querySelector('.ssp-toolbar');
-  if(tb){
-    tb.style.position = 'sticky';
-    tb.style.top = '0';
-    tb.style.zIndex = '15';
-    tb.style.background = 'var(--bg)';
-    tb.style.padding = '10px 12px';
-    tb.style.borderRadius = '14px';
-    tb.style.marginBottom = '14px';
-  }
-  pv.scrollIntoView({behavior:'smooth'});
+  renderContent();
   toast('Surat berhasil dibuat');
 }
 function suratSPBuatSatu(pembId){
@@ -9635,7 +9623,6 @@ function pratinjauSuratSP(id){
       '<button type="button" class="btn btn-primary no-print" onclick="cetakSuratSP()">\uD83D\uDD68\uFE0F Cetak Surat</button></div>' + page;
     suratSPLastPreview = html;
     renderContent();
-    setTimeout(()=>{ const el=document.getElementById('ssp-preview'); if(el) el.scrollIntoView({behavior:'smooth'}); }, 150);
   }catch(e){ console.error('Pratinjau SP gagal:', e); toast('Gagal menampilkan pratinjau'); }
 }
 function cetakSemuaSuratSP(){
@@ -9659,16 +9646,7 @@ function cetakSemuaSuratSP(){
     });
     suratSPLastPreview = html;
     document.body.classList.remove('print-daftar-sp');
-    // pastikan pratinjau tampil di halaman ini (render ulang)
-    const pv = document.getElementById('ssp-preview');
-    if(pv){
-      pv.innerHTML = html;
-      pv.scrollIntoView({behavior:'smooth'});
-    } else {
-      renderContent();
-      pv2Scroll();
-    }
-    function pv2Scroll(){ const el = document.getElementById('ssp-preview'); if(el) el.scrollIntoView({behavior:'smooth'}); }
+    renderContent();
     setTimeout(cetakSuratSP, 450);
   }catch(e){ console.error('Cetak semua SP gagal:', e); toast('Gagal menyiapkan cetak surat'); }
 }
