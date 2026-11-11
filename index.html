@@ -9019,15 +9019,18 @@ function suratSPOpenPilih(){
   const all = suratSPOverdue();
   const q = (currentSubState.q||'').toLowerCase();
   const kel = currentSubState.kel || '';
+  const tahunPilih = currentSubState.tahunPilih || '';
+  const tahunSet = [...new Set(all.map(d=>String(new Date(d.jatuhTempo).getFullYear())).filter(Boolean))].sort((a,b)=>b-a);
   let list = all;
   if(kel) list = list.filter(x=>x.kelompok===kel);
   if(q) list = list.filter(x=>x.nama.toLowerCase().includes(q));
+  if(tahunPilih) list = list.filter(d=>String(new Date(d.jatuhTempo).getFullYear())===tahunPilih);
   const kelGroups = Array.from(new Set(all.map(x=>x.kelompok))).sort();
   const kelOpts = kelGroups.map(k=>`<option value="${escapeHtml(k)}" ${kel===k?'selected':''}>${escapeHtml(k)}</option>`).join('');
   openModal(`
     <div style="position:sticky;top:0;z-index:100;background:#fff;margin:0 -22px 14px;padding:20px 22px 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.25);">
       <h3 style="margin:0 0 12px;">Pilih Nasabah untuk Surat SP</h3>
-      <div class="toolbar-row" style="margin:0;flex-wrap:wrap;align-items:center;">
+      <div class="toolbar-row" style="margin:0;flex-wrap:wrap;align-items:center;gap:8px;">
         <div style="position:relative;flex:1;min-width:140px;">
           <button type="button" class="ssp-input" style="text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;" onclick="suratSPToggleKel()">
             <span id="ssp-kel-label">${kel?escapeHtml(kel):'Semua Kelompok'}</span>
@@ -9038,6 +9041,10 @@ function suratSPOpenPilih(){
             ${kelGroups.map(k=>`<div style="padding:10px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border);" onclick="suratSPSelectKel('${escapeHtml(k)}')">${escapeHtml(k)}</div>`).join('')}
           </div>
         </div>
+        <select style="padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;" onchange="currentSubState.tahunPilih=this.value;suratSPFilterPilih()">
+          <option value="" ${!tahunPilih?'selected':''}>Semua Tahun</option>
+          ${tahunSet.map(n=>`<option value="${n}" ${tahunPilih===n?'selected':''}>${n}</option>`).join('')}
+        </select>
         <div class="search-box">${ICONS.search}<input id="ssp-cari" placeholder="Cari nama..." value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; suratSPFilterPilih()"></div>
       </div>
     </div>
@@ -9067,9 +9074,11 @@ function suratSPOpenPilih(){
 function suratSPFilterPilih(){
   const q = (currentSubState.q||'').toLowerCase();
   const kel = currentSubState.kel || '';
+  const tahunPilih = currentSubState.tahunPilih || '';
   let list = suratSPOverdue();
   if(kel) list = list.filter(x=>x.kelompok===kel);
   if(q) list = list.filter(x=>x.nama.toLowerCase().includes(q));
+  if(tahunPilih) list = list.filter(x=>String(new Date(x.jatuhTempo).getFullYear())===tahunPilih);
   const tbody = document.getElementById('ssp-pilih-tbody');
   if(!tbody) return;
   tbody.innerHTML = list.map(d=>`
