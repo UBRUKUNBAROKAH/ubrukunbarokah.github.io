@@ -9029,7 +9029,10 @@ function suratSPOpenPilih(){
   const kelOpts = kelGroups.map(k=>`<option value="${escapeHtml(k)}" ${kel===k?'selected':''}>${escapeHtml(k)}</option>`).join('');
   openModal(`
     <div style="position:sticky;top:0;z-index:100;background:#fff;margin:0 -22px 14px;padding:20px 22px 12px;border-bottom:2px solid var(--border);box-shadow:0 4px 10px -6px rgba(0,0,0,.25);">
-      <h3 style="margin:0 0 12px;">Pilih Nasabah untuk Surat SP</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="margin:0;font-size:16px;">Pilih Nasabah untuk Surat SP</h3>
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal()" style="flex:0 0 auto;padding:6px 10px;font-size:12px;">Tutup</button>
+      </div>
       <div class="toolbar-row" style="margin:0;flex-wrap:wrap;align-items:center;gap:8px;">
         <div style="position:relative;flex:1;min-width:140px;">
           <button type="button" class="ssp-input" style="text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;" onclick="suratSPToggleKel()">
