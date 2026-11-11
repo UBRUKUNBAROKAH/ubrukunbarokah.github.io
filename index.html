@@ -9382,9 +9382,11 @@ function suratSPRiwayatData(defaultSrc){
   const st = currentSubState.st || '';
   const src = currentSubState.src || defaultSrc || '';
   const spKe = currentSubState.spKe ? Number(currentSubState.spKe) : '';
+  const tahun = currentSubState.tahun ? String(currentSubState.tahun) : '';
   let list = all.slice();
   if(st) list = list.filter(r=>r.status===st);
   if(spKe) list = list.filter(r=>(Number(r.spKe)||1)===spKe);
+  if(tahun) list = list.filter(r=>String(new Date(r.tanggalSurat||r.createdAt).getFullYear())===tahun);
   if(src) list = list.filter(r=>r.sumber===src);
   if(q) list = list.filter(r=>
     String(r.nama||'').toLowerCase().includes(q) ||
@@ -9409,6 +9411,7 @@ function suratSPRiwayatData(defaultSrc){
 
 function suratSPListSection(defaultSrc){
   const {all, list, src, spKe} = suratSPRiwayatData(defaultSrc);
+  const tahunSet = [...new Set(all.map(r=>String(new Date(r.tanggalSurat||r.createdAt).getFullYear())).filter(Boolean))].sort((a,b)=>b-a);
   const tahapSet = [...new Set(all.map(r=>Number(r.spKe)||1))].sort((a,b)=>a-b);
   const tr = list.map(r=>`
     <tr>
@@ -9434,6 +9437,10 @@ function suratSPListSection(defaultSrc){
         <select style="padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;" onchange="currentSubState.spKe=this.value;renderContent()">
           <option value="" ${!spKe?'selected':''}>Semua tahap</option>
           ${tahapSet.map(n=>`<option value="${n}" ${spKe===n?'selected':''}>SP ke-${n}</option>`).join('')}
+        </select>
+        <select style="padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;" onchange="currentSubState.tahun=this.value;renderContent()">
+          <option value="" ${!currentSubState.tahun?'selected':''}>Semua tahun</option>
+          ${tahunSet.map(n=>`<option value="${n}" ${currentSubState.tahun===n?'selected':''}>${n}</option>`).join('')}
         </select>
       </div>
     </div>
