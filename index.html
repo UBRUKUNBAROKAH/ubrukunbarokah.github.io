@@ -8841,7 +8841,7 @@ function renderAdminSuratSP(user){
             <td style="white-space:nowrap;">${fmtDateShort(r.tanggalSurat)}</td>
             <td>SP ${r.spKe||1}</td>
             <td><span class="badge ${suratSPRiwayatStatusMeta(r).cls}">${suratSPRiwayatStatusMeta(r).label}</span></td>
-            <td style="white-space:nowrap;"><button class="btn btn-primary btn-compact no-print" onclick="cetakUlangSuratSP('${r.id}')">Cetak</button></td>
+            <td style="white-space:nowrap;"><button class="btn btn-primary btn-compact no-print" onclick="cetakUlangSuratSP('${r.id}')">Cetak</button><button class="btn btn-outline btn-compact no-print" style="margin-left:4px;color:var(--danger);border-color:var(--danger);" title="Hapus dari daftar SP" onclick="suratSPRiwayatHapus('${r.id}')">🗑️ Hapus</button></td>
           </tr>`).join('')}</tbody>
         </table>
       </div>` : `
