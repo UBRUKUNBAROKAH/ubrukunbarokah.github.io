@@ -9041,8 +9041,8 @@ function suratSPOpenPilih(){
             ${kelGroups.map(k=>`<div style="padding:10px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border);" onclick="suratSPSelectKel('${escapeHtml(k)}')">${escapeHtml(k)}</div>`).join('')}
           </div>
         </div>
-        <select style="padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;" onchange="currentSubState.tahunPilih=this.value;suratSPFilterPilih()">
-          <option value="" ${!tahunPilih?'selected':''}>Semua Tahun</option>
+        <select style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:12px;" onchange="currentSubState.tahunPilih=this.value;suratSPFilterPilih()">
+          <option value="" ${!tahunPilih?'selected':''}>Semua</option>
           ${tahunSet.map(n=>`<option value="${n}" ${tahunPilih===n?'selected':''}>${n}</option>`).join('')}
         </select>
         <div class="search-box">${ICONS.search}<input id="ssp-cari" placeholder="Cari nama..." value="${currentSubState.q||''}" oninput="currentSubState.q=this.value; suratSPFilterPilih()"></div>
