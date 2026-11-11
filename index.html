@@ -10124,15 +10124,38 @@ function suratSPRiwayatHapus(id){
 function suratSPRiwayatHapusSemua(){
   const arr = suratSPRiwayatArr();
   if(!arr.length){ toast('Daftar sudah kosong'); return; }
+  // Hanya hapus yang cocok dengan filter saat ini (SP ke, sumber, pencarian)
+  const q = String(currentSubState.q||'').toLowerCase().trim();
+  const st = currentSubState.st || '';
+  const src = currentSubState.src || '';
+  const spKe = currentSubState.spKe ? Number(currentSubState.spKe) : '';
+  const cocok = arr.filter(r=>{
+    if(st && r.status!==st) return false;
+    if(spKe && (Number(r.spKe)||1)!==spKe) return false;
+    if(src && r.sumber!==src) return false;
+    if(q){
+      const s = String(r.nama||'').toLowerCase() + ' ' + String(r.nomorSurat||'').toLowerCase() + ' ' + String(r.kelompok||'').toLowerCase();
+      if(!s.includes(q)) return false;
+    }
+    return true;
+  });
+  if(!cocok.length){ toast('Tidak ada data sesuai filter yang dipilih'); return; }
+  const filterDesc = [];
+  if(spKe) filterDesc.push('SP ke-'+spKe);
+  if(src) filterDesc.push(src==='bermasalah'?'Bermasalah':'Aktif');
+  if(q) filterDesc.push('cari "'+q+'"');
   confirmDialog(
     'Hapus Semua Daftar Surat SP?',
-    'Semua ' + arr.length + ' catatan surat SP akan dihapus dari daftar. Tindakan ini tidak dapat dibatalkan. Surat yang sudah dicetak tetap berlaku.',
+    'Akan menghapus '+cocok.length+' catatan'+(filterDesc.length?' (filter: '+filterDesc.join(', ')+')':'.')+' Tindakan ini tidak dapat dibatalkan. Surat yang sudah dicetak tetap berlaku.',
     'danger',
     ()=>{
-      arr.length = 0;
+      const hapusSet = new Set(cocok.map(r=>r.id));
+      for(let i=arr.length-1;i>=0;i--){
+        if(hapusSet.has(arr[i].id)) arr.splice(i,1);
+      }
       persist();
       closeModal();
-      bigSuccess('Semua daftar surat SP telah dihapus');
+      bigSuccess(cocok.length+' catatan surat SP telah dihapus');
       renderContent();
     }
   );
