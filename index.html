@@ -289,6 +289,12 @@ input,select{font-family:inherit;}
 /* Tombol aksi (power/hapus) di kanan baris anggota tidak terpotong */
 .anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"]{flex-shrink:0!important;}
 .anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"] > .icon-btn-sm{flex-shrink:0!important;width:32px!important;height:32px!important;}
+
+/* Tabungan daftar nasabah: tombol kanan tidak terpotong di layar sempit/PWA */
+.tabungan-list-row{flex-wrap:wrap!important;justify-content:space-between!important;align-items:center!important;}
+.tabungan-list-row > .flex{max-width:calc(100% - 140px)!important;}
+.tabungan-list-row > .tabungan-actions{flex-shrink:0!important;}
+.tabungan-list-row > .tabungan-actions > .icon-btn-sm{flex-shrink:0!important;width:32px!important;height:32px!important;}
 .ic-primary{background:var(--primary-soft);color:var(--primary);}
 .login-error{background:var(--danger-soft);color:var(--danger);font-size:13px;padding:10px 12px;border-radius:10px;display:none;}
 .demo-box{background:var(--primary-soft);border-radius:var(--radius-sm);padding:12px 14px;font-size:11.5px;color:var(--primary);line-height:1.6;}
@@ -4452,9 +4458,9 @@ function renderAdminTabungan(user){
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
       <div class="card" style="padding:6px 18px;margin-bottom:14px;">
         ${g.items.map(u=>{ i++; return `
-        <div class="list-row" style="cursor:pointer;" onclick="go('admin_tabungan_detail',{userId:'${u.id}'})">
+        <div class="list-row tabungan-list-row" style="cursor:pointer;" onclick="go('admin_tabungan_detail',{userId:'${u.id}'})">
           <div class="flex"><div class="row-num">${i}</div><div class="avatar">${initials(u.nama)}</div><div class="info"><div class="title">${u.nama}</div><div class="sub">${kelompokName(u.kelompokId)} &middot; <span style="display:inline-flex;align-items:center;gap:5px;">${u.noRekening} ${copyBtn(u.noRekening)}</span>${rekeningNonaktif(u.id)?' <span style="color:var(--danger);font-weight:700;">&middot; NONAKTIF</span>':''}</div></div></div>
-          <div style="display:flex;align-items:center;gap:6px;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-primary" style="color:var(--gold);" title="Transfer dari rekening ini" onclick="event.stopPropagation();openTransferModal('${u.id}')">${ICON_SWAP}</button>${rekeningNonaktif(u.id)
+          <div class="tabungan-actions" style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><div class="amt">${rupiah(totalSaldoUser(u.id))}</div><button class="icon-btn-sm ic-primary" style="color:var(--gold);" title="Transfer dari rekening ini" onclick="event.stopPropagation();openTransferModal('${u.id}')">${ICON_SWAP}</button>${rekeningNonaktif(u.id)
             ? `<button class="icon-btn-sm ic-primary" title="Aktifkan semua rekening" onclick="event.stopPropagation();nonaktifkanSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>`
             : `<button class="icon-btn-sm ic-primary" title="Nonaktifkan semua rekening" onclick="event.stopPropagation();nonaktifkanSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>`}<button class="icon-btn-sm ic-danger" title="Hapus semua rekening" onclick="event.stopPropagation();hapusSemuaRekening('${u.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg></button></div>
         </div>
