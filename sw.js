@@ -1,4 +1,4 @@
-const CACHE = 'rukun-barokah-v71';
+const CACHE = 'rukun-barokah-v72';
 
 // App shell yang di-cache saat install.
 // Pastikan semua file ini benar-benar ada di root repo.
