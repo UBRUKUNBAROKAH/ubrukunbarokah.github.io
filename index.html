@@ -281,20 +281,23 @@ input,select{font-family:inherit;}
 .icon-btn-sm{width:32px;height:32px;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;box-shadow:var(--shadow-neu-xs);transition:box-shadow .12s;}
 .icon-btn-sm:active{box-shadow:var(--shadow-neu-in);}
 .ic-danger{background:var(--danger-soft);color:var(--danger);}
-/* Baris anggota admin: tombol power/hapus di kanan tetap terlihat di layar sempit/PWA */
-.anggota-list-row{flex-wrap:wrap!important;justify-content:space-between!important;align-items:center!important;}
-.anggota-list-row > [style*="flex:1"][style*="min-width:0"]{max-width:calc(100% - 120px)!important;}
-.anggota-list-row > div[style*="flex:1"] > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;}
+/* Baris anggota admin: satu baris rapi, nama memendek otomatis, tombol kanan tidak terpotong */
+.anggota-list-row{flex-wrap:nowrap!important;align-items:center!important;gap:8px!important;}
+.anggota-list-row > [style*="flex:1"][style*="min-width:0"]{flex:1 1 auto!important;min-width:0!important;max-width:none!important;overflow:hidden!important;}
+.anggota-list-row > [style*="flex:1"][style*="min-width:0"] > div{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis;white-space:nowrap!important;}
+.anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"]{flex:0 0 auto!important;flex-shrink:0!important;white-space:nowrap!important;}
+.anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"] > .icon-btn-sm{flex-shrink:0!important;width:30px!important;height:30px!important;}
 
-/* Tombol aksi (power/hapus) di kanan baris anggota tidak terpotong */
-.anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"]{flex-shrink:0!important;}
-.anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"] > .icon-btn-sm{flex-shrink:0!important;width:32px!important;height:32px!important;}
-
-/* Tabungan daftar nasabah: tombol kanan tidak terpotong di layar sempit/PWA */
-.tabungan-list-row{flex-wrap:wrap!important;justify-content:space-between!important;align-items:center!important;}
-.tabungan-list-row > .flex{max-width:calc(100% - 140px)!important;}
-.tabungan-list-row > .tabungan-actions{flex-shrink:0!important;}
-.tabungan-list-row > .tabungan-actions > .icon-btn-sm{flex-shrink:0!important;width:32px!important;height:32px!important;}
+/* Tabungan daftar nasabah: satu baris rapi, nama memendek otomatis, tombol kanan tidak pernah terpotong */
+.tabungan-list-row{flex-wrap:nowrap!important;align-items:center!important;gap:8px!important;}
+.tabungan-list-row > .flex{flex:1 1 auto!important;min-width:0!important;overflow:hidden!important;gap:8px!important;}
+.tabungan-list-row > .flex > .avatar,.tabungan-list-row > .flex > .row-num{flex-shrink:0!important;}
+.tabungan-list-row > .flex > .info{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;}
+.tabungan-list-row > .flex > .info > .title{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.tabungan-list-row > .flex > .info > .sub{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.tabungan-actions{flex:0 0 auto!important;flex-shrink:0!important;white-space:nowrap!important;}
+.tabungan-actions > .amt{flex-shrink:0!important;font-size:12.5px!important;}
+.tabungan-actions > .icon-btn-sm{flex-shrink:0!important;width:30px!important;height:30px!important;}
 .ic-primary{background:var(--primary-soft);color:var(--primary);}
 .login-error{background:var(--danger-soft);color:var(--danger);font-size:13px;padding:10px 12px;border-radius:10px;display:none;}
 .demo-box{background:var(--primary-soft);border-radius:var(--radius-sm);padding:12px 14px;font-size:11.5px;color:var(--primary);line-height:1.6;}
