@@ -281,13 +281,14 @@ input,select{font-family:inherit;}
 .icon-btn-sm{width:32px;height:32px;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;box-shadow:var(--shadow-neu-xs);transition:box-shadow .12s;}
 .icon-btn-sm:active{box-shadow:var(--shadow-neu-in);}
 .ic-danger{background:var(--danger-soft);color:var(--danger);}
-/* Pastikan tombol aksi di kanan baris (power/hapus) selalu terlihat, tidak terpotong di layar sempit/PWA */
-[style*="gap:4px"][style*="flex-shrink:0"]{min-width:auto;flex-shrink:0!important;}
-[style*="gap:4px"][style*="flex-shrink:0"] > .icon-btn-sm{flex-shrink:0!important;width:32px!important;height:32px!important;}
-/* Baris anggota: biarkan tombol kanan tetap muncul meski layar sempit */
-div[style*="gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;"]{flex-wrap:wrap!important;justify-content:space-between!important;align-items:center!important;}
-div[style*="gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;"] > [style*="flex:1"][style*="min-width:0"]{max-width:calc(100% - 110px)!important;}
-div[style*="gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;"] > div[style*="flex:1"] > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;}
+/* Baris anggota admin: tombol power/hapus di kanan tetap terlihat di layar sempit/PWA */
+.anggota-list-row{flex-wrap:wrap!important;justify-content:space-between!important;align-items:center!important;}
+.anggota-list-row > [style*="flex:1"][style*="min-width:0"]{max-width:calc(100% - 120px)!important;}
+.anggota-list-row > div[style*="flex:1"] > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;}
+
+/* Tombol aksi (power/hapus) di kanan baris anggota tidak terpotong */
+.anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"]{flex-shrink:0!important;}
+.anggota-list-row > div[style*="gap:4px"][style*="flex-shrink:0"] > .icon-btn-sm{flex-shrink:0!important;width:32px!important;height:32px!important;}
 .ic-primary{background:var(--primary-soft);color:var(--primary);}
 .login-error{background:var(--danger-soft);color:var(--danger);font-size:13px;padding:10px 12px;border-radius:10px;display:none;}
 .demo-box{background:var(--primary-soft);border-radius:var(--radius-sm);padding:12px 14px;font-size:11.5px;color:var(--primary);line-height:1.6;}
@@ -4233,7 +4234,7 @@ function renderAdminAnggota(user){
       <div class="section-label">${g.nama} <span style="font-weight:400;color:var(--muted);">(${g.items.length})</span></div>
       <div class="card" style="padding:0;margin-bottom:14px;">
         ${g.items.map(u=>{ i++; return `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="go('admin_anggota_detail', {userId:'${u.id}'})">
+        <div class="anggota-list-row" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="go('admin_anggota_detail', {userId:'${u.id}'})">
           <div class="row-num">${i}</div>
           <div class="avatar">${initials(u.nama)}</div>
           <div style="flex:1;min-width:0;">
