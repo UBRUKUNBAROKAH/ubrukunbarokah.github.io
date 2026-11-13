@@ -7164,12 +7164,24 @@ function applyDisplayWidth(){
   document.documentElement.style.setProperty('--app-max', v === 'full' ? '100%' : (v + 'px'));
 }
 function setDisplayWidth(v){
-  localStorage.setItem(DISPLAY_WIDTH_KEY, v);
+  let val = String(v);
+  if(val !== 'full'){
+    const n = parseInt(val, 10);
+    if(isNaN(n)){ return; }
+    val = String(Math.max(240, Math.min(900, n)));
+  }
+  localStorage.setItem(DISPLAY_WIDTH_KEY, val);
   applyDisplayWidth();
-  toast(v === 'full' ? 'Lebar tampilan: penuh (sesuai layar)' : 'Lebar tampilan dikunci ' + v + 'px');
+  if(typeof currentUser === 'function' && currentUser()){
+    currentSubState.setTab = 'tampilan';
+    renderContent();
+  }
+  toast(val === 'full' ? 'Lebar tampilan: penuh (sesuai layar)' : 'Lebar tampilan dikunci ' + val + 'px');
 }
+const DISPLAY_WIDTH_PRESETS = ['480','430','400','360'];
 function renderPengaturanTampilan(){
   const cur = displayWidthValue();
+  const isCustom = cur !== 'full' && !DISPLAY_WIDTH_PRESETS.includes(cur);
   const opts = [
     ['full','Penuh','Lebar mengikuti layar (bawaan)'],
     ['480','480px','Seukuran HP lebar'],
@@ -7186,7 +7198,16 @@ function renderPengaturanTampilan(){
           <input type="radio" name="disp-width" value="${o[0]}" ${cur===o[0]?'checked':''} style="margin-top:2px;width:16px;height:16px;" onchange="setDisplayWidth('${o[0]}')">
           <span><b style="font-size:13.5px;">${o[1]}</b><br><span style="font-size:12px;color:var(--muted);">${o[2]}</span></span>
         </label>`).join('')}
-      <div class="hint" style="margin-top:10px;">Contoh: pilih 360px agar proporsi tampilan sama di semua HP; konten tampil dalam kolom 360px di tengah layar.</div>
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid ${isCustom?'var(--primary)':'var(--border-neu)'};border-radius:12px;margin-bottom:8px;cursor:pointer;background:${isCustom?'var(--primary-soft)':'var(--bg)'};">
+        <input type="radio" name="disp-width" value="custom" ${isCustom?'checked':''} style="margin-top:2px;width:16px;height:16px;" onchange="document.getElementById('disp-width-custom').focus()">
+        <span style="flex:1;"><b style="font-size:13.5px;">Custom</b><br><span style="font-size:12px;color:var(--muted);">Ketik angka lebar sendiri (satuan px), misal <b>511</b></span>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            <input type="number" id="disp-width-custom" min="240" max="900" step="1" inputmode="numeric" value="${isCustom?cur:''}" placeholder="mis. 511" style="width:110px;padding:8px 10px;border:1px solid var(--border-neu);border-radius:10px;font-size:13px;" onchange="if(this.value){setDisplayWidth(this.value)}">
+            <span style="font-size:12px;color:var(--muted);">px &middot; batas 240&ndash;900</span>
+          </div>
+        </span>
+      </label>
+      <div class="hint" style="margin-top:10px;">Contoh: pilih 360px agar proporsi tampilan sama di semua HP; konten tampil dalam kolom 360px di tengah layar. Angka keluar batas otomatis dibulatkan ke 240&ndash;900.</div>
     </div>
   `;
 }
