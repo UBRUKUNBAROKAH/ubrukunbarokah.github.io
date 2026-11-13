@@ -566,6 +566,13 @@ input,select{font-family:inherit;}
   .app-body #content{padding-bottom:80px;}
 }
 
+/* ===== LEBAR TAMPILAN (atur di Pengaturan > Tampilan) ===== */
+body.app-locked #app-screen,
+body.app-locked #login-screen{width:100%;max-width:var(--app-max,430px);margin-left:auto;margin-right:auto;}
+body.app-locked .bottom-nav{left:50%;right:auto;width:100%;max-width:var(--app-max,430px);transform:translateX(-50%);}
+body.app-locked .app-footer{max-width:var(--app-max,430px);margin-left:auto;margin-right:auto;}
+body.app-locked .toast{max-width:calc(var(--app-max,430px) - 32px);}
+
 /* modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(10,25,18,.5);z-index:50;display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.show{display:flex;}
@@ -1974,6 +1981,7 @@ function koordinatorForKelompok(kid) { const k = DB.koperasi?.kelompok?.find(x=>
 
 // ---- Boot ----
 async function boot() {
+  applyDisplayWidth();
   await initSupabaseDB();
   applyKoperasiBranding();
   const user = currentUser();
@@ -7085,6 +7093,7 @@ function renderAdminPengaturan(user){
       <button class="${tab==='saham'?'active':''}" onclick="setPengaturanTab('saham')">Saham</button>
       <button class="${tab==='keuangan'?'active':''}" onclick="setPengaturanTab('keuangan')">Aturan Keuangan</button>
       <button class="${tab==='wa'?'active':''}" onclick="setPengaturanTab('wa')">Notifikasi</button>
+      <button class="${tab==='tampilan'?'active':''}" onclick="setPengaturanTab('tampilan')">Tampilan</button>
     </div>
     ${tab==='profil' ? renderPengaturanProfil() : ''}
     ${tab==='tabungan' ? renderPengaturanJenisTabungan() : ''}
@@ -7092,6 +7101,7 @@ function renderAdminPengaturan(user){
     ${tab==='saham' ? renderPengaturanSaham() : ''}
     ${tab==='keuangan' ? renderPengaturanKeuangan() : ''}
     ${tab==='wa' ? renderPengaturanWA() : ''}
+    ${tab==='tampilan' ? renderPengaturanTampilan() : ''}
   `;
 }
 function renderPengaturanWA(){
@@ -7141,6 +7151,45 @@ function saveTemplateWA(){
   renderContent();
 }
 function setPengaturanTab(t){ currentSubState.setTab = t; renderContent(); }
+
+/* =========================================================
+   LEBAR TAMPILAN APLIKASI (Pengaturan > Tampilan)
+   Tersimpan di localStorage tiap HP.
+========================================================= */
+const DISPLAY_WIDTH_KEY = 'ub_display_width_v1';
+function displayWidthValue(){ return localStorage.getItem(DISPLAY_WIDTH_KEY) || 'full'; }
+function applyDisplayWidth(){
+  const v = displayWidthValue();
+  document.body.classList.toggle('app-locked', v !== 'full');
+  document.documentElement.style.setProperty('--app-max', v === 'full' ? '100%' : (v + 'px'));
+}
+function setDisplayWidth(v){
+  localStorage.setItem(DISPLAY_WIDTH_KEY, v);
+  applyDisplayWidth();
+  toast(v === 'full' ? 'Lebar tampilan: penuh (sesuai layar)' : 'Lebar tampilan dikunci ' + v + 'px');
+}
+function renderPengaturanTampilan(){
+  const cur = displayWidthValue();
+  const opts = [
+    ['full','Penuh','Lebar mengikuti layar (bawaan)'],
+    ['480','480px','Seukuran HP lebar'],
+    ['430','430px','Seukuran HP standar'],
+    ['400','400px','Lebih ringkas'],
+    ['360','360px','Seukuran HP kecil']
+  ];
+  return `
+    <div class="card">
+      <div style="font-weight:700;font-size:14.5px;margin-bottom:6px;">Lebar tampilan aplikasi</div>
+      <div class="hint" style="margin-bottom:12px;">Aturan ini tersimpan di HP masing-masing, jadi setiap HP bisa memilih lebar yang paling nyaman. Pilih "Penuh" agar memenuhi layar.</div>
+      ${opts.map(o=>`
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid ${cur===o[0]?'var(--primary)':'var(--border-neu)'};border-radius:12px;margin-bottom:8px;cursor:pointer;background:${cur===o[0]?'var(--primary-soft)':'var(--bg)'};">
+          <input type="radio" name="disp-width" value="${o[0]}" ${cur===o[0]?'checked':''} style="margin-top:2px;width:16px;height:16px;" onchange="setDisplayWidth('${o[0]}')">
+          <span><b style="font-size:13.5px;">${o[1]}</b><br><span style="font-size:12px;color:var(--muted);">${o[2]}</span></span>
+        </label>`).join('')}
+      <div class="hint" style="margin-top:10px;">Contoh: pilih 360px agar proporsi tampilan sama di semua HP; konten tampil dalam kolom 360px di tengah layar.</div>
+    </div>
+  `;
+}
 function renderPengaturanProfil(){
   const preview = DB.koperasi.iconImage || null;
   const info = DB.koperasi.info || {};
