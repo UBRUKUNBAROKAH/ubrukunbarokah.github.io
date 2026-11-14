@@ -1394,6 +1394,9 @@ async function initSupabaseDB() {
       if (!p.userId || userIdsSet.has(p.userId)) return;
       if (aggToUserId.has(p.userId)) { p.userId = aggToUserId.get(p.userId); return; }
       // Import lama tanpa akun: cocokkan lewat nama pada keterangan akad.
+      // Hanya untuk catatan yang benar-benar berisi (baris impor kosong
+      // ber-nominal 0 dibiarkan tersembunyi agar tidak mengotori daftar).
+      if (!(Number(p.jumlahPinjaman) > 0)) return;
       const m = String(p.keterangan || '').match(/AKD-[^\s]+\s*·\s*([^·]+?)\s*·/);
       if (!m) return;
       const cand = userByName.get(m[1].trim().toLowerCase()) || [];
