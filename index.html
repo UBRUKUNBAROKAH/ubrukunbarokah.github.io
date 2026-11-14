@@ -1638,6 +1638,15 @@ async function syncAllToSupabase() {
   async function safeUpsert(table, data, label){
     if (!data || (Array.isArray(data) && data.length===0)) return;
     try {
+      // Cegah "ON CONFLICT DO UPDATE command cannot affect row a second time":
+      // dua baris ber-id sama dalam satu upsert membuat Postgres menolak semua.
+      // Buang duplikat (yang pertama dipakai) supaya satu data ganda tidak
+      // memblokir seluruh proses simpan.
+      if (Array.isArray(data)) {
+        const seen = new Map();
+        for (const row of data) { if (row && row.id != null && !seen.has(row.id)) seen.set(row.id, row); }
+        data = [...seen.values()];
+      }
       const { error } = await supabaseClient.from(table).upsert(data, { onConflict: 'id' });
       if (error) { console.error(`Supabase sync error (${label||table}):`, error); errors.push({table: label||table, error}); }
     } catch (err) {
@@ -2037,7 +2046,7 @@ async function handleLogin(){
       console.warn('DB tidak valid saat login, mencoba memuat ulang DB');
       await loadDB();
     }
-    const user = (DB.users||[]).find(u=>u.username===username && u.password===password);
+    const user = (DB.users||[]).find(u=>u.username && u.username.toLowerCase()===username.toLowerCase() && u.password===password);
     if(!user){
       errBox.textContent = 'Nama pengguna atau kata sandi salah.';
       errBox.style.display = 'block';
@@ -4212,7 +4221,7 @@ function commitImportRows(){
       const o = r.obj;
       const baseUsername = o.nama.toLowerCase().replace(/[^a-z]/g,'');
       let username = baseUsername, counter = 1;
-      while(DB.users.some(u=>u.username===username)){ username = baseUsername+counter; counter++; }
+      while(DB.users.some(u=>u.username && u.username.toLowerCase()===username)){ username = baseUsername+counter; counter++; }
       const newUser = {
         id:uid('u'), username, password:'anggota354', role:'nasabah', nama:o.nama, nik:o.nik, alamat:o.alamat, noHp:o.noHp, kelompokId:o.kelompokId,
         noRekening: '2026'+String(1000+DB.users.length), saham:{s_A:0,s_B:0,s_C:0}, status:'aktif', anggotaId:uid('agg'), createdAt: nowISO()
@@ -4779,7 +4788,7 @@ function submitTambahAnggota(){
   const baseUsername = nama.toLowerCase().replace(/[^a-z]/g,'');
   let username = baseUsername;
   let counter = 1;
-  while(DB.users.some(u=>u.username===username)){ username = baseUsername + counter; counter++; }
+  while(DB.users.some(u=>u.username && u.username.toLowerCase()===username)){ username = baseUsername + counter; counter++; }
   const password = 'anggota354';
 
   const newUser = {
@@ -5674,7 +5683,7 @@ async function submitUser(existingId){
     const target = DB.users.find(u=>u.id===memberId && u.role==='nasabah');
     if(!target){ toast('Pilih nasabah dari daftar terlebih dahulu'); return; }
     if(!username || !password){ toast('Lengkapi username & kata sandi'); return; }
-    if(DB.users.some(u=>u.username===username && u.id!==target.id)){ toast('Nama pengguna sudah dipakai'); return; }
+    if(DB.users.some(u=>u.username && u.username.toLowerCase()===username.toLowerCase() && u.id!==target.id)){ toast('Nama pengguna sudah dipakai'); return; }
     // Kasus 1: nasabah belum punya akun login (_noAkun) -> buat akun baru resmi
     if(target._noAkun){
       const newId = uid('u');
@@ -5713,8 +5722,8 @@ async function submitUser(existingId){
     ? document.getElementById('um-nama').value.trim()
     : document.getElementById('um-nama').value.trim();
   if(!nama || !username || !password){ toast('Lengkapi semua data'); return; }
-  if(!existingId && DB.users.some(u=>u.username===username)){ toast('Nama pengguna sudah dipakai'); return; }
-  if(existingId && DB.users.some(u=>u.username===username && u.id!==existingId)){ toast('Nama pengguna sudah dipakai'); return; }
+  if(!existingId && DB.users.some(u=>u.username && u.username.toLowerCase()===username.toLowerCase())){ toast('Nama pengguna sudah dipakai'); return; }
+  if(existingId && DB.users.some(u=>u.username && u.username.toLowerCase()===username.toLowerCase() && u.id!==existingId)){ toast('Nama pengguna sudah dipakai'); return; }
 
   const btn = document.querySelector('button[onclick^="submitUser("]');
   if(btn){ btn.disabled = true; btn.textContent = 'Menyimpan...'; }
