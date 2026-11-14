@@ -1376,6 +1376,30 @@ async function initSupabaseDB() {
       }
     });
 
+    // Samakan penunjuk pemilik pembiayaan dengan ID akun.
+    // Data lama/import menyimpan ID anggota (atau 'usr_imp'), bukan ID akun,
+    // sehingga pembiayaan tidak muncul di halaman koordinator & nasabah
+    // (pencocokan di sana memakai ID akun).
+    const userIdsSet = new Set(mergedUsers.map(x => x.id));
+    const aggToUserId = new Map();
+    mergedUsers.forEach(x => { if (x.anggotaId) aggToUserId.set(x.anggotaId, x.id); });
+    const userByName = new Map();
+    mergedUsers.forEach(x => {
+      const n = String(x.nama || '').trim().toLowerCase();
+      if (!n) return;
+      if (!userByName.has(n)) userByName.set(n, []);
+      userByName.get(n).push(x);
+    });
+    pb.forEach(p => {
+      if (!p.userId || userIdsSet.has(p.userId)) return;
+      if (aggToUserId.has(p.userId)) { p.userId = aggToUserId.get(p.userId); return; }
+      // Import lama tanpa akun: cocokkan lewat nama pada keterangan akad.
+      const m = String(p.keterangan || '').match(/AKD-[^\s]+\s*·\s*([^·]+?)\s*·/);
+      if (!m) return;
+      const cand = userByName.get(m[1].trim().toLowerCase()) || [];
+      if (cand.length === 1) p.userId = cand[0].id;
+    });
+
     // Build DB object
     DB = {
       users: mergedUsers,
