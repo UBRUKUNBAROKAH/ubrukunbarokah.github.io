@@ -1655,6 +1655,17 @@ async function syncAllToSupabase() {
     }
   }
 
+  function failIfSyncErrors(){
+    if(!errors.length) return;
+    const detail = errors.map(e => {
+      const msg = e.error && (e.error.message || e.error.msg) || 'unknown error';
+      const extra = e.error && (e.error.details || e.error.hint) ? ' — ' + (e.error.details || e.error.hint) : '';
+      return e.table + ': ' + msg + extra;
+    }).join(' | ');
+    console.error('Auto-sync gagal pada tabel:', detail);
+    throw new Error(detail);
+  }
+
   // Sync users (tabel login) + anggota (tabel data nasabah)
   const usersTable = [];
   const anggotaTable = [];
@@ -1693,12 +1704,8 @@ async function syncAllToSupabase() {
     return s;
   });
   await safeUpsert(TABLES.tabungan_tx, txSnake);
-  // Sync pembiayaan (dengan gabungan data usang dari perangkat lain supaya
-  // status ACC/tolak & progres angsuran tidak ditimpa)
-  const pembSync = await mergePembiayaanForSync();
-  await safeUpsert(TABLES.pembiayaan, pembSync, 'pembiayaan');
-  // Sync angsuran
-  await safeUpsert(TABLES.angsuran, toSnake(DB.angsuran));
+  // Sync pembiayaan & angsuran dipindah ke bagian akhir (lihat di bawah) supaya
+  // kalau ada tabel lain gagal, data pembayaran tidak tersimpan setengah-setengah.
   // Sync jenis saham
   await safeUpsert(TABLES.jenis_saham, toSnake(DB.koperasi?.saham?.jenis));
   // Sync kepemilikan saham
@@ -1724,6 +1731,13 @@ async function syncAllToSupabase() {
       }
     }
   } catch(e){} // cleanup error aman diabaikan
+  // ---- Data pembayaran & pengaturan: sinkron paling akhir ----
+  // Kalau ada tabel lain yang gagal, hentikan di sini supaya angsuran/pembiayaan
+  // tidak tersimpan setengah (penyebab "angsuran hantu" saat pengguna mencoba ulang).
+  failIfSyncErrors();
+  const pembSync = await mergePembiayaanForSync();
+  await safeUpsert(TABLES.pembiayaan, pembSync, 'pembiayaan');
+  await safeUpsert(TABLES.angsuran, toSnake(DB.angsuran));
   // Setoran angsuran (di_koordinator) disimpan via info agar ikut tersinkron
   // tanpa kolom baru di tabel setoran (yang tidak punya kolom jenis).
   try{
@@ -1753,15 +1767,7 @@ async function syncAllToSupabase() {
   };
   await safeUpsert(TABLES.pengaturan_koperasi, [pg], 'pengaturan_koperasi');
 
-  if (errors.length) {
-    const detail = errors.map(e => {
-      const msg = e.error && (e.error.message || e.error.msg) || 'unknown error';
-      const extra = e.error && (e.error.details || e.error.hint) ? ' — ' + (e.error.details || e.error.hint) : '';
-      return e.table + ': ' + msg + extra;
-    }).join(' | ');
-    console.error('Auto-sync selesai dengan error pada tabel:', detail);
-    throw new Error(detail);
-  }
+  failIfSyncErrors();
   console.log('Auto-sync to Supabase berhasil');
 }
 
@@ -1989,9 +1995,30 @@ function jenisName(jid) { const j = DB.koperasi?.jenisTabungan?.find(x=>x.id===j
 function koordinatorForKelompok(kid) { const k = DB.koperasi?.kelompok?.find(x=>x.id===kid); const koorId = k && (k.koor_id||k.koorId||k.koordinatorId); return koorId?userById(koorId):null; }
 
 // ---- Boot ----
+/* Pembersihan satu kali (v81): hapus catatan angsuran ganda akibat simpan
+   yang gagal berulang pada 14 Nov 2026 (pembiayaan Syaiful N H). Server sudah
+   dibersihkan; ini mencegah perangkat yang masih memegang data lama
+   mengunggah ulang catatan hantu tersebut. */
+function fixAngsuranHantuV81(){
+  try{
+    if(localStorage.getItem('ub_fix_angsuran_v81')) return;
+    const hantu = ['ang_piyt7zy','ang_yzf0zqa','ang_yv79dni','ang_3jjingm'];
+    let berubah = false;
+    (DB.pembiayaan||[]).forEach(p=>{
+      if(!Array.isArray(p.riwayatAngsuran)) return;
+      const sebelum = p.riwayatAngsuran.length;
+      p.riwayatAngsuran = p.riwayatAngsuran.filter(a=>!hantu.includes(a.id));
+      if(p.riwayatAngsuran.length !== sebelum) berubah = true;
+    });
+    localStorage.setItem('ub_fix_angsuran_v81', '1');
+    if(berubah) persist();
+  }catch(e){ console.warn('fixAngsuranHantuV81:', e); }
+}
+
 async function boot() {
   applyDisplayWidth();
   await initSupabaseDB();
+  fixAngsuranHantuV81();
   applyKoperasiBranding();
   const user = currentUser();
   if(!user){
