@@ -1353,6 +1353,30 @@ async function initSupabaseDB() {
       }
       return user;
     });
+
+    // Akun kembar: dua baris users dengan anggota_id sama (biasanya perangkat lain
+    // mengunggah ulang akun lama). Simpan satu saja: yang punya kelompok, lalu yang
+    // paling awal dibuat. Referensi pembiayaan akun yang dibuang dialihkan ke akun
+    // yang disimpan agar datanya tidak hilang.
+    const aliasUserId = new Map();
+    const byAnggota = new Map();
+    mergedUsers.forEach(x => {
+      if (!x.anggotaId) return;
+      if (!byAnggota.has(x.anggotaId)) byAnggota.set(x.anggotaId, []);
+      byAnggota.get(x.anggotaId).push(x);
+    });
+    byAnggota.forEach(list => {
+      if (list.length < 2) return;
+      const rank = x => (x.kelompokId ? 0 : 1);
+      const sorted = [...list].sort((x, y) => (rank(x) - rank(y)) || (new Date(x.createdAt || 0) - new Date(y.createdAt || 0)));
+      const keep = sorted[0];
+      sorted.slice(1).forEach(x => aliasUserId.set(x.id, keep.id));
+    });
+    if (aliasUserId.size) {
+      const keptUsers = mergedUsers.filter(x => !aliasUserId.has(x.id));
+      mergedUsers.length = 0;
+      mergedUsers.push(...keptUsers);
+    }
 // Anggota yang ada di tabel "anggota" tapi belum punya akun login di tabel "users"
     // (mis. diinput langsung lewat Supabase, atau sinkronisasi user sempat gagal)
     // tetap ditampilkan di daftar supaya tidak "hilang".
@@ -1392,6 +1416,7 @@ async function initSupabaseDB() {
     });
     pb.forEach(p => {
       if (!p.userId || userIdsSet.has(p.userId)) return;
+      if (aliasUserId.has(p.userId)) { p.userId = aliasUserId.get(p.userId); return; }
       if (aggToUserId.has(p.userId)) { p.userId = aggToUserId.get(p.userId); return; }
       // Import lama tanpa akun: cocokkan lewat nama pada keterangan akad.
       // Hanya untuk catatan yang benar-benar berisi (baris impor kosong
