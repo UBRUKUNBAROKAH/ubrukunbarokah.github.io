@@ -1342,7 +1342,7 @@ async function initSupabaseDB() {
       fetchAllRows(TABLES.kepemilikan_saham),
       supabaseClient.from(TABLES.pengaturan_koperasi).select('*').eq('id', 'koperasi').single(),
       fetchAllRows(TABLES.setoran),
-      supabaseClient.from(TABLES.logs).select('*').order('created_at', {ascending: false}).limit(100),
+      supabaseClient.from(TABLES.logs).select('*').order('created_at', {ascending: false}).limit(500),
       fetchAllRows(TABLES.kas_penarikan_koor),
       fetchAllRows(TABLES.hutang_koordinator)
     ]);
@@ -1806,13 +1806,14 @@ async function syncAllToSupabase() {
   // Sync hutang admin ke koordinator (kekurangan kas saat penarikan melebihi dana yang dipegang koordinator)
   await safeUpsert(TABLES.hutang_koordinator, toSnake(DB.hutangKoor), 'hutang_koordinator');
   // Sync logs + cleanup (keep max 500 row)
-  await safeUpsert(TABLES.logs, toSnake(DB.logs));
+  await safeUpsert(TABLES.logs, logsForSync());
   try {
     const { count } = await supabaseClient.from(TABLES.logs).select('*', { count: 'exact', head: true });
     if (count && count > 500) {
-      const { data: old } = await supabaseClient.from(TABLES.logs).select('id').order('created_at', {ascending: true}).limit(count - 500);
+      const { data: old } = await supabaseClient.from(TABLES.logs).select('id,telegram_status').order('created_at', {ascending: true}).limit(count - 500);
       if (old && old.length) {
-        const ids = old.map(r=>r.id);
+        // Jangan hapus log yang belum terkirim ke Telegram.
+        const ids = old.filter(r=>r.telegram_status!=='pending' && r.telegram_status!=='failed').map(r=>r.id);
         for (let i = 0; i < ids.length; i += 100) {
           await supabaseClient.from(TABLES.logs).delete().in('id', ids.slice(i, i + 100));
         }
@@ -2107,6 +2108,7 @@ async function boot() {
   applyDisplayWidth();
   await initSupabaseDB();
   fixAngsuranHantuV81();
+  mulaiSyncTelegram();
   applyKoperasiBranding();
   const user = currentUser();
   if(!user){
@@ -2129,27 +2131,78 @@ async function boot() {
 function telegramLogEnabled(){
   try{ return ((DB.koperasi.info||{}).notifTelegram||{}).enabled !== false; }catch(e){ return true; }
 }
-function kirimLogTelegram(entry){
+let _tgSyncTimer = null;
+let _tgSyncRunning = false;
+let _tgSyncInterval = null;
+function jadwalkanSyncTelegram(delay){
   if(!telegramLogEnabled()) return;
-  if(TG_LOG_SKIP_AKSI.indexOf(entry.aksi) !== -1) return;
+  if(_tgSyncTimer) clearTimeout(_tgSyncTimer);
+  _tgSyncTimer = setTimeout(()=>{ _tgSyncTimer = null; syncTelegramLogs(); }, Math.max(500, Number(delay)||2500));
+}
+// Ambil antrean dari tabel logs di server, kirim ke Telegram, lalu tandai statusnya.
+// Dengan cara ini log yang tampil di aplikasi dan yang masuk grup memakai sumber yang sama.
+async function syncTelegramLogs(){
+  if(_tgSyncRunning || !telegramLogEnabled()) return;
+  if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  _tgSyncRunning = true;
   try{
-    // Fire-and-forget: jangan pernah menunggu/mengganggu persist() ke Supabase.
-    fetch(TG_LOG_FN_URL, {
+    const res = await fetch(TG_LOG_FN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-      body: JSON.stringify(entry),
-      keepalive: true
-    }).catch(e=>console.warn('Log Telegram gagal:', e));
-  }catch(e){ console.warn('Log Telegram gagal:', e); }
+      body: JSON.stringify({ mode: 'sync', limit: 10 })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data || data.success === false){
+      console.warn('Sync log Telegram gagal:', data);
+      return;
+    }
+    if(Array.isArray(data.results) && data.results.length){
+      data.results.forEach(r=>{
+        const l = DB.logs.find(x=>x.id===r.id);
+        if(!l) return;
+        l.telegramStatus = r.status;
+        l.telegramAttempts = r.attempts;
+        l.telegramError = r.error || null;
+        l.telegramSentAt = r.sentAt || l.telegramSentAt || null;
+      });
+      if(currentPage === 'admin_log') renderContent();
+    }
+  }catch(e){
+    console.warn('Sync log Telegram gagal:', e);
+  }finally{
+    _tgSyncRunning = false;
+  }
+}
+function mulaiSyncTelegram(){
+  jadwalkanSyncTelegram(3000);
+  if(_tgSyncInterval) return;
+  _tgSyncInterval = setInterval(()=>{
+    if(document.visibilityState === 'visible') syncTelegramLogs();
+  }, 60_000);
+}
+function logsForSync(){
+  // Status Telegram dikelola Edge Function; jangan ditimpa oleh upsert biasa.
+  return (DB.logs||[]).map(l=>{
+    const s = toSnake(l);
+    delete s.telegram_status;
+    delete s.telegram_sent_at;
+    delete s.telegram_error;
+    delete s.telegram_attempts;
+    delete s.telegram_claimed_at;
+    return s;
+  });
 }
 function addLog(aksi, detail){
   const s = getSession();
-  const entry = {id:uid('log'), waktu:nowISO(), oleh: s? s.userId : 'system', peran: s? s.role : '-', aksi, detail};
+  const entry = {
+    id:uid('log'), waktu:nowISO(), oleh: s? s.userId : 'system', peran: s? s.role : '-', aksi, detail,
+    telegramStatus: TG_LOG_SKIP_AKSI.indexOf(aksi) !== -1 ? 'skipped' : 'pending',
+    telegramSentAt: null, telegramError: null, telegramAttempts: 0
+  };
   DB.logs.unshift(entry);
   persist();
-  let nama = entry.oleh;
-  try{ const u = userById(entry.oleh); if(u && u.nama) nama = u.nama; }catch(e){}
-  kirimLogTelegram(Object.assign({}, entry, {olehNama: nama}));
+  // Tunggu persist() (debounce 2 detik) selesai dulu, baru minta server memproses antrean.
+  jadwalkanSyncTelegram(4000);
 }
 
 /* =========================================================
@@ -10566,7 +10619,7 @@ function renderAdminLog(user){
         <div class="list-row"${trf?' style="background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;margin-bottom:4px;padding:10px 12px;"':''}>
           <div class="row-num">${i+1}</div>
           <div class="info"><div class="title">${l.aksi} ${trf?'<span class="badge badge-gold" style="margin-left:6px;">TRANSFER</span>':`<span class="badge badge-green" style="margin-left:6px;">${l.peran}</span>`}</div><div class="sub">${l.detail}</div></div>
-          <div class="sub" style="font-size:10.5px;white-space:nowrap;text-align:right;">${fmtDate(l.waktu)}</div>
+          <div class="sub" style="font-size:10.5px;white-space:nowrap;text-align:right;">${fmtDate(l.waktu)}${l.telegramStatus==='sent'?'<br><span style="color:#1B7F3B;">TG ✓</span>':l.telegramStatus==='failed'?'<br><span style="color:var(--danger);">TG !</span>':l.telegramStatus==='pending'?'<br><span style="color:var(--gold);">TG …</span>':''}</div>
         </div>`;
       }).join('') || emptyRow('Belum ada log')}
     </div>
