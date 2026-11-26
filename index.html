@@ -1702,8 +1702,19 @@ async function upsertToSupabase(table, data) {
 let _syncTimeout = null;
 function persist() {
   if (_syncTimeout) clearTimeout(_syncTimeout);
-  _syncTimeout = setTimeout(() => {
-    syncAllToSupabase().catch(err => console.error('Auto-sync error:', err));
+  _syncTimeout = setTimeout(async () => {
+    try {
+      await syncAllToSupabase();
+    } catch(err) {
+      console.error('Auto-sync error:', err);
+    } finally {
+      // Setelah log benar-benar tersimpan di server, baru minta antrean Telegram diproses.
+      try{
+        if((DB.logs||[]).some(l=>l.telegramStatus==='pending' || l.telegramStatus==='failed')){
+          jadwalkanSyncTelegram(800);
+        }
+      }catch(e){}
+    }
   }, 2000);
 }
 
