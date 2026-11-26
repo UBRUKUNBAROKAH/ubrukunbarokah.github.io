@@ -822,6 +822,9 @@ const SUPABASE_URL = 'https://nuczywforbwbctwxbfky.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51Y3p5d2ZvcmJ3YmN0d3hiZmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjY5NTAsImV4cCI6MjA5ODkwMjk1MH0.4xQPbzS8EQ3NAdwzkU5Q5Fjbxi2Q0rlRDWYaYBCQ8Ic';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const WA_FN_URL = SUPABASE_URL + '/functions/v1/wa-notif';
+const TG_LOG_FN_URL = SUPABASE_URL + '/functions/v1/log-notif';
+// Login/logout hanya mengganggu grup log — tidak dikirim.
+const TG_LOG_SKIP_AKSI = ['Masuk aplikasi', 'Keluar aplikasi'];
 let SUPABASE_ENABLED = true;
 
 const TABLES = {
@@ -2123,10 +2126,30 @@ async function boot() {
 }
 
 
+function telegramLogEnabled(){
+  try{ return ((DB.koperasi.info||{}).notifTelegram||{}).enabled !== false; }catch(e){ return true; }
+}
+function kirimLogTelegram(entry){
+  if(!telegramLogEnabled()) return;
+  if(TG_LOG_SKIP_AKSI.indexOf(entry.aksi) !== -1) return;
+  try{
+    // Fire-and-forget: jangan pernah menunggu/mengganggu persist() ke Supabase.
+    fetch(TG_LOG_FN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify(entry),
+      keepalive: true
+    }).catch(e=>console.warn('Log Telegram gagal:', e));
+  }catch(e){ console.warn('Log Telegram gagal:', e); }
+}
 function addLog(aksi, detail){
   const s = getSession();
-  DB.logs.unshift({id:uid('log'), waktu:nowISO(), oleh: s? s.userId : 'system', peran: s? s.role : '-', aksi, detail});
+  const entry = {id:uid('log'), waktu:nowISO(), oleh: s? s.userId : 'system', peran: s? s.role : '-', aksi, detail};
+  DB.logs.unshift(entry);
   persist();
+  let nama = entry.oleh;
+  try{ const u = userById(entry.oleh); if(u && u.nama) nama = u.nama; }catch(e){}
+  kirimLogTelegram(Object.assign({}, entry, {olehNama: nama}));
 }
 
 /* =========================================================
@@ -7253,6 +7276,20 @@ function renderPengaturanWA(){
     <div class="hint" style="margin-bottom:10px;">Template pesan WhatsApp yang dikirim ke nasabah saat tombol "Kirim Info Akun" diklik.</div>
     <div class="form-row"><label>Templat pesan Info Akun</label><textarea id="set-wa-template" rows="8" style="font-size:12px;">${(DB.koperasi.info&&DB.koperasi.info.waInfoTemplate) || "Assalamu'alaikum Wr. Wb.\n\nYth. Bapak/Ibu {nama},\n\nBerikut informasi akun login Anda di {koperasi}:\n\nUsername : {username}\nPassword : {password}\n\nSilakan login melalui aplikasi {koperasi}:\n{link}\n\nHubungi kami jika ada kendala.\n\nTerima kasih.\n\nWassalamu'alaikum Wr. Wb."}</textarea><span class="hint">Kode otomatis yang diganti saat dikirim: <b>{nama}</b>, <b>{koperasi}</b>, <b>{username}</b>, <b>{password}</b>, <b>{link}</b> (link aplikasi).</span></div>
     <button class="btn btn-primary btn-block" onclick="saveTemplateWA()">Simpan Templat</button>`;
+  const tgCfg = (DB.koperasi.info||{}).notifTelegram || {};
+  const tgContent = `
+    <div class="hint" style="margin-bottom:10px;">Setiap aktivitas aplikasi dikirim satu per satu ke grup Telegram khusus log. <b>Login dan logout tidak dikirim.</b></div>
+    <div style="background:var(--primary-soft);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.5;margin-bottom:12px;">
+      <b>Log Telegram</b> — token bot &amp; chat ID disimpan aman di server (Edge Function <b>log-notif</b>), tidak bisa dibaca dari browser.
+    </div>
+    <div class="form-row"><label>Kirim log ke Telegram</label><label style="display:flex;align-items:center;gap:8px;font-size:13.5px;"><input type="checkbox" id="tg-log-enabled" style="width:16px;height:16px;" ${tgCfg.enabled!==false?'checked':''}> Aktif</label></div>
+    <button class="btn btn-primary btn-block" onclick="savePengaturanTelegram()">Simpan pengaturan Telegram</button>
+    <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">
+      <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Uji Kirim Log</div>
+      <div class="hint" style="margin-bottom:10px;">Kirim satu pesan contoh untuk memastikan grup Telegram sudah terhubung.</div>
+      <button class="btn btn-primary btn-block" onclick="testNotifTelegram()">Kirim Log Telegram Tes</button>
+      <div id="tg-test-result" style="margin-top:10px;font-size:13px;"></div>
+    </div>`;
   const accordion = (id,label,desc,open,content) => `
     <div class="card" style="padding:0;overflow:hidden;${open?'border-color:var(--primary);':''}">
       <button onclick="setNotifSub('${id}')" style="display:flex;align-items:center;gap:12px;width:100%;padding:16px;background:none;border:none;text-align:left;cursor:pointer;">
@@ -7266,6 +7303,8 @@ function renderPengaturanWA(){
       ${accordion('wa','Pengaturan WhatsApp Admin','Nomor admin & uji kirim WA', sub==='wa', waContent)}
       <div style="height:12px;"></div>
       ${accordion('tpl','Templat Notifikasi','Isi pesan Info Akun yang dikirim ke nasabah via WhatsApp', sub==='tpl', tplContent)}
+      <div style="height:12px;"></div>
+      ${accordion('tg','Log Telegram','Laporkan setiap aktivitas ke grup khusus', sub==='tg', tgContent)}
     </div>
   `;
 }
@@ -7404,6 +7443,52 @@ async function testNotifWA(){
   } catch(e){
     if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+e.message+'</span>';
     toast('Gagal kirim WA tes — Edge Function wa-notif belum ter-deploy?');
+  }
+}
+function savePengaturanTelegram(){
+  if(!DB.koperasi.info) DB.koperasi.info = {};
+  const cfg = DB.koperasi.info.notifTelegram || {};
+  const el = document.getElementById('tg-log-enabled');
+  cfg.enabled = el ? !!el.checked : true;
+  DB.koperasi.info.notifTelegram = cfg;
+  persist();
+  toast('Pengaturan log Telegram disimpan');
+  renderContent();
+}
+async function testNotifTelegram(){
+  const resultEl = document.getElementById('tg-test-result');
+  if(resultEl) resultEl.innerHTML = '<span style="color:var(--muted);">Mengirim pesan tes...</span>';
+  const s = getSession();
+  let nama = s ? s.userId : 'system';
+  try{ const u = userById(nama); if(u && u.nama) nama = u.nama; }catch(e){}
+  const payload = {
+    test: true,
+    id: uid('log'),
+    waktu: nowISO(),
+    oleh: s ? s.userId : 'system',
+    olehNama: nama,
+    peran: s ? s.role : '-',
+    aksi: 'Tes Log Telegram',
+    detail: 'Koneksi grup log Telegram berhasil. Setiap aktivitas aplikasi (kecuali login/logout) akan dilaporkan di sini.'
+  };
+  try {
+    const res = await fetch(TG_LOG_FN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=>({}));
+    if(res.ok && data && data.success){
+      if(resultEl) resultEl.innerHTML = '<span style="color:#1B7F3B;">✔ Pesan tes terkirim ke grup Telegram.</span>';
+      bigSuccess('Log Telegram tes terkirim');
+    } else {
+      const detail = data && (data.error || data.message) ? (data.error || data.message) : ('HTTP ' + res.status);
+      if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+detail+'</span>';
+      toast('Gagal kirim log Telegram tes');
+    }
+  } catch(e){
+    if(resultEl) resultEl.innerHTML = '<span style="color:var(--danger);">✘ Gagal: '+e.message+'</span>';
+    toast('Gagal kirim log Telegram — Edge Function log-notif belum ter-deploy?');
   }
 }
 let _pendingIconImage = null;
